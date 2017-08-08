@@ -1,0 +1,35 @@
+{
+  "sources": [
+    {
+      "source": "/media/mmami/Extra/Datasets/books.parquet",
+      "options": {}
+    },
+    {
+      "source": "hdfs://localhost:9000/input/students",
+      "options": {}
+    },
+    {
+      "source": "/media/mmami/Extra/Datasets/authors.csv",
+      "options": {
+        "header": "true",
+        "delimiter": ",",
+        "mode": "DROPMALFORMED"
+      }
+    },
+    {
+      "source": "/a/reviewers",
+      "options": {
+        "keyspace": "db",
+        "table": "reviewers"
+      }
+    },
+    {
+      "source": "/a/institutes",
+      "options": {
+        "url": "127.0.0.1",
+        "database": "db",
+        "collection": "institutes"
+      }
+    }
+  ]
+}

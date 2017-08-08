@@ -1,0 +1,104 @@
+@prefix rr: <http://www.w3.org/ns/r2rml#> .
+@prefix rml: <http://semweb.mmlab.be/ns/rml#> .
+@prefix foaf: <http://xmlns.com/foaf/spec/> .
+@prefix dc: <http://purl.org/dc/terms/> .
+@prefix bibo: <http://purl.org/ontology/bibo/> .
+@prefix schema: <http://schema.org/> .
+@prefix ql: <http://semweb.mmlab.be/ns/ql#> .
+@prefix sa: <http://sparkall.com/ns/spec/> .
+@prefix person: <http://www.w3.org/ns/person#> .
+@prefix nlon: <http://lod.nl.go.kr/ontology/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<#Author>
+    rml:logicalSource [
+	    rml:source "/media/mmami/Extra/Datasets/authors.csv";
+        rml:referenceFormulation ql:SQL;
+        sa:store sa:csv
+    ];
+
+    rr:subjectMap [
+        rr:template "http://example.com/ns/{ID}";
+        rr:class nlon:Author
+    ];
+
+    rr:predicateObjectMap [
+    	rr:predicate foaf:firstName;
+    	rr:objectMap [ rml:reference "Fname" ]
+ 	];
+
+ 	rr:predicateObjectMap [
+        rr:predicate foaf:lastName;
+        rr:objectMap [ rml:reference "Lname" ]
+    ].
+
+<#Reviewer>
+    rml:logicalSource [
+	    rml:source "/a/reviewers";
+        rml:referenceFormulation sa:CQL;
+        sa:store sa:cassandra
+    ];
+
+    rr:subjectMap [
+        rr:template "http://aaa.com/ns/{RID}" ;
+        rr:class nlon:Reviewer
+    ];
+
+    rr:predicateObjectMap [
+    	rr:predicate foaf:firstName;
+    	rr:objectMap [ rml:reference "first_name" ]
+ 	];
+
+ 	rr:predicateObjectMap [
+        rr:predicate foaf:lastName;
+        rr:objectMap [ rml:reference "last_name" ]
+    ];
+
+    rr:predicateObjectMap [
+         rr:predicate person:placeOfBirth;
+         rr:objectMap [ rml:reference "birthPlace" ]
+     ].
+
+<#Book>
+    rml:logicalSource [
+	    rml:source "/media/mmami/Extra/Datasets/books.parquet";
+        rml:referenceFormulation ql:CSV;
+        sa:store sa:parquet
+    ];
+
+    rr:subjectMap [
+        rr:template "http://books.com/ns/{ID}" ;
+        rr:class schema:Book
+    ];
+
+    rr:predicateObjectMap [
+    	rr:predicate dc:title;
+    	rr:objectMap [ rml:reference "Title" ]
+ 	];
+
+ 	rr:predicateObjectMap [
+        rr:predicate bibo:isbn;
+        rr:objectMap [ rml:reference "ISBN" ]
+    ];
+
+    rr:predicateObjectMap [
+        	rr:predicate schema:author;
+        	rr:objectMap [ rml:reference "Author" ]
+    ].
+
+<#Institute>
+    rml:logicalSource [
+	    rml:source "/a/Institute";
+        rml:referenceFormulation ql:Document;
+        sa:store sa:mongodb
+    ];
+
+    rr:subjectMap [
+        rr:template "http://books.com/ns/{IID}" ;
+        rr:class schema:Book
+    ];
+
+ 	rr:predicateObjectMap [
+        rr:predicate rdfs:label;
+        rr:objectMap [ rml:reference "Name" ]
+    ]

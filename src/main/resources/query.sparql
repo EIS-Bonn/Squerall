@@ -1,0 +1,23 @@
+PREFIX rml: <http://semweb.mmlab.be/ns/rml#>
+PREFIX ql: <http://semweb.mmlab.be/ns/ql#>
+PREFIX foaf: <http://xmlns.com/foaf/spec/>
+PREFIX schema: <http://schema.org/>
+PREFIX bibo: <http://purl.org/ontology/bibo/>
+PREFIX dc: <http://purl.org/dc/terms/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX nlon: <http://lod.nl.go.kr/ontology/>
+PREFIX vivo: <http://vivoweb.org/ontology/core#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?fn ?ln ?i
+WHERE {
+    ?a foaf:firstName ?fn .
+    ?a foaf:lastName ?ln .
+    #?a rdf:type nlon:Author .
+    ?b schema:author ?a .
+    ?b bibo:isbn ?i .
+    ?b dc:title ?t .
+    ?a vivo:Institute ?i .
+    ?i rdfs:label ?n .
+    #?b bibo:volume ?v
+}
