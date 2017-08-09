@@ -9,6 +9,7 @@
 @prefix person: <http://www.w3.org/ns/person#> .
 @prefix nlon: <http://lod.nl.go.kr/ontology/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vivo: <http://vivoweb.org/ontology/core#> .
 
 <#Author>
     rml:logicalSource [
@@ -30,7 +31,12 @@
  	rr:predicateObjectMap [
         rr:predicate foaf:lastName;
         rr:objectMap [ rml:reference "Lname" ]
-    ].
+    ];
+
+    rr:predicateObjectMap [
+         rr:predicate vivo:Institute;
+         rr:objectMap [ rml:reference "Institute" ]
+     ].
 
 <#Reviewer>
     rml:logicalSource [
@@ -88,7 +94,7 @@
 
 <#Institute>
     rml:logicalSource [
-	    rml:source "/a/Institute";
+	    rml:source "/a/institutes";
         rml:referenceFormulation ql:Document;
         sa:store sa:mongodb
     ];

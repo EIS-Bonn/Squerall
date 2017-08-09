@@ -32,6 +32,7 @@ object Main extends App {
     }
 
     // 3. Generate plan of joins
+    println("/**************************PLAN GENERATION**************************/")
     var pl = new Planner(stars)
     var pln = pl.generateJoinPlan()
     var srcs = pln._1
@@ -40,10 +41,13 @@ object Main extends App {
     srcs(0)
 
     // 4. Check mapping file
+    println("/**************************MAPPINGS**************************/")
     var mappingsFile = Config.get("mappings.file")
     var mappers = new Mapper(mappingsFile)
     var results = mappers.findDataSources(stars)
     var star_df : Map[String, DataFrame] = Map()
+
+    println("FLAGS: " + joinFlags)
 
     for(s <- results) {
         val star = s._1
@@ -51,19 +55,20 @@ object Main extends App {
         val options = s._3
 
         //println("Start: " + star)
-        var spark = new Sparking("local")
 
-        //println("FLAGS: " + joinFlags)
+        var spark = new Sparking(Config.get("spark.url"))
 
         var ds : DataFrame = null
         if(joinFlags.contains(star)) {
             //println("TRUE: " + star)
+            //println("->datasources: " + datasources)
             ds = spark.query(datasources, options, true)
-            //ds.printSchema()
+            ds.printSchema()
         } else {
             //println("FALSE: " + star)
+            //println("->datasources: " + datasources)
             ds = spark.query(datasources, options, false)
-            //ds.printSchema()
+            ds.printSchema()
         }
 
         //ds.collect().foreach(s => println(s))
@@ -73,7 +78,9 @@ object Main extends App {
 
     println("Star - DataFrame: " + star_df)
 
+    println("/**************************QUERY EXECUTION**************************/")
     var df_join : DataFrame = null
+
     for(v <- srcs) {
         println(v._1 + " JOIN " + v._2 + " VIA " + v._3)
         val df1 = star_df(v._1)

@@ -14,7 +14,7 @@ class Helpers() {
 object Helpers {
 
     def omitNamespace(URI: String): String = {
-        val URIBits = URI.replace("<","").replace(">","").split("/")
+        val URIBits = URI.replace("<","").replace(">","").replace("#","/").split("/")
         return URIBits(URIBits.length-1)
     }
 
@@ -80,6 +80,6 @@ object Helpers {
     }
 
     def makeMongoURI(uri:String, database:String, collection:String) =
-        (s"${uri}/${database}.${collection}")
+        (s"mongodb://${uri}/${database}.${collection}")
 
 }

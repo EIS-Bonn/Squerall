@@ -17,7 +17,7 @@ WHERE {
     ?b schema:author ?a .
     ?b bibo:isbn ?i .
     ?b dc:title ?t .
-    ?a vivo:Institute ?i .
-    ?i rdfs:label ?n .
+    ?a vivo:Institute ?in .
+    ?in rdfs:label ?n .
     #?b bibo:volume ?v
 }

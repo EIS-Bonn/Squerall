@@ -67,9 +67,4 @@ class QueryAnalyser(query: String) {
     }
 }
 
-Map (
-    ?b -> Set((<http://semweb.mmlab.be/ns/rml#logicalSource5>,?c), (<http://semweb.mmlab.be/ns/rml#logicalSource2>,?c)),
-    ?a -> Set((<http://semweb.mmlab.be/ns/rml#logicalSource1>,?b)),
-    ?c -> Set((<http://semweb.mmlab.be/ns/rml#logicalSource3>,?d), (<http://semweb.mmlab.be/ns/rml#logicalSource4>,?e))
-)
 */

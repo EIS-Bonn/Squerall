@@ -34,6 +34,7 @@ class Mapper (mappingFile: String) {
         for(s <- stars) {
             val subject = s._1 // core of the star
             val predicates_objects = s._2
+
             val ds = findDataSource(predicates_objects) // One or more relevant data sources
             count = count + 1
 
@@ -86,6 +87,8 @@ class Mapper (mappingFile: String) {
         val returnedSources : Set[(HashMap[String, String], String, String)] = Set()
 
         var temp = 0
+
+        println("predicates_objects: " + predicates_objects)
 
         for(v <- predicates_objects) {
             val predicate = v._1
@@ -140,6 +143,8 @@ class Mapper (mappingFile: String) {
             val src = soln.get("src").toString
             val srcType = soln.get("type").toString
 
+            println("src: " + src + " srcType: " + srcType)
+
             println("Source containing: " + listOfPredicates.toString() + " is: " + src) //NOTE: considering first only one src
 
             val pred_attr: HashMap[String, String] = HashMap()
@@ -186,75 +191,5 @@ class Mapper (mappingFile: String) {
         return returnedSources
     }
 
-    /*def listStatements (model: Model): Unit = {
-        var iter = model.listStatements()
-        while (iter.hasNext()) {
-            var stmt      = iter.nextStatement()  // get next statement
-            var subject   = stmt.getSubject()     // get the subject
-            var predicate = stmt.getPredicate()   // get the predicate
-            var obj    = stmt.getObject()      // get the object
-
-            println(stmt)
-        }
-    }*/
-
 }
 
-
-/*implicit val formats = DefaultFormats
-
-        case class Config(source: String, options: Map[String,String])
-
-        def extract(source: JsonInput) : Config = {
-            parse(source).transformField({
-                case JField("source", jv) => ("pi", jv \ "pi")
-            }).extract[Config]
-        }
-*/
-
-/*val cursor: HCursor = json.hcursor
-
-val baz2: io.circe.Decoder.Result[Map[String,String]] = cursor.get[Map[String, String]]("options")
-
-for(i <- baz2)
-    print(i)*/
-
-/*
-
-val json: Json = parse(configJSON).getOrElse(Json.Null)
-
-val res = root..options.as[Map[String,String]]
-
-val phoneNum: Option[Map[String,String]] = res.getOption(json)
-
-for(i <- phoneNum)
-    print(i)*/
-
-//val _phoneNum = root.order.customer.contactDetails.phone.string
-
-
-/*var json = parse(configJSON)
-
-var src = json.\("Author").\("options")
-
-var list = src.values.asInstanceOf[Map[String, String]]
-
-println(list.toString())
-
-for (obj <- list)
-    println("obj : " + obj._1 + ": " + obj._2)*/
-
-//var src1 = json.\("/").filterField{ case JField("source", JString(src)) => true case _ => true }
-
-/*var js = src filter {
-    case JField("resource", JString(src)) => true
-    case _ => false
-}*/
-
-/*var a = compact(render(js))
-var b = parse(a)
-
-var list = b.values.asInstanceOf[Map[String, String]]
-
-for (obj <- list)
-    println("obj : " + obj._1 + ": " + obj._2)*/

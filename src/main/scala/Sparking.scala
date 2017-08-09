@@ -64,7 +64,7 @@ class Sparking(sparkURI: String) {
             if(datasource == 1) {
                 finalDF = newDF
 
-                newDF.show()
+                //newDF.show()
 
                 //finalDF.show()
                 //println("-Print before union ")

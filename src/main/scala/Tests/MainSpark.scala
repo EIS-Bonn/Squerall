@@ -1,4 +1,7 @@
+package Tests
+
 import org.apache.spark.sql.SparkSession
+
 import scala.sys.process._
 
 /**

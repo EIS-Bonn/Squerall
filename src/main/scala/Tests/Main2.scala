@@ -1,3 +1,5 @@
+package Tests
+
 import org.apache.jena.query.{QueryExecutionFactory, QueryFactory, ResultSetFactory}
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.sparql.algebra.Algebra
