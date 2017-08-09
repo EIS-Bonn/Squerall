@@ -35,6 +35,7 @@ class Mapper (mappingFile: String) {
             val subject = s._1 // core of the star
             val predicates_objects = s._2
 
+            println("\n- Going to find DataSources related to " + subject + "...")
             val ds = findDataSource(predicates_objects) // One or more relevant data sources
             count = count + 1
 
@@ -47,8 +48,6 @@ class Mapper (mappingFile: String) {
                 //val pre_attr = d._1
                 val src = d._2
                 //val srcType = d._3
-
-                println("->" + src)
 
                 var configFile = Config.get("datasets.descr")
                 val queryString = scala.io.Source.fromFile(configFile)
@@ -88,7 +87,7 @@ class Mapper (mappingFile: String) {
 
         var temp = 0
 
-        println("predicates_objects: " + predicates_objects)
+        println("...with the (Predicate,Object) pairs: " + predicates_objects)
 
         for(v <- predicates_objects) {
             val predicate = v._1
@@ -123,7 +122,7 @@ class Mapper (mappingFile: String) {
                 listOfPredicatesForQuery +
             "}"
 
-        println("- Going ot execute the query: " + queryString)
+        println("...for this, the following query will be executed: " + queryString)
         var query = QueryFactory.create(queryString)
 
         var in = FileManager.get().open(mappingFile)
@@ -143,9 +142,7 @@ class Mapper (mappingFile: String) {
             val src = soln.get("src").toString
             val srcType = soln.get("type").toString
 
-            println("src: " + src + " srcType: " + srcType)
-
-            println("Source containing: " + listOfPredicates.toString() + " is: " + src) //NOTE: considering first only one src
+            println(">>> Relevant source detected [" + src + "] of type [" + srcType + "]") //NOTE: considering first only one src
 
             val pred_attr: HashMap[String, String] = HashMap()
 

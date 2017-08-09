@@ -22,7 +22,7 @@ class Sparking(sparkURI: String) {
         var datasource = 0
 
         for (s <- sources) {
-            println("*****************************************************")
+            println("\nNEXT SOURCE...")
             datasource += 1 // in case of multiple relevant data sources to union
 
             var attr_pred = s._1
@@ -33,13 +33,14 @@ class Sparking(sparkURI: String) {
             var columns = Helpers.getSelectColumnsFromSet(attr_pred)
 
             if(toJoinWith) {
-                println(datasource + ") Relevant source: " + sourcePath)
+                println("Relevant source (" + datasource + ") is: [" + sourcePath + "] of type: [" + sourceType + "]")
                 var id = Helpers.getID(sourcePath)
-                println("=> Whose ID (from RML subjectMap) is: " + id)
+                println("...whose ID is: " + id + " (obtained from subjectMap)")
                 columns = columns + "," + id + " AS ID"
             }
 
-            println("Getting the columns: " + columns + " from the source: " + sourcePath + " of type: " + sourceType + " with the options: " + options)
+            println("...from which columns (" + columns + ") are going to be projected")
+            println("...with the following configuration options: " + options)
 
             var df : DataFrame = null
             sourceType match {

@@ -12,7 +12,7 @@ class QueryAnalyser(query: String) {
         val q = QueryFactory.create(query)
         val prolog = q.getPrologue().getPrefixMapping.getNsPrefixMap
 
-        println("PROLOG: " + prolog)
+        println("\n- Prefixes: " + prolog)
 
         return null
     }
@@ -20,11 +20,12 @@ class QueryAnalyser(query: String) {
 
     def getStars() : HashMap[String, Set[Tuple2[String,String]]] with MultiMap[String, Tuple2[String,String]] = {
         val q = QueryFactory.create(query)
-        val bgp = q.getQueryPattern.toString.replaceAll("\n", "").replaceAll("\\s+", " ").replace("{"," ").replace("}"," ") // See example below + replace breaklines + remove extra white spaces
+        val originalBGP = q.getQueryPattern.toString
+        val bgp = originalBGP.replaceAll("\n", "").replaceAll("\\s+", " ").replace("{"," ").replace("}"," ") // See example below + replace breaklines + remove extra white spaces
         val tps = bgp.split("\\.(?![^\\<\\[]*[\\]\\>])")
 
-        println("The BGP=" + bgp)
-        println("Number of triple-stars detected =" + tps.length)
+        println("\n- The BGP of the input query:  " + originalBGP)
+        println("\n- Number of triple-stars detected: " + tps.length)
 
         val stars = new HashMap[String, Set[Tuple2[String,String]]] with MultiMap[String, Tuple2[String,String]]
         // Multi-map to add/append elements to the value
