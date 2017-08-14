@@ -8,6 +8,7 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX nlon: <http://lod.nl.go.kr/ontology/>
 PREFIX vivo: <http://vivoweb.org/ontology/core#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX npg: <http://ns.nature.com/terms/>
 
 SELECT ?fn ?ln ?i
 WHERE {
@@ -19,5 +20,6 @@ WHERE {
     ?b dc:title ?t .
     ?a vivo:Institute ?in .
     ?in rdfs:label ?n .
-    #?b bibo:volume ?v
+    ?b bibo:volume ?v .
+    ?v npg:number ?n .
 }
