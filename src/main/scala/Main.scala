@@ -1,6 +1,8 @@
+import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.DataFrame
 
-import org.apache.log4j.{Level, Logger}
+import scala.collection.JavaConversions._
+import scala.collection.mutable.ListBuffer
 
 /**
   * Created by mmami on 26.01.17.
@@ -37,14 +39,14 @@ object Main extends App {
 
     // 3. Generate plan of joins
     println("\n/*******************************************************************/")
-    println("/*                         PLAN GENERATION                         */")
+    println("/*                  PLAN GENERATION & MAPPINGS                     */")
     println("/*******************************************************************/")
     var pl = new Planner(stars)
     var pln = pl.generateJoinPlan()
     var srcs = pln._1
     var joinFlags = pln._2
 
-    srcs(0)
+    println("JOINS detected: " + srcs)
 
     // 4. Check mapping file
     println("---> MAPPING CONSULTATION")
@@ -55,7 +57,7 @@ object Main extends App {
 
     println("\n- The following are the join variables: " + joinFlags)
 
-    println("\n---> GOING TO SPARK NOW")
+    println("\n---> GOING TO SPARK NOW TO JOIN STUFF")
     for(s <- results) {
         val star = s._1
         val datasources = s._2
@@ -92,7 +94,68 @@ object Main extends App {
     var df_join : DataFrame = null
 
     println("- Here are join pairs: " + srcs + "\n")
-    for(v <- srcs) {
+
+    var firstTime = true
+    val join = " x "
+
+    val seenDF : ListBuffer[(String,String)] = ListBuffer()
+
+    val it = srcs.entries.iterator
+    while ({it.hasNext}) {
+        val entry = it.next
+
+        val op1 = entry.getKey
+        val op2 = entry.getValue._1
+        val jVal = entry.getValue._2
+
+        println("-> (" + op1 + join + op2 + ")")
+
+        it.remove
+
+        if (firstTime) { // First time look for joins in the join hashmap, later look for them in the previously joined DFs so to join with them
+            seenDF.add((op1,jVal))
+            seenDF.add((op2,"ID"))
+            // TODO: var jdf = df(op1).join(op2).on(op1.jVal = op2.ID)
+
+            val pairsHavingAsValue = srcs.entries().filter(entry => entry.getValue()._1 == op1)
+            println("pairsHavingAsValue: " + pairsHavingAsValue)
+            for (i <- pairsHavingAsValue) {
+                println(i.getKey + " join " + op1)
+                //jMap.remove(i.getKey,i.getValue)
+
+                seenDF.add((i.getKey, i.getValue._2))
+            }
+
+            val pairsHavingAsKey = srcs.entries().filter(entry => entry.getKey == op2)
+            println("pairsHavingAsKey: " + pairsHavingAsKey)
+            for (j <- pairsHavingAsKey) {
+                println(op2 + " join " + j.getValue._1)
+                //jMap.remove(j.getKey,j.getValue)
+
+                seenDF.add((j.getValue._1,"ID"))
+            }
+
+
+            firstTime = false
+
+        } else {
+            val dfs_only = seenDF.map(_._1)
+
+            if(dfs_only.contains(op1) && !dfs_only.contains(op2)) {
+                seenDF.add((op2,"ID"))
+            } else if(!dfs_only.contains(op1) && dfs_only.contains(op2)) {
+                seenDF.add((op1,jVal))
+            }
+        }
+    }
+
+    println("--Join series: " + seenDF)
+
+    for(s <- seenDF) {
+
+    }
+
+    /*for(v <- srcs) {
         println("- DF1 of (" + v._1 + ") joins DF2 of (" + v._2 + ") using [" + Helpers.omitNamespace(v._3) + " (from " + v._3 + ") = ID]")
         val df1 = star_df(v._1)
         val df2 = star_df(v._2)
@@ -108,7 +171,7 @@ object Main extends App {
         df2.show()
         df_join = df1.join(df2, df1.col(Helpers.omitNamespace(v._3)).equalTo(df2("ID"))) // people.col("deptId").equalTo(department("id"))
 
-    }
+    }*/
 
     println("- Final results DF schema: ")
     df_join.printSchema()

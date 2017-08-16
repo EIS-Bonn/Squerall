@@ -43,7 +43,7 @@ object Helpers {
     }
 
     def getID(sourcePath: String): String = {
-        var mappingsFile = "/home/mmami/Documents/IntelliJ_Projects/SeBiFly/src/main/resources/mappings.ttl"
+        var mappingsFile = Config.get("mappings.file")
 
         var getID = "PREFIX rml: <http://semweb.mmlab.be/ns/rml#>" +
             "PREFIX rr: <http://www.w3.org/ns/r2rml#>" +
@@ -80,6 +80,6 @@ object Helpers {
     }
 
     def makeMongoURI(uri:String, database:String, collection:String) =
-        (s"mongodb://${uri}/${database}.${collection}")
+        s"mongodb://${uri}/${database}.${collection}"
 
 }

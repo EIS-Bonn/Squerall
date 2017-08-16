@@ -20,6 +20,6 @@ WHERE {
     ?b dc:title ?t .
     ?a vivo:Institute ?in .
     ?in rdfs:label ?n .
-    ?b bibo:volume ?v .
-    ?v npg:number ?n .
+    #?b bibo:volume ?v .
+    #?v npg:number ?n .
 }

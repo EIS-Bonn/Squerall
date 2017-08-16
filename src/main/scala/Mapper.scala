@@ -31,7 +31,7 @@ class Mapper (mappingFile: String) {
 
         var count = 0
         
-        for(s <- stars) {
+        for(s <-stars) {
             val subject = s._1 // core of the star
             val predicates_objects = s._2
 
