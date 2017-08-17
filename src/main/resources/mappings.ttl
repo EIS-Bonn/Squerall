@@ -69,7 +69,7 @@
 <#Book>
     rml:logicalSource [
 	    rml:source "/media/mmami/Extra/Datasets/books.parquet";
-        rml:referenceFormulation ql:CSV;
+        rml:referenceFormulation ql:SQL;
         sa:store sa:parquet
     ];
 

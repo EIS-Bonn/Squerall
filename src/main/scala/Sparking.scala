@@ -11,7 +11,7 @@ import org.apache.log4j.{Level, Logger}
 
 class Sparking(sparkURI: String) {
 
-    def query (sources : Set[(HashMap[String, String], String, String)], optionsMap: HashMap[String, Map[String, String]], toJoinWith: Boolean): DataFrame = {
+    def query (sources : Set[(HashMap[String, String], String, String)], optionsMap: HashMap[String, Map[String, String]], toJoinWith: Boolean, star: String): DataFrame = {
 
         Logger.getLogger("org").setLevel(Level.OFF)
         Logger.getLogger("akka").setLevel(Level.OFF)
@@ -30,17 +30,18 @@ class Sparking(sparkURI: String) {
             var sourceType = Helpers.getTypeFromURI(s._3)
             var options = optionsMap(sourcePath)
 
-            var columns = Helpers.getSelectColumnsFromSet(attr_pred)
+            var columns = Helpers.getSelectColumnsFromSet(attr_pred, Helpers.omitQuestionMark(star))
 
-            if(toJoinWith) {
-                println("Relevant source (" + datasource + ") is: [" + sourcePath + "] of type: [" + sourceType + "]")
-                var id = Helpers.getID(sourcePath)
-                println("...whose ID is: " + id + " (obtained from subjectMap)")
-                columns = columns + "," + id + " AS ID"
-            }
+            println("Relevant source (" + datasource + ") is: [" + sourcePath + "] of type: [" + sourceType + "]")
 
             println("...from which columns (" + columns + ") are going to be projected")
             println("...with the following configuration options: " + options)
+
+            if(toJoinWith) { // That kind of table who is the 2nd operand of a join operation
+                var id = Helpers.getID(sourcePath)
+                println("... is to be joined with using the ID: " + Helpers.omitQuestionMark(star) + "_" + id + " (obtained from subjectMap)")
+                columns = columns + "," + id + " AS " + Helpers.omitQuestionMark(star) + "_ID"
+            }
 
             var df : DataFrame = null
             sourceType match {

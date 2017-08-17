@@ -13,6 +13,9 @@ class Helpers() {
 
 object Helpers {
 
+    def omitQuestionMark(str: String) = str.replace("?","")
+
+
     def omitNamespace(URI: String): String = {
         val URIBits = URI.replace("<","").replace(">","").replace("#","/").split("/")
         return URIBits(URIBits.length-1)
@@ -26,13 +29,13 @@ object Helpers {
         rtrn
     }
 
-    def getSelectColumnsFromSet(pred_attr: mutable.HashMap[String,String]): String = {
+    def getSelectColumnsFromSet(pred_attr: mutable.HashMap[String,String], star: String): String = {
         var columns = ""
         var i = 0
         for(v <- pred_attr) {
             val attr = v._2
             val pred = Helpers.omitNamespace(v._1) // CAREFUL: add namespace later, we can have a:fname, b:fname
-            val c = attr + " AS " + pred
+            val c = attr + " AS " + star + "_" + pred
             //println(attr + " AS " + pred)
             //columns = if(i == 0) columns + v else columns + "," + columns
             if(i == 0) columns += c else columns += "," + c

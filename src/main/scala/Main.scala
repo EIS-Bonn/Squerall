@@ -71,13 +71,13 @@ object Main extends App {
         if(joinFlags.contains(star)) {
             //println("TRUE: " + star)
             //println("->datasources: " + datasources)
-            ds = spark.query(datasources, options, true)
+            ds = spark.query(datasources, options, true, star)
             println("...with DataFrame schema: ")
             ds.printSchema()
         } else {
             //println("FALSE: " + star)
             //println("->datasources: " + datasources)
-            ds = spark.query(datasources, options, false)
+            ds = spark.query(datasources, options, false, star)
             println("...with DataFrame schema: ")
             ds.printSchema()
         }
@@ -108,29 +108,50 @@ object Main extends App {
         val op2 = entry.getValue._1
         val jVal = entry.getValue._2
 
-        println("-> (" + op1 + join + op2 + ")")
+        println("-> (" + op1 + join + op2 + ") using " + jVal)
 
         it.remove
+
+        var jDF : DataFrame = null
 
         if (firstTime) { // First time look for joins in the join hashmap, later look for them in the previously joined DFs so to join with them
             seenDF.add((op1,jVal))
             seenDF.add((op2,"ID"))
             // TODO: var jdf = df(op1).join(op2).on(op1.jVal = op2.ID)
+            val df1 = star_df(op1)
+            val df2 = star_df(op2)
+
+            jDF = df1.join(df2,df1.col(Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)).equalTo(df2(Helpers.omitQuestionMark(op2) + "_ID")))
+
+            jDF.show()
 
             val pairsHavingAsValue = srcs.entries().filter(entry => entry.getValue()._1 == op1)
-            println("pairsHavingAsValue: " + pairsHavingAsValue)
+            println("\n- Pairs having as value: " + op1 + " are " + pairsHavingAsValue)
             for (i <- pairsHavingAsValue) {
                 println(i.getKey + " join " + op1)
-                //jMap.remove(i.getKey,i.getValue)
 
+                println(i.getKey + " JOIN jDF ON " + Helpers.omitQuestionMark(i.getKey) + "_" +  Helpers.omitNamespace(i.getValue._2) + " = " + Helpers.omitQuestionMark(op1) + "_ID")
+
+                // For clarity, break down:
+                val leftJ = star_df(i.getKey) // left is the jDF
+                val leftJVar = Helpers.omitQuestionMark(i.getKey) + "_" + Helpers.omitNamespace(i.getValue._2) // left join variable
+                val rightJVar = Helpers.omitQuestionMark(op1) + "_ID"
+                jDF = leftJ.join(jDF, leftJ.col(leftJVar).equalTo(jDF.col(rightJVar)))
+
+                jDF.show()
                 seenDF.add((i.getKey, i.getValue._2))
             }
 
             val pairsHavingAsKey = srcs.entries().filter(entry => entry.getKey == op2)
-            println("pairsHavingAsKey: " + pairsHavingAsKey)
+            println("\n- Pairs having as key: " + pairsHavingAsKey)
             for (j <- pairsHavingAsKey) {
                 println(op2 + " join " + j.getValue._1)
-                //jMap.remove(j.getKey,j.getValue)
+
+                // For clarity, break down:
+                val rightJ = star_df(j.getKey) // left is the jDF
+                val leftJVar = Helpers.omitQuestionMark(op2) + "_" + Helpers.omitNamespace(j.getValue._2)
+                val rightJVar = Helpers.omitQuestionMark(j.getValue._1) + "_ID"
+                jDF = jDF.join(rightJ, jDF.col(leftJVar).equalTo(jDF.col(rightJVar)))
 
                 seenDF.add((j.getValue._1,"ID"))
             }
