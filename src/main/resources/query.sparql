@@ -8,18 +8,21 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX nlon: <http://lod.nl.go.kr/ontology/>
 PREFIX vivo: <http://vivoweb.org/ontology/core#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX npg: <http://ns.nature.com/terms/>
+PREFIX saws: <http://purl.org/saws/ontology#>
 
 SELECT ?fn ?ln ?i
 WHERE {
+    ?b bibo:isbn ?i .
+    ?b dc:title ?t .
+    ?b schema:author ?a . # join
+    ?b bibo:editor ?e . # join
     ?a foaf:firstName ?fn .
     ?a foaf:lastName ?ln .
     #?a rdf:type nlon:Author .
-    ?b schema:author ?a .
-    ?b bibo:isbn ?i .
-    ?b dc:title ?t .
-    ?a vivo:Institute ?in .
-    ?in rdfs:label ?n .
-    #?b bibo:volume ?v .
-    #?v npg:number ?n .
+    ?a vivo:Institute ?in . # join
+    ?in rdfs:label ?n1 .
+    ?in a vivo:Institute . # type
+    ?e rdfs:label ?n2 .
+    ?e rdf:type saws:Editor . # type
+    ?r schema:reviews ?b .
 }
