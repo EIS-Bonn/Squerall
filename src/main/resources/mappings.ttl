@@ -10,7 +10,8 @@
 @prefix nlon: <http://lod.nl.go.kr/ontology/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix vivo: <http://vivoweb.org/ontology/core#> .
-@prefix npg: <http://ns.nature.com/terms/>
+@prefix npg: <http://ns.nature.com/terms/> .
+@prefix saws: <http://purl.org/saws/ontology#>
 
 <#Author>
     rml:logicalSource [
@@ -37,7 +38,7 @@
     rr:predicateObjectMap [
          rr:predicate vivo:Institute;
          rr:objectMap [ rml:reference "Institute" ]
-     ].
+    ].
 
 <#Reviewer>
     rml:logicalSource [
@@ -64,7 +65,12 @@
     rr:predicateObjectMap [
          rr:predicate person:placeOfBirth;
          rr:objectMap [ rml:reference "birthPlace" ]
-     ].
+    ];
+
+    rr:predicateObjectMap [
+        rr:predicate schema:reviews;
+        rr:objectMap [ rml:reference "book_id" ]
+    ].
 
 <#Book>
     rml:logicalSource [
@@ -89,13 +95,13 @@
     ];
 
     rr:predicateObjectMap [
-        rr:predicate bibo:volume;
-        rr:objectMap [ rml:reference "Volume" ]
+        rr:predicate schema:author;
+        rr:objectMap [ rml:reference "Author" ]
     ];
 
     rr:predicateObjectMap [
-        	rr:predicate schema:author;
-        	rr:objectMap [ rml:reference "Author" ]
+        rr:predicate bibo:editor;
+        rr:objectMap [ rml:reference "Editor" ]
     ].
 
 <#Institute>
@@ -107,7 +113,7 @@
 
     rr:subjectMap [
         rr:template "http://example.com/books/ns/{IID}" ;
-        rr:class schema:Book
+        rr:class vivo:Institute
     ];
 
  	rr:predicateObjectMap [
@@ -115,19 +121,19 @@
         rr:objectMap [ rml:reference "Name" ]
     ].
 
-<#Volume>
+<#Editor>
     rml:logicalSource [
-	    rml:source "/a/volumes";
+	    rml:source "/a/editors";
         rml:referenceFormulation ql:sql;
-        sa:store sa:relational
+        sa:store sa:jdbc
     ];
 
     rr:subjectMap [
-        rr:template "http://example.com/volumes/ns/{VID}" ;
-        rr:class schema:Book
+        rr:template "http://example.com/editors/ns/{EID}";
+        rr:class saws:Editor
     ];
 
  	rr:predicateObjectMap [
-        rr:predicate npg:number;
-        rr:objectMap [ rml:reference "Number" ]
+        rr:predicate rdfs:label;
+        rr:objectMap [ rml:reference "Name" ]
     ].
