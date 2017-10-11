@@ -3,6 +3,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import scala.collection.mutable.{HashMap, Set}
 
+
 /**
   * Created by mmami on 30.01.17.
   */
@@ -57,6 +58,8 @@ class Sparking(sparkURI: String) {
                     val mongoConf = Helpers.makeMongoURI(vals(0), vals(1), vals(2))
                     val mongoOptions: ReadConfig = ReadConfig(Map("uri" -> mongoConf))
                     df = spark.read.format("com.mongodb.spark.sql").options(mongoOptions.asOptions).load
+                case "jdbc" =>
+                    df = spark.read.format("jdbc").options(options).load()
                 case _ =>
             }
 

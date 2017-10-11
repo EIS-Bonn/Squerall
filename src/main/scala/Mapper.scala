@@ -35,7 +35,7 @@ class Mapper (mappingFile: String) {
             val subject = s._1 // core of the star
             val predicates_objects = s._2
 
-            println("\n- Going to find DataSources related to " + subject + "...")
+            println("\n- Going to find datasources related to " + subject + "...")
             val ds = findDataSource(predicates_objects) // One or more relevant data sources
             count = count + 1
 
@@ -93,6 +93,7 @@ class Mapper (mappingFile: String) {
             val predicate = v._1
 
             if(predicate == "rdf:type" || predicate == "a") {
+                println("...of class: " + v._2)
                 listOfPredicatesForQuery += "?mp rr:subjectMap ?sm . ?sm rr:class " + v._2 + " . "
 
             } else {

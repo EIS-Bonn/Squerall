@@ -2,6 +2,7 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.DataFrame
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -9,14 +10,14 @@ import scala.collection.mutable.ListBuffer
   */
 object Main extends App {
 
-    Logger.getLogger("ac.biu.nlp.nlp.engineml").setLevel(Level.OFF);
-    Logger.getLogger("org.BIU.utils.logging.ExperimentLogger").setLevel(Level.OFF);
-    Logger.getRootLogger().setLevel(Level.OFF);
+    Logger.getLogger("ac.biu.nlp.nlp.engineml").setLevel(Level.OFF)
+    Logger.getLogger("org.BIU.utils.logging.ExperimentLogger").setLevel(Level.OFF)
+    Logger.getRootLogger().setLevel(Level.OFF)
 
     if (args.length == 1)
-        println(s"Hello, ${args(0)}")
+        println(s"Hello, ${args(0)}!")
     else
-        println("I didn't get your name.")
+        println("Hello, anonymous!")
 
     // 1. Read SPARQL query
     println("\n/*******************************************************************/")
@@ -53,7 +54,7 @@ object Main extends App {
     var mappingsFile = Config.get("mappings.file")
     var mappers = new Mapper(mappingsFile)
     var results = mappers.findDataSources(stars)
-    var star_df : Map[String, DataFrame] = Map()
+    var star_df : Map[String, DataFrame] = Map.empty
 
     println("\n- The following are the join variables: " + joinFlags)
 
@@ -100,6 +101,11 @@ object Main extends App {
 
     val seenDF : ListBuffer[(String,String)] = ListBuffer()
 
+    //var listiter : util.Iterator[Map.Entry[String, (String, String)]] = null
+    //listiter = srcs.entries().iterator()
+
+    var pendingJoins = mutable.Queue[(String, (String, String))]()
+
     val it = srcs.entries.iterator
     while ({it.hasNext}) {
         val entry = it.next
@@ -108,73 +114,141 @@ object Main extends App {
         val op2 = entry.getValue._1
         val jVal = entry.getValue._2
 
-        println("-> (" + op1 + join + op2 + ") using " + jVal)
+        println("-> Joining (" + op1 + join + op2 + ") using " + jVal + "...")
 
         it.remove
 
         var jDF : DataFrame = null
+        val df1 = star_df(op1)
+        val df2 = star_df(op2)
 
+        // VARIATION 1
         if (firstTime) { // First time look for joins in the join hashmap, later look for them in the previously joined DFs so to join with them
+            println("ENTERED FIRST TIME")
             seenDF.add((op1,jVal))
             seenDF.add((op2,"ID"))
-            // TODO: var jdf = df(op1).join(op2).on(op1.jVal = op2.ID)
-            val df1 = star_df(op1)
-            val df2 = star_df(op2)
 
+            // Join level 1
             jDF = df1.join(df2,df1.col(Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)).equalTo(df2(Helpers.omitQuestionMark(op2) + "_ID")))
 
             jDF.show()
 
+            // Join level 2
             val pairsHavingAsValue = srcs.entries().filter(entry => entry.getValue()._1 == op1)
-            println("\n- Pairs having as value: " + op1 + " are " + pairsHavingAsValue)
-            for (i <- pairsHavingAsValue) {
-                println(i.getKey + " join " + op1)
+            if (pairsHavingAsValue.size > 0) {
+                println("\n...so detecting pairs having as value: " + op1 + " are " + pairsHavingAsValue)
+                for (i <- pairsHavingAsValue) {
+                    println("Found: " + i.getKey + " join " + op1)
+                    println("Joins added: " + i.getKey + " JOIN jDF ON " + Helpers.omitQuestionMark(i.getKey) + "_" +  Helpers.omitNamespace(i.getValue._2) + " = " + Helpers.omitQuestionMark(op1) + "_ID")
 
-                println(i.getKey + " JOIN jDF ON " + Helpers.omitQuestionMark(i.getKey) + "_" +  Helpers.omitNamespace(i.getValue._2) + " = " + Helpers.omitQuestionMark(op1) + "_ID")
+                    // For clarity, break down:
+                    val leftJ = star_df(i.getKey) // left is the jDF
+                    val leftJVar = Helpers.omitQuestionMark(i.getKey) + "_" + Helpers.omitNamespace(i.getValue._2) // left join variable
+                    val rightJVar = Helpers.omitQuestionMark(op1) + "_ID"
+                    jDF = leftJ.join(jDF, leftJ.col(leftJVar).equalTo(jDF.col(rightJVar)))
 
-                // For clarity, break down:
-                val leftJ = star_df(i.getKey) // left is the jDF
-                val leftJVar = Helpers.omitQuestionMark(i.getKey) + "_" + Helpers.omitNamespace(i.getValue._2) // left join variable
-                val rightJVar = Helpers.omitQuestionMark(op1) + "_ID"
-                jDF = leftJ.join(jDF, leftJ.col(leftJVar).equalTo(jDF.col(rightJVar)))
-
-                jDF.show()
-                seenDF.add((i.getKey, i.getValue._2))
+                    jDF.show()
+                    seenDF.add((i.getKey, i.getValue._2))
+                }
             }
-
+            // TODO: test the following
             val pairsHavingAsKey = srcs.entries().filter(entry => entry.getKey == op2)
-            println("\n- Pairs having as key: " + pairsHavingAsKey)
-            for (j <- pairsHavingAsKey) {
-                println(op2 + " join " + j.getValue._1)
+            if (pairsHavingAsKey.size > 0) {
+                println("\n- Pairs having as key: " + pairsHavingAsKey)
+                for (j <- pairsHavingAsKey) {
+                    println(op2 + " join " + j.getValue._1)
 
-                // For clarity, break down:
-                val rightJ = star_df(j.getKey) // left is the jDF
-                val leftJVar = Helpers.omitQuestionMark(op2) + "_" + Helpers.omitNamespace(j.getValue._2)
-                val rightJVar = Helpers.omitQuestionMark(j.getValue._1) + "_ID"
-                jDF = jDF.join(rightJ, jDF.col(leftJVar).equalTo(jDF.col(rightJVar)))
+                    // For clarity, break down:
+                    val rightJ = star_df(j.getKey) // left is the jDF
+                    val leftJVar = Helpers.omitQuestionMark(op2) + "_" + Helpers.omitNamespace(j.getValue._2)
+                    val rightJVar = Helpers.omitQuestionMark(j.getValue._1) + "_ID"
+                    jDF = jDF.join(rightJ, jDF.col(leftJVar).equalTo(jDF.col(rightJVar)))
 
-                seenDF.add((j.getValue._1,"ID"))
+                    seenDF.add((j.getValue._1,"ID"))
+                }
             }
-
 
             firstTime = false
 
         } else {
             val dfs_only = seenDF.map(_._1)
+            println("ENTERED NEXT TIME " + seenDF)
 
-            if(dfs_only.contains(op1) && !dfs_only.contains(op2)) {
+            if (dfs_only.contains(op1) && !dfs_only.contains(op2)) {
+
+                val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)
+                val rightJVar = Helpers.omitQuestionMark(op2) + "_ID"
+                jDF = jDF.join(df2, jDF.col(leftJVar).equalTo(df2.col(rightJVar)))
+
                 seenDF.add((op2,"ID"))
-            } else if(!dfs_only.contains(op1) && dfs_only.contains(op2)) {
+            } else if (!dfs_only.contains(op1) && dfs_only.contains(op2)) {
+
+                val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)
+                val rightJVar = Helpers.omitQuestionMark(op2) + "_ID"
+                jDF = df1.join(jDF, df1.col(leftJVar).equalTo(jDF.col(rightJVar)))
+
                 seenDF.add((op1,jVal))
+            } else if (!dfs_only.contains(op1) && !dfs_only.contains(op2)) {
+                pendingJoins.enqueue((op1, (op2, jVal)))
             }
         }
+
+        // VARIATION 2
+        /*
+        * val dfs_only = seenDF.map(_._1)
+        *
+        * if (dfs_only.contains(op1) && !dfs_only.contains(op2)) {
+
+                val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)
+                val rightJVar = Helpers.omitQuestionMark(op2) + "_ID"
+                jDF = jDF.join(df2, jDF.col(leftJVar).equalTo(df2.col(rightJVar)))
+
+                seenDF.add((op2,"ID"))
+            } else if (!dfs_only.contains(op1) && dfs_only.contains(op2)) {
+
+                val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)
+                val rightJVar = Helpers.omitQuestionMark(op2) + "_ID"
+                jDF = df1.join(jDF, df1.col(leftJVar).equalTo(jDF.col(rightJVar)))
+
+                seenDF.add((op1,jVal))
+            } else if (!dfs_only.contains(op1) && !dfs_only.contains(op2)) {
+                pendingJoins.enqueue((op1, (op2, jVal)))
+            }
+        *
+        * */
+    }
+
+    while (pendingJoins.nonEmpty) {
+        println("***********---------------*************")
+        val dfs_only = seenDF.map(_._1)
+
+        val e = pendingJoins.head
+
+        val op1 = e._1
+        val op2 = e._2._1
+        val jVal = e._2._2
+
+        var jDF : DataFrame = null
+        val df1 = star_df(op1)
+        val df2 = star_df(op2)
+
+        if (dfs_only.contains(op1) && !dfs_only.contains(op2)) {
+
+
+            seenDF.add((op2,"ID"))
+        } else if (!dfs_only.contains(op1) && dfs_only.contains(op2)) {
+
+
+            seenDF.add((op1,jVal))
+        } else if (!dfs_only.contains(op1) && !dfs_only.contains(op2)) {
+            pendingJoins.enqueue((op1, (op2, jVal)))
+        }
+
+        pendingJoins = pendingJoins.tail
     }
 
     println("--Join series: " + seenDF)
 
-    for(s <- seenDF) {
-
-    }
 
     /*for(v <- srcs) {
         println("- DF1 of (" + v._1 + ") joins DF2 of (" + v._2 + ") using [" + Helpers.omitNamespace(v._3) + " (from " + v._3 + ") = ID]")
