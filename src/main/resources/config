@@ -41,6 +41,15 @@
             "user": "root",
             "password": "root"
        }
+    },
+    {
+        "source": "/media/mmami/Extra/Datasets/chaires.csv",
+        "type": "csv",
+        "options": {
+             "header": "true",
+             "delimiter": ",",
+             "mode": "DROPMALFORMED"
+        }
     }
   ]
 }

@@ -9,13 +9,15 @@ PREFIX nlon: <http://lod.nl.go.kr/ontology/>
 PREFIX vivo: <http://vivoweb.org/ontology/core#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX saws: <http://purl.org/saws/ontology#>
+PREFIX swc: <http://data.semanticweb.org/ns/swc/ontology#>
+PREFIX dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#>
 
 SELECT ?fn ?ln ?i
 WHERE {
-    ?b bibo:isbn ?i .
-    ?b dc:title ?t .
-    ?b schema:author ?a . # join
-    ?b bibo:editor ?e . # join
+    ?k bibo:isbn ?i .
+    ?k dc:title ?t .
+    ?k schema:author ?a . # join
+    ?k bibo:editor ?e . # join
     ?a foaf:firstName ?fn .
     ?a foaf:lastName ?ln .
     #?a rdf:type nlon:Author .
@@ -24,5 +26,7 @@ WHERE {
     ?in a vivo:Institute . # type
     ?e rdfs:label ?n2 .
     ?e rdf:type saws:Editor . # type
-    ?r schema:reviews ?b .
+    ?c a swc:Chair .
+    ?c dul:introduces ?r . # join
+    ?r schema:reviews ?k . # join
 }

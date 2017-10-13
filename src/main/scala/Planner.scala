@@ -10,6 +10,7 @@ class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[S
     def generateJoinPlan(): (ArrayListMultimap[String, (String,String)], Set[String]) = {
 
         var keys = stars.keySet.toSeq
+        println("................keys: " + keys)
         var joins : ArrayListMultimap[String, (String,String)] = ArrayListMultimap.create[String,(String,String)]()
 
         var joinedToFlag : Set[String] = Set()
@@ -18,7 +19,7 @@ class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[S
 
         for(i <- keys.indices) {
             var currentSubject = keys(i)
-            //println("sub: " + currentSubject) //bbcxvf
+            println("sub: " + currentSubject) //bbcxvf
             var valueSet = stars(currentSubject)
             //println("vals: " + valueSet.toString())
             for(p_o <- valueSet) {
@@ -26,13 +27,12 @@ class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[S
                 //print("o=" + o)
                 if (keys.contains(o)) { // A previous star of o
                     var p = p_o._1
-                    //println(currentSubject + "-" + o)
+                    println(currentSubject + "---(" + o + ", " + p + ")")
                     joins.put(currentSubject, (o, p))
                     joinedToFlag.add(o)
                 }
             }
         }
-        //println("FLAAAG: " + joinedToFlag)
 
         return (joins, joinedToFlag)
     }

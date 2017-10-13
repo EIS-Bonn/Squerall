@@ -106,6 +106,7 @@ object Main extends App {
 
     var pendingJoins = mutable.Queue[(String, (String, String))]()
 
+    var jDF : DataFrame = null
     val it = srcs.entries.iterator
     while ({it.hasNext}) {
         val entry = it.next
@@ -113,15 +114,53 @@ object Main extends App {
         val op1 = entry.getKey
         val op2 = entry.getValue._1
         val jVal = entry.getValue._2
+        // TODO: add omitQuestionMark and omit it from the next
 
         println("-> Joining (" + op1 + join + op2 + ") using " + jVal + "...")
 
         it.remove
 
-        var jDF : DataFrame = null
         val df1 = star_df(op1)
         val df2 = star_df(op2)
 
+        // VARIATION 0
+        if (firstTime) { // First time look for joins in the join hashmap
+            println("ENTERED FIRST TIME")
+            seenDF.add((op1, jVal))
+            seenDF.add((op2, "ID"))
+            firstTime = false
+
+            // Join level 1
+            jDF = df1.join(df2, df1.col(Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)).equalTo(df2(Helpers.omitQuestionMark(op2) + "_ID")))
+
+            jDF.show()
+        } else {
+            val dfs_only = seenDF.map(_._1)
+            if (dfs_only.contains(op1) && !dfs_only.contains(op2)) {
+                println("ENTERED NEXT TIME >> " + dfs_only)
+
+                val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)
+                val rightJVar = Helpers.omitQuestionMark(op2) + "_ID"
+                jDF = jDF.join(df2, jDF.col(leftJVar).equalTo(df2.col(rightJVar)))
+
+                seenDF.add((op2,"ID"))
+                jDF.show()
+            } else if (!dfs_only.contains(op1) && dfs_only.contains(op2)) {
+                println("ENTERED NEXT TIME << " + dfs_only)
+
+                val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)
+                val rightJVar = Helpers.omitQuestionMark(op2) + "_ID"
+                jDF = df1.join(jDF, df1.col(leftJVar).equalTo(jDF.col(rightJVar)))
+
+                seenDF.add((op1,jVal))
+                jDF.show()
+            } else if (!dfs_only.contains(op1) && !dfs_only.contains(op2)) {
+                println("GOING TO THE QUEUE")
+                pendingJoins.enqueue((op1, (op2, jVal)))
+            }
+        }
+
+        /*
         // VARIATION 1
         if (firstTime) { // First time look for joins in the join hashmap, later look for them in the previously joined DFs so to join with them
             println("ENTERED FIRST TIME")
@@ -192,34 +231,11 @@ object Main extends App {
                 pendingJoins.enqueue((op1, (op2, jVal)))
             }
         }
-
-        // VARIATION 2
-        /*
-        * val dfs_only = seenDF.map(_._1)
-        *
-        * if (dfs_only.contains(op1) && !dfs_only.contains(op2)) {
-
-                val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)
-                val rightJVar = Helpers.omitQuestionMark(op2) + "_ID"
-                jDF = jDF.join(df2, jDF.col(leftJVar).equalTo(df2.col(rightJVar)))
-
-                seenDF.add((op2,"ID"))
-            } else if (!dfs_only.contains(op1) && dfs_only.contains(op2)) {
-
-                val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)
-                val rightJVar = Helpers.omitQuestionMark(op2) + "_ID"
-                jDF = df1.join(jDF, df1.col(leftJVar).equalTo(jDF.col(rightJVar)))
-
-                seenDF.add((op1,jVal))
-            } else if (!dfs_only.contains(op1) && !dfs_only.contains(op2)) {
-                pendingJoins.enqueue((op1, (op2, jVal)))
-            }
-        *
-        * */
+        */
     }
 
     while (pendingJoins.nonEmpty) {
-        println("***********---------------*************")
+        println("ENTERED QUEUED AREA: " + pendingJoins)
         val dfs_only = seenDF.map(_._1)
 
         val e = pendingJoins.head
@@ -228,16 +244,21 @@ object Main extends App {
         val op2 = e._2._1
         val jVal = e._2._2
 
-        var jDF : DataFrame = null
+        println("-> Joining (" + op1 + join + op2 + ") using " + jVal + "...")
+
         val df1 = star_df(op1)
         val df2 = star_df(op2)
 
         if (dfs_only.contains(op1) && !dfs_only.contains(op2)) {
-
+            val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)
+            val rightJVar = Helpers.omitQuestionMark(op2) + "_ID"
+            jDF = jDF.join(df2, jDF.col(leftJVar).equalTo(df2.col(rightJVar)))
 
             seenDF.add((op2,"ID"))
         } else if (!dfs_only.contains(op1) && dfs_only.contains(op2)) {
-
+            val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)
+            val rightJVar = Helpers.omitQuestionMark(op2) + "_ID"
+            jDF = df1.join(jDF, df1.col(leftJVar).equalTo(jDF.col(rightJVar)))
 
             seenDF.add((op1,jVal))
         } else if (!dfs_only.contains(op1) && !dfs_only.contains(op2)) {
@@ -247,8 +268,7 @@ object Main extends App {
         pendingJoins = pendingJoins.tail
     }
 
-    println("--Join series: " + seenDF)
-
+    //println("\n--Join series: " + seenDF)
 
     /*for(v <- srcs) {
         println("- DF1 of (" + v._1 + ") joins DF2 of (" + v._2 + ") using [" + Helpers.omitNamespace(v._3) + " (from " + v._3 + ") = ID]")
@@ -269,10 +289,10 @@ object Main extends App {
     }*/
 
     println("- Final results DF schema: ")
-    df_join.printSchema()
+    jDF.printSchema()
 
     println("results: ")
-    df_join.show()
+    jDF.show()
     //df_join.collect().foreach(t => println(t))
 
 }

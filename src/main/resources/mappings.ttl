@@ -11,7 +11,10 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix vivo: <http://vivoweb.org/ontology/core#> .
 @prefix npg: <http://ns.nature.com/terms/> .
-@prefix saws: <http://purl.org/saws/ontology#>
+@prefix saws: <http://purl.org/saws/ontology#> .
+@prefix swc: <http://data.semanticweb.org/ns/swc/ontology#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#>
+
 
 <#Author>
     rml:logicalSource [
@@ -136,4 +139,31 @@
  	rr:predicateObjectMap [
         rr:predicate rdfs:label;
         rr:objectMap [ rml:reference "Name" ]
+    ].
+
+<#Chaire>
+    rml:logicalSource [
+	    rml:source "/media/mmami/Extra/Datasets/chaires.csv";
+        rml:referenceFormulation ql:SQL;
+        sa:store sa:csv
+    ];
+
+    rr:subjectMap [
+        rr:template "http://example.com/ns/{ID}";
+        rr:class swc:Chair
+    ];
+
+    rr:predicateObjectMap [
+    	rr:predicate foaf:firstName;
+    	rr:objectMap [ rml:reference "Fname" ]
+ 	];
+
+ 	rr:predicateObjectMap [
+        rr:predicate foaf:lastName;
+        rr:objectMap [ rml:reference "Lname" ]
+    ];
+
+    rr:predicateObjectMap [
+         rr:predicate dul:introduces;
+         rr:objectMap [ rml:reference "Invites" ]
     ].
