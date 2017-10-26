@@ -1,3 +1,5 @@
+import java.util
+
 import com.mongodb.spark.config.ReadConfig
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -12,7 +14,7 @@ import org.apache.log4j.{Level, Logger}
 
 class Sparking(sparkURI: String) {
 
-    def query (sources : Set[(HashMap[String, String], String, String)], optionsMap: HashMap[String, Map[String, String]], toJoinWith: Boolean, star: String): DataFrame = {
+    def query (sources : Set[(HashMap[String, String], String, String)], optionsMap: HashMap[String, Map[String, String]], toJoinWith: Boolean, star: String, prefixes: Map[String, String], select: util.List[String]): DataFrame = {
 
         Logger.getLogger("org").setLevel(Level.OFF)
         Logger.getLogger("akka").setLevel(Level.OFF)
@@ -27,11 +29,12 @@ class Sparking(sparkURI: String) {
             datasource += 1 // in case of multiple relevant data sources to union
 
             var attr_pred = s._1
+            println("attr_pred: " + attr_pred)
             var sourcePath = s._2
             var sourceType = Helpers.getTypeFromURI(s._3)
             var options = optionsMap(sourcePath)
 
-            var columns = Helpers.getSelectColumnsFromSet(attr_pred, Helpers.omitQuestionMark(star))
+            var columns = Helpers.getSelectColumnsFromSet(attr_pred, Helpers.omitQuestionMark(star), prefixes, select)
 
             println("Relevant source (" + datasource + ") is: [" + sourcePath + "] of type: [" + sourceType + "]")
 

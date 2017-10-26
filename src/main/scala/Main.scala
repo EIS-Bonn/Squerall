@@ -30,19 +30,25 @@ object Main extends App {
 
     // 2. Extract star-shaped BGPs
     var qa = new QueryAnalyser(query)
+
     var stars = qa.getStars()
-    val prefixes = qa.getProlog()
+    val prefixes = qa.getProfixes()
+    val select = qa.getProject()
 
     println("\n- Predicates per star:")
-    for(v <- stars) {
+    for(v <- stars._1) {
         println("* " + v._1 + ") " + v._2)
     }
+
+    val star_pred_var = stars._2
+
+    println("star_pred_var " + star_pred_var)
 
     // 3. Generate plan of joins
     println("\n/*******************************************************************/")
     println("/*                  PLAN GENERATION & MAPPINGS                     */")
     println("/*******************************************************************/")
-    var pl = new Planner(stars)
+    var pl = new Planner(stars._1)
     var pln = pl.generateJoinPlan()
     var srcs = pln._1
     var joinFlags = pln._2
@@ -53,7 +59,7 @@ object Main extends App {
     println("---> MAPPING CONSULTATION")
     var mappingsFile = Config.get("mappings.file")
     var mappers = new Mapper(mappingsFile)
-    var results = mappers.findDataSources(stars)
+    var results = mappers.findDataSources(stars._1)
     var star_df : Map[String, DataFrame] = Map.empty
 
     println("\n- The following are the join variables: " + joinFlags)
@@ -72,13 +78,13 @@ object Main extends App {
         if(joinFlags.contains(star)) {
             //println("TRUE: " + star)
             //println("->datasources: " + datasources)
-            ds = spark.query(datasources, options, true, star)
+            ds = spark.query(datasources, options, true, star, prefixes, select)
             println("...with DataFrame schema: ")
             ds.printSchema()
         } else {
             //println("FALSE: " + star)
             //println("->datasources: " + datasources)
-            ds = spark.query(datasources, options, false, star)
+            ds = spark.query(datasources, options, false, star, prefixes, select)
             println("...with DataFrame schema: ")
             ds.printSchema()
         }
@@ -118,6 +124,11 @@ object Main extends App {
 
         println("-> Joining (" + op1 + join + op2 + ") using " + jVal + "...")
 
+        var njVal = Helpers.getNS_pred(jVal)
+        var ns = prefixes(njVal.split("__:__")(0))
+
+        println("njVal: " + ns)
+
         it.remove
 
         val df1 = star_df(op1)
@@ -131,7 +142,7 @@ object Main extends App {
             firstTime = false
 
             // Join level 1
-            jDF = df1.join(df2, df1.col(Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)).equalTo(df2(Helpers.omitQuestionMark(op2) + "_ID")))
+            jDF = df1.join(df2, df1.col(Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal) + "_" + ns).equalTo(df2(Helpers.omitQuestionMark(op2) + "_ID")))
 
             jDF.show()
         } else {
@@ -139,7 +150,7 @@ object Main extends App {
             if (dfs_only.contains(op1) && !dfs_only.contains(op2)) {
                 println("ENTERED NEXT TIME >> " + dfs_only)
 
-                val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)
+                val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal) + "_" + ns
                 val rightJVar = Helpers.omitQuestionMark(op2) + "_ID"
                 jDF = jDF.join(df2, jDF.col(leftJVar).equalTo(df2.col(rightJVar)))
 
@@ -148,7 +159,7 @@ object Main extends App {
             } else if (!dfs_only.contains(op1) && dfs_only.contains(op2)) {
                 println("ENTERED NEXT TIME << " + dfs_only)
 
-                val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)
+                val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal) + "_" + ns
                 val rightJVar = Helpers.omitQuestionMark(op2) + "_ID"
                 jDF = df1.join(jDF, df1.col(leftJVar).equalTo(jDF.col(rightJVar)))
 
@@ -244,6 +255,9 @@ object Main extends App {
         val op2 = e._2._1
         val jVal = e._2._2
 
+        var njVal = Helpers.getNS_pred(jVal)
+        var ns = prefixes(njVal.split("__:__")(0))
+
         println("-> Joining (" + op1 + join + op2 + ") using " + jVal + "...")
 
         val df1 = star_df(op1)
@@ -256,7 +270,7 @@ object Main extends App {
 
             seenDF.add((op2,"ID"))
         } else if (!dfs_only.contains(op1) && dfs_only.contains(op2)) {
-            val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)
+            val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal) + "_" + ns
             val rightJVar = Helpers.omitQuestionMark(op2) + "_ID"
             jDF = df1.join(jDF, df1.col(leftJVar).equalTo(jDF.col(rightJVar)))
 

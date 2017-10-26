@@ -1,3 +1,5 @@
+import java.util
+
 import org.apache.jena.query.{QueryExecutionFactory, QueryFactory}
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.util.FileManager
@@ -12,6 +14,19 @@ class Helpers() {
 }
 
 object Helpers {
+    def invertMap(prolog: util.Map[String, String]) = {
+        var star_df : Map[String, String] = Map.empty
+
+        var keys = prolog.keySet()
+        var it = keys.iterator()
+        while(it.hasNext) {
+            var key : String = it.next()
+            star_df += (prolog.get(key) -> key)
+        }
+
+        star_df
+    }
+
 
     def omitQuestionMark(str: String) = str.replace("?","")
 
@@ -19,6 +34,30 @@ object Helpers {
     def omitNamespace(URI: String): String = {
         val URIBits = URI.replace("<","").replace(">","").replace("#","/").split("/")
         return URIBits(URIBits.length-1)
+    }
+
+    def getNamespaceFromURI(URI: String): String = {
+        return "" // TODO: to create
+    }
+
+    def getNS_pred(predicateURI: String): String = {
+
+        val url = predicateURI.replace("<","").replace(">","")
+        val URIBits = url.split("/")
+
+        var pred = ""
+        var ns = ""
+        if(predicateURI.contains("#")) {
+            pred = URIBits(URIBits.length-1).split("#")(1) // like: http://www.w3.org/2000/01/[rdf-schema#label]
+        } else {
+            pred = URIBits(URIBits.length-1)
+        }
+
+        ns = url.replace(pred, "")
+
+        println("NAMSESPACE: " + ns)
+
+        ns + "__:__" + pred
     }
 
     def getTypeFromURI(typeURI: String) : String = {
@@ -29,14 +68,21 @@ object Helpers {
         rtrn
     }
 
-    def getSelectColumnsFromSet(pred_attr: mutable.HashMap[String,String], star: String): String = {
+    def getSelectColumnsFromSet(pred_attr: mutable.HashMap[String,String], star: String, prefixes: Map[String, String], select: util.List[String]): String = {
         var columns = ""
         var i = 0
         for(v <- pred_attr) {
             val attr = v._2
-            val pred = Helpers.omitNamespace(v._1) // CAREFUL: add namespace later, we can have a:fname, b:fname
-            val c = attr + " AS " + star + "_" + pred
-            //println(attr + " AS " + pred)
+            val ns_pred = Helpers.getNS_pred(v._1) // CAREFUL TODO: add namespace later, we can have a:fname, b:fname
+
+            val short_ns_pred_bits = ns_pred.split("__:__")
+            val shortNS = short_ns_pred_bits(0)
+            val pred = short_ns_pred_bits(1)
+
+            println(ns_pred + ":" + pred)
+
+            val c = attr + " AS " + star + "_" + pred + "_" + prefixes(shortNS)
+            println("SELECT CLAUSE: " + c)
             //columns = if(i == 0) columns + v else columns + "," + columns
             if(i == 0) columns += c else columns += "," + c
             i += 1
