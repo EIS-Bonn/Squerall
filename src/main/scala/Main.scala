@@ -40,9 +40,10 @@ object Main extends App {
         println("* " + v._1 + ") " + v._2)
     }
 
+    // Build ((s,p) - o) to check later if predicates appearing in WHERE appears actually in SELECT
     val star_pred_var = stars._2
 
-    println("star_pred_var " + star_pred_var)
+    println("Map('star_pred' -> var) " + star_pred_var)
 
     // 3. Generate plan of joins
     println("\n/*******************************************************************/")
@@ -54,6 +55,10 @@ object Main extends App {
     var joinFlags = pln._2
 
     println("JOINS detected: " + srcs)
+
+    var neededPred = pl.getNeededPredicates(star_pred_var, srcs.keySet(), select)
+
+    println("neededPred: " + neededPred)
 
     // 4. Check mapping file
     println("---> MAPPING CONSULTATION")

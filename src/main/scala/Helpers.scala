@@ -73,7 +73,7 @@ object Helpers {
         var i = 0
         for(v <- pred_attr) {
             val attr = v._2
-            val ns_pred = Helpers.getNS_pred(v._1) // CAREFUL TODO: add namespace later, we can have a:fname, b:fname
+            val ns_pred = Helpers.getNS_pred(v._1)
 
             val short_ns_pred_bits = ns_pred.split("__:__")
             val shortNS = short_ns_pred_bits(0)

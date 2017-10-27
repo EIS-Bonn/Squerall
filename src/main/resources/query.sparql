@@ -16,17 +16,18 @@ SELECT ?fn ?ln ?i
 WHERE {
     ?k bibo:isbn ?i .
     ?k dc:title ?t .
-    ?k schema:author ?a . # join
-    ?k bibo:editor ?e . # join
+    ?k schema:author ?a . # join __
+    ?k bibo:editor ?e . # join __
     ?a foaf:firstName ?fn .
     ?a foaf:lastName ?ln .
     #?a rdf:type nlon:Author .
-    ?a vivo:Institute ?in . # join
+    ?a vivo:Institute ?in . # join __
     ?in rdfs:label ?n1 .
-    ?in a vivo:Institute . # type
+    ?in a vivo:Institute . # type __
     ?e rdfs:label ?n2 .
     ?e rdf:type saws:Editor . # type
     ?c a swc:Chair .
-    ?c dul:introduces ?r . # join
-    ?r schema:reviews ?k . # join
+    ?c dul:introduces ?r .
+    ?r schema:reviews ?k .
 }
+ # ?r, ?fn, ?k, ?i, ?a, ?ln !!!! ?c
