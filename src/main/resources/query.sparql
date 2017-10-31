@@ -12,7 +12,7 @@ PREFIX saws: <http://purl.org/saws/ontology#>
 PREFIX swc: <http://data.semanticweb.org/ns/swc/ontology#>
 PREFIX dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#>
 
-SELECT ?fn ?ln ?i
+SELECT ?n2
 WHERE {
     ?k bibo:isbn ?i .
     ?k dc:title ?t .
@@ -27,7 +27,8 @@ WHERE {
     ?e rdfs:label ?n2 .
     ?e rdf:type saws:Editor . # type
     ?c a swc:Chair .
-    ?c dul:introduces ?r .
+    ?c dul:introduces ?r . # join
+    ?c foaf:firstName ?cfn .
     ?r schema:reviews ?k .
 }
- # ?r, ?fn, ?k, ?i, ?a, ?ln !!!! ?c
+ # ?r, ?k, ?in, ?a, ?e !!!! ?c

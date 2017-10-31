@@ -17,16 +17,15 @@ object Helpers {
     def invertMap(prolog: util.Map[String, String]) = {
         var star_df : Map[String, String] = Map.empty
 
-        var keys = prolog.keySet()
-        var it = keys.iterator()
+        val keys = prolog.keySet()
+        val it = keys.iterator()
         while(it.hasNext) {
-            var key : String = it.next()
+            val key : String = it.next()
             star_df += (prolog.get(key) -> key)
         }
 
         star_df
     }
-
 
     def omitQuestionMark(str: String) = str.replace("?","")
 
@@ -40,24 +39,21 @@ object Helpers {
         return "" // TODO: to create
     }
 
-    def getNS_pred(predicateURI: String): String = {
+    def getNS_pred(predicateURI: String): (String, String) = {
 
         val url = predicateURI.replace("<","").replace(">","")
         val URIBits = url.split("/")
 
         var pred = ""
-        var ns = ""
         if(predicateURI.contains("#")) {
             pred = URIBits(URIBits.length-1).split("#")(1) // like: http://www.w3.org/2000/01/[rdf-schema#label]
         } else {
             pred = URIBits(URIBits.length-1)
         }
 
-        ns = url.replace(pred, "")
+        val ns = url.replace(pred, "")
 
-        println("NAMSESPACE: " + ns)
-
-        ns + "__:__" + pred
+        (ns,pred)
     }
 
     def getTypeFromURI(typeURI: String) : String = {
@@ -68,24 +64,31 @@ object Helpers {
         rtrn
     }
 
-    def getSelectColumnsFromSet(pred_attr: mutable.HashMap[String,String], star: String, prefixes: Map[String, String], select: util.List[String]): String = {
+    def getSelectColumnsFromSet(pred_attr: mutable.HashMap[String,String], star: String, prefixes: Map[String, String], select: util.List[String], star_predicate_var: mutable.HashMap[(String, String), String], neededPredicates: mutable.Set[String]): String = {
         var columns = ""
         var i = 0
-        for(v <- pred_attr) {
+        for (v <- pred_attr) {
+            println("pred_attr: " + pred_attr)
             val attr = v._2
-            val ns_pred = Helpers.getNS_pred(v._1)
+            val ns_predicate = Helpers.getNS_pred(v._1)
 
-            val short_ns_pred_bits = ns_pred.split("__:__")
-            val shortNS = short_ns_pred_bits(0)
-            val pred = short_ns_pred_bits(1)
+            val ns_predicate_bits = ns_predicate
+            val NS = ns_predicate_bits._1
+            val predicate = ns_predicate_bits._2
 
-            println(ns_pred + ":" + pred)
+            val objVar = star_predicate_var(("?" + star, "<" + NS + predicate + ">"))
 
-            val c = attr + " AS " + star + "_" + pred + "_" + prefixes(shortNS)
-            println("SELECT CLAUSE: " + c)
-            //columns = if(i == 0) columns + v else columns + "," + columns
-            if(i == 0) columns += c else columns += "," + c
-            i += 1
+            println("-> Variable: " + objVar + " exists in WHERE, is it in SELECT? " + select.contains(objVar.replace("?","")))
+
+            //if (select.contains(objVar.replace("?",""))) {
+            if (neededPredicates.contains(v._1)) {
+                val c = attr + " AS " + star + "_" + predicate + "_" + prefixes(NS)
+                //println("SELECT CLAUSE: " + c)
+                //columns = if(i == 0) columns + v else columns + "," + columns
+                if (i == 0) columns += c else columns += "," + c
+                i += 1
+            }
+
         }
 
         columns
@@ -122,7 +125,6 @@ object Helpers {
 
             var templateBits = template.split("/")
             id = templateBits(templateBits.length-1).replace("{","").replace("}","")
-            //println("IIIIIIIIIIIIIIIIIIIIIDDDDDDDDDDDDDDDD: " + id)
         }
 
         id

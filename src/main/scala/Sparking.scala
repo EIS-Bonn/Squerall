@@ -3,6 +3,7 @@ import java.util
 import com.mongodb.spark.config.ReadConfig
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
+import scala.collection.mutable
 import scala.collection.mutable.{HashMap, Set}
 
 
@@ -14,7 +15,7 @@ import org.apache.log4j.{Level, Logger}
 
 class Sparking(sparkURI: String) {
 
-    def query (sources : Set[(HashMap[String, String], String, String)], optionsMap: HashMap[String, Map[String, String]], toJoinWith: Boolean, star: String, prefixes: Map[String, String], select: util.List[String]): DataFrame = {
+    def query (sources : Set[(HashMap[String, String], String, String)], optionsMap: HashMap[String, Map[String, String]], toJoinWith: Boolean, star: String, prefixes: Map[String, String], select: util.List[String], star_pred_var: mutable.HashMap[(String, String), String], neededPredicates: Set[String]): DataFrame = {
 
         Logger.getLogger("org").setLevel(Level.OFF)
         Logger.getLogger("akka").setLevel(Level.OFF)
@@ -22,29 +23,35 @@ class Sparking(sparkURI: String) {
         val spark = SparkSession.builder.master(sparkURI).appName("Sparkall").getOrCreate;
 
         var finalDF : DataFrame = null
-        var datasource = 0
+        var datasource_count = 0
 
         for (s <- sources) {
             println("\nNEXT SOURCE...")
-            datasource += 1 // in case of multiple relevant data sources to union
+            datasource_count += 1 // in case of multiple relevant data sources to union
 
             var attr_pred = s._1
-            println("attr_pred: " + attr_pred)
-            var sourcePath = s._2
-            var sourceType = Helpers.getTypeFromURI(s._3)
-            var options = optionsMap(sourcePath)
+            //println("attr_pred: " + attr_pred)
+            val sourcePath = s._2
+            val sourceType = Helpers.getTypeFromURI(s._3)
+            val options = optionsMap(sourcePath)
 
-            var columns = Helpers.getSelectColumnsFromSet(attr_pred, Helpers.omitQuestionMark(star), prefixes, select)
+            // TODO: move to another class
+            var columns = Helpers.getSelectColumnsFromSet(attr_pred, Helpers.omitQuestionMark(star), prefixes, select, star_pred_var, neededPredicates)
 
-            println("Relevant source (" + datasource + ") is: [" + sourcePath + "] of type: [" + sourceType + "]")
+            println("COOOOO: " + columns)
+            println("Relevant source (" + datasource_count + ") is: [" + sourcePath + "] of type: [" + sourceType + "]")
 
             println("...from which columns (" + columns + ") are going to be projected")
             println("...with the following configuration options: " + options)
 
-            if(toJoinWith) { // That kind of table who is the 2nd operand of a join operation
-                var id = Helpers.getID(sourcePath)
+            if (toJoinWith) { // That kind of table that is the 1st or 2nd operand of a join operation
+                val id = Helpers.getID(sourcePath)
                 println("... is to be joined with using the ID: " + Helpers.omitQuestionMark(star) + "_" + id + " (obtained from subjectMap)")
-                columns = columns + "," + id + " AS " + Helpers.omitQuestionMark(star) + "_ID"
+                if(columns == "") {
+                    println("heeey id = " + id + " star " + star)
+                    columns = id + " AS " + Helpers.omitQuestionMark(star) + "_ID"
+                } else
+                    columns = columns + "," + id + " AS " + Helpers.omitQuestionMark(star) + "_ID"
             }
 
             var df : DataFrame = null
@@ -66,10 +73,13 @@ class Sparking(sparkURI: String) {
                 case _ =>
             }
 
+
+            println("columns: " + columns)
+
             df.createOrReplaceTempView("table")
             var newDF = spark.sql("SELECT " + columns + " FROM table")
 
-            if(datasource == 1) {
+            if(datasource_count == 1) {
                 finalDF = newDF
 
                 //newDF.show()

@@ -36,14 +36,14 @@ object Main extends App {
     val select = qa.getProject()
 
     println("\n- Predicates per star:")
-    for(v <- stars._1) {
+    for (v <- stars._1) {
         println("* " + v._1 + ") " + v._2)
     }
 
-    // Build ((s,p) - o) to check later if predicates appearing in WHERE appears actually in SELECT
-    val star_pred_var = stars._2
+    // Build ((s,p) -> o) map to check later if predicates appearing in WHERE appears actually in SELECT
+    val star_predicate_var = stars._2
 
-    println("Map('star_pred' -> var) " + star_pred_var)
+    println("Map('star_pred' -> var) " + star_predicate_var)
 
     // 3. Generate plan of joins
     println("\n/*******************************************************************/")
@@ -51,14 +51,20 @@ object Main extends App {
     println("/*******************************************************************/")
     var pl = new Planner(stars._1)
     var pln = pl.generateJoinPlan()
-    var srcs = pln._1
-    var joinFlags = pln._2
+    var sources = pln._1
+    var joinVars = sources.keySet()
+    var joinedToFlag = pln._2
+    var joinedFromFlag = pln._3
 
-    println("JOINS detected: " + srcs)
+    //println("JOINS detected: " + sources)
 
-    var neededPred = pl.getNeededPredicates(star_pred_var, srcs.keySet(), select)
+    var neededPredicates = pl.getNeededPredicates(star_predicate_var, sources, select)
 
-    println("neededPred: " + neededPred)
+    val neededPredicatesAll = neededPredicates._1
+    val neededPredicatesSelect = neededPredicates._2
+
+    //println("joinedToFlag: " + joinedToFlag)
+    println("--> Needed predicates all: " + neededPredicatesAll)
 
     // 4. Check mapping file
     println("---> MAPPING CONSULTATION")
@@ -67,30 +73,28 @@ object Main extends App {
     var results = mappers.findDataSources(stars._1)
     var star_df : Map[String, DataFrame] = Map.empty
 
-    println("\n- The following are the join variables: " + joinFlags)
-
     println("\n---> GOING TO SPARK NOW TO JOIN STUFF")
-    for(s <- results) {
+    for (s <- results) {
         val star = s._1
         val datasources = s._2
         val options = s._3
 
-        //println("Start: " + star)
+        println("* Getting DF relevant to the start: " + star)
 
         var spark = new Sparking(Config.get("spark.url"))
 
         var ds : DataFrame = null
-        if(joinFlags.contains(star)) {
-            //println("TRUE: " + star)
-            //println("->datasources: " + datasources)
-            ds = spark.query(datasources, options, true, star, prefixes, select)
+        if (joinedToFlag.contains(star) || joinedFromFlag.contains(star)) {
+            println("TRUE: " + star)
+            //println("-> datasources: " + datasources)
+            ds = spark.query(datasources, options, true, star, prefixes, select, star_predicate_var, neededPredicatesAll)
             println("...with DataFrame schema: ")
             ds.printSchema()
-        } else {
-            //println("FALSE: " + star)
-            //println("->datasources: " + datasources)
-            ds = spark.query(datasources, options, false, star, prefixes, select)
-            println("...with DataFrame schema: ")
+        } else if (!joinedToFlag.contains(star) && !joinedFromFlag.contains(star)) {
+            println("FALSE: " + star)
+            println("-> datasources: " + datasources)
+            ds = spark.query(datasources, options, false, star, prefixes, select, star_predicate_var, neededPredicatesAll)
+            println("...with DataFrame schema: " + ds)
             ds.printSchema()
         }
 
@@ -105,20 +109,17 @@ object Main extends App {
     println("- Here are the (Star, DataFrame) pairs: " + star_df)
     var df_join : DataFrame = null
 
-    println("- Here are join pairs: " + srcs + "\n")
+    println("- Here are join pairs: " + sources + "\n")
 
     var firstTime = true
     val join = " x "
 
     val seenDF : ListBuffer[(String,String)] = ListBuffer()
 
-    //var listiter : util.Iterator[Map.Entry[String, (String, String)]] = null
-    //listiter = srcs.entries().iterator()
-
     var pendingJoins = mutable.Queue[(String, (String, String))]()
 
     var jDF : DataFrame = null
-    val it = srcs.entries.iterator
+    val it = sources.entries.iterator
     while ({it.hasNext}) {
         val entry = it.next
 
@@ -130,7 +131,7 @@ object Main extends App {
         println("-> Joining (" + op1 + join + op2 + ") using " + jVal + "...")
 
         var njVal = Helpers.getNS_pred(jVal)
-        var ns = prefixes(njVal.split("__:__")(0))
+        var ns = prefixes(njVal._1)
 
         println("njVal: " + ns)
 
@@ -175,79 +176,6 @@ object Main extends App {
                 pendingJoins.enqueue((op1, (op2, jVal)))
             }
         }
-
-        /*
-        // VARIATION 1
-        if (firstTime) { // First time look for joins in the join hashmap, later look for them in the previously joined DFs so to join with them
-            println("ENTERED FIRST TIME")
-            seenDF.add((op1,jVal))
-            seenDF.add((op2,"ID"))
-
-            // Join level 1
-            jDF = df1.join(df2,df1.col(Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)).equalTo(df2(Helpers.omitQuestionMark(op2) + "_ID")))
-
-            jDF.show()
-
-            // Join level 2
-            val pairsHavingAsValue = srcs.entries().filter(entry => entry.getValue()._1 == op1)
-            if (pairsHavingAsValue.size > 0) {
-                println("\n...so detecting pairs having as value: " + op1 + " are " + pairsHavingAsValue)
-                for (i <- pairsHavingAsValue) {
-                    println("Found: " + i.getKey + " join " + op1)
-                    println("Joins added: " + i.getKey + " JOIN jDF ON " + Helpers.omitQuestionMark(i.getKey) + "_" +  Helpers.omitNamespace(i.getValue._2) + " = " + Helpers.omitQuestionMark(op1) + "_ID")
-
-                    // For clarity, break down:
-                    val leftJ = star_df(i.getKey) // left is the jDF
-                    val leftJVar = Helpers.omitQuestionMark(i.getKey) + "_" + Helpers.omitNamespace(i.getValue._2) // left join variable
-                    val rightJVar = Helpers.omitQuestionMark(op1) + "_ID"
-                    jDF = leftJ.join(jDF, leftJ.col(leftJVar).equalTo(jDF.col(rightJVar)))
-
-                    jDF.show()
-                    seenDF.add((i.getKey, i.getValue._2))
-                }
-            }
-            // TODO: test the following
-            val pairsHavingAsKey = srcs.entries().filter(entry => entry.getKey == op2)
-            if (pairsHavingAsKey.size > 0) {
-                println("\n- Pairs having as key: " + pairsHavingAsKey)
-                for (j <- pairsHavingAsKey) {
-                    println(op2 + " join " + j.getValue._1)
-
-                    // For clarity, break down:
-                    val rightJ = star_df(j.getKey) // left is the jDF
-                    val leftJVar = Helpers.omitQuestionMark(op2) + "_" + Helpers.omitNamespace(j.getValue._2)
-                    val rightJVar = Helpers.omitQuestionMark(j.getValue._1) + "_ID"
-                    jDF = jDF.join(rightJ, jDF.col(leftJVar).equalTo(jDF.col(rightJVar)))
-
-                    seenDF.add((j.getValue._1,"ID"))
-                }
-            }
-
-            firstTime = false
-
-        } else {
-            val dfs_only = seenDF.map(_._1)
-            println("ENTERED NEXT TIME " + seenDF)
-
-            if (dfs_only.contains(op1) && !dfs_only.contains(op2)) {
-
-                val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)
-                val rightJVar = Helpers.omitQuestionMark(op2) + "_ID"
-                jDF = jDF.join(df2, jDF.col(leftJVar).equalTo(df2.col(rightJVar)))
-
-                seenDF.add((op2,"ID"))
-            } else if (!dfs_only.contains(op1) && dfs_only.contains(op2)) {
-
-                val leftJVar = Helpers.omitQuestionMark(op1) + "_" + Helpers.omitNamespace(jVal)
-                val rightJVar = Helpers.omitQuestionMark(op2) + "_ID"
-                jDF = df1.join(jDF, df1.col(leftJVar).equalTo(jDF.col(rightJVar)))
-
-                seenDF.add((op1,jVal))
-            } else if (!dfs_only.contains(op1) && !dfs_only.contains(op2)) {
-                pendingJoins.enqueue((op1, (op2, jVal)))
-            }
-        }
-        */
     }
 
     while (pendingJoins.nonEmpty) {
@@ -261,7 +189,7 @@ object Main extends App {
         val jVal = e._2._2
 
         var njVal = Helpers.getNS_pred(jVal)
-        var ns = prefixes(njVal.split("__:__")(0))
+        var ns = prefixes(njVal._1)
 
         println("-> Joining (" + op1 + join + op2 + ") using " + jVal + "...")
 
@@ -289,23 +217,22 @@ object Main extends App {
 
     //println("\n--Join series: " + seenDF)
 
-    /*for(v <- srcs) {
-        println("- DF1 of (" + v._1 + ") joins DF2 of (" + v._2 + ") using [" + Helpers.omitNamespace(v._3) + " (from " + v._3 + ") = ID]")
-        val df1 = star_df(v._1)
-        val df2 = star_df(v._2)
+    println("--> Needed predicates select: " + neededPredicatesSelect)
 
-        println("DF1: ")
-        //df1.collect().foreach(t => println(t.getAs("author")))
-        //df1.printSchema()
-        df1.show()
+    var columnNames = Seq[String]()
 
-        println("DF2: ")
-        //df2.collect().foreach(z => println(z.getAs("ID")))
-        //df2.printSchema()
-        df2.show()
-        df_join = df1.join(df2, df1.col(Helpers.omitNamespace(v._3)).equalTo(df2("ID"))) // people.col("deptId").equalTo(department("id"))
+    for (i <- neededPredicatesSelect) {
 
-    }*/
+        val star = i._1
+        val ns_predicate = i._2
+        val bits = Helpers.getNS_pred(ns_predicate)
+
+        val selected_predicate = Helpers.omitQuestionMark(star) + "_" + bits._2 + "_" + prefixes(bits._1)
+        columnNames = columnNames :+ selected_predicate
+    }
+
+    println("columnNames: " + columnNames)
+    jDF = jDF.select(columnNames.head, columnNames.tail: _*)
 
     println("- Final results DF schema: ")
     jDF.printSchema()

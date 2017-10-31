@@ -149,7 +149,7 @@
     ];
 
     rr:subjectMap [
-        rr:template "http://example.com/ns/{ID}";
+        rr:template "http://example.com/ns/{CID}";
         rr:class swc:Chair
     ];
 
