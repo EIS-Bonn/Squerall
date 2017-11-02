@@ -7,27 +7,29 @@ import org.apache.jena.query.{QueryExecutionFactory, QueryFactory}
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.util.FileManager
 
+import scala.collection.mutable
+
 //import org.json4s._
 //import org.json4s.native.JsonMethods._
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-import scala.collection.mutable.{HashMap, MultiMap, Set}
+import scala.collection.mutable.{HashMap, Set}
 
 class Mapper (mappingFile: String) {
 
     //val logger = Logger("name")
 
-    def findDataSources(stars: HashMap[String, Set[(String, String)]] with MultiMap[String, (String, String)]) : Set[(String,Set[(HashMap[String, String], String, String)],HashMap[String, Map[String, String]])] = {
+    def findDataSources(stars: mutable.HashMap[String, mutable.Set[(String, String)]] with mutable.MultiMap[String, (String, String)]) : mutable.Set[(String,Set[(mutable.HashMap[String, String], String, String)],HashMap[String, Map[String, String]])] = {
 
         //logger.info(queryString)
         var starSources :
-            Set[(
+            mutable.Set[(
                 String, // Star core
-                Set[(HashMap[String, String], String, String)], // A set of data sources relevant to the Star (pred_attr, src, srcType)
-                HashMap[String, Map[String, String]] // A set of options of each relevant data source
-            )] = Set()
+                mutable.Set[(mutable.HashMap[String, String], String, String)], // A set of data sources relevant to the Star (pred_attr, src, srcType)
+                mutable.HashMap[String, Map[String, String]] // A set of options of each relevant data source
+            )] = mutable.Set()
 
         var count = 0
         
@@ -40,7 +42,7 @@ class Mapper (mappingFile: String) {
             count = count + 1
 
             // Options of relevant sources of one star
-            var optionsPerStar : HashMap[String, Map[String,String]] = new HashMap()
+            var optionsPerStar : mutable.HashMap[String, Map[String,String]] = new HashMap()
 
             // Iterate through the relevant data sources to get options
             // One star can have many relevant sources (containing its predicates)
@@ -55,7 +57,7 @@ class Mapper (mappingFile: String) {
 
                 case class ConfigObject(source: String, options: Map[String,String])
 
-                implicit val userReads = (
+                implicit val userReads: Reads[ConfigObject] = (
                     (__ \ 'source).read[String] and
                     (__ \ 'options).read[Map[String,String]]
                 )(ConfigObject)
@@ -181,12 +183,7 @@ class Mapper (mappingFile: String) {
 
         qe.close() // Important: free up resources used running the query
 
-
-        // Output query results
-        //ResultSetFormatter.out(System.out, results, query);
-
-        /*return x*/
-        return returnedSources
+        returnedSources
     }
 
 }

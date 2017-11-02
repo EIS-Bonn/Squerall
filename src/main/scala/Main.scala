@@ -31,9 +31,10 @@ object Main extends App {
     // 2. Extract star-shaped BGPs
     var qa = new QueryAnalyser(query)
 
-    var stars = qa.getStars()
-    val prefixes = qa.getProfixes()
-    val select = qa.getProject()
+    var stars = qa.getStars
+    val prefixes = qa.getPrefixes
+    val select = qa.getProject
+    val filters = qa.getFilters
 
     println("\n- Predicates per star:")
     for (v <- stars._1) {
@@ -41,16 +42,14 @@ object Main extends App {
     }
 
     // Build ((s,p) -> o) map to check later if predicates appearing in WHERE appears actually in SELECT
-    val star_predicate_var = stars._2
-
-    println("Map('star_pred' -> var) " + star_predicate_var)
+    val star_predicate_var = stars._2 // assuming no (star,predicate) with two vars?
 
     // 3. Generate plan of joins
     println("\n/*******************************************************************/")
     println("/*                  PLAN GENERATION & MAPPINGS                     */")
     println("/*******************************************************************/")
     var pl = new Planner(stars._1)
-    var pln = pl.generateJoinPlan()
+    var pln = pl.generateJoinPlan
     var sources = pln._1
     var joinVars = sources.keySet()
     var joinedToFlag = pln._2
@@ -85,15 +84,15 @@ object Main extends App {
 
         var ds : DataFrame = null
         if (joinedToFlag.contains(star) || joinedFromFlag.contains(star)) {
-            println("TRUE: " + star)
+            //println("TRUE: " + star)
             //println("-> datasources: " + datasources)
-            ds = spark.query(datasources, options, true, star, prefixes, select, star_predicate_var, neededPredicatesAll)
-            println("...with DataFrame schema: ")
+            ds = spark.query(datasources, options, true, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters)
+            println("...with DataFrame schema: " + ds)
             ds.printSchema()
         } else if (!joinedToFlag.contains(star) && !joinedFromFlag.contains(star)) {
-            println("FALSE: " + star)
-            println("-> datasources: " + datasources)
-            ds = spark.query(datasources, options, false, star, prefixes, select, star_predicate_var, neededPredicatesAll)
+            //println("FALSE: " + star)
+            //println("-> datasources: " + datasources)
+            ds = spark.query(datasources, options, false, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters)
             println("...with DataFrame schema: " + ds)
             ds.printSchema()
         }
@@ -130,7 +129,7 @@ object Main extends App {
 
         println("-> Joining (" + op1 + join + op2 + ") using " + jVal + "...")
 
-        var njVal = Helpers.getNS_pred(jVal)
+        var njVal = Helpers.get_NS_predicate(jVal)
         var ns = prefixes(njVal._1)
 
         println("njVal: " + ns)
@@ -188,7 +187,7 @@ object Main extends App {
         val op2 = e._2._1
         val jVal = e._2._2
 
-        var njVal = Helpers.getNS_pred(jVal)
+        var njVal = Helpers.get_NS_predicate(jVal)
         var ns = prefixes(njVal._1)
 
         println("-> Joining (" + op1 + join + op2 + ") using " + jVal + "...")
@@ -225,7 +224,7 @@ object Main extends App {
 
         val star = i._1
         val ns_predicate = i._2
-        val bits = Helpers.getNS_pred(ns_predicate)
+        val bits = Helpers.get_NS_predicate(ns_predicate)
 
         val selected_predicate = Helpers.omitQuestionMark(star) + "_" + bits._2 + "_" + prefixes(bits._1)
         columnNames = columnNames :+ selected_predicate

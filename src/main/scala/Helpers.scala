@@ -14,7 +14,7 @@ class Helpers() {
 }
 
 object Helpers {
-    def invertMap(prolog: util.Map[String, String]) = {
+    def invertMap(prolog: util.Map[String, String]): Map[String, String] = {
         var star_df : Map[String, String] = Map.empty
 
         val keys = prolog.keySet()
@@ -27,19 +27,19 @@ object Helpers {
         star_df
     }
 
-    def omitQuestionMark(str: String) = str.replace("?","")
+    def omitQuestionMark(str: String): String = str.replace("?","")
 
 
     def omitNamespace(URI: String): String = {
         val URIBits = URI.replace("<","").replace(">","").replace("#","/").split("/")
-        return URIBits(URIBits.length-1)
+        URIBits(URIBits.length-1)
     }
 
     def getNamespaceFromURI(URI: String): String = {
-        return "" // TODO: to create
+        "" // TODO: create
     }
 
-    def getNS_pred(predicateURI: String): (String, String) = {
+    def get_NS_predicate(predicateURI: String): (String, String) = {
 
         val url = predicateURI.replace("<","").replace(">","")
         val URIBits = url.split("/")
@@ -70,7 +70,7 @@ object Helpers {
         for (v <- pred_attr) {
             println("pred_attr: " + pred_attr)
             val attr = v._2
-            val ns_predicate = Helpers.getNS_pred(v._1)
+            val ns_predicate = Helpers.get_NS_predicate(v._1)
 
             val ns_predicate_bits = ns_predicate
             val NS = ns_predicate_bits._1

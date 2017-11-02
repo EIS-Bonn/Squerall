@@ -41,13 +41,12 @@ class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[S
 
             if(select_vars.contains(o.replace("?","")))
                 predicatesForSelect.add(s_p)
-
         }
 
         (predicates,predicatesForSelect)
     }
 
-    def generateJoinPlan(): (ArrayListMultimap[String, (String,String)], Set[String], Set[String]) = {
+    def generateJoinPlan: (ArrayListMultimap[String, (String,String)], Set[String], Set[String]) = {
 
         var keys = stars.keySet.toSeq
         println("Stars: " + keys.toString())
@@ -74,7 +73,7 @@ class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[S
             }
         }
 
-        return (joins, joinedToFlag, joinedFromFlag)
+        (joins, joinedToFlag, joinedFromFlag)
     }
 }
  /*
