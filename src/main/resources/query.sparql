@@ -12,7 +12,7 @@ PREFIX saws: <http://purl.org/saws/ontology#>
 PREFIX swc: <http://data.semanticweb.org/ns/swc/ontology#>
 PREFIX dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#>
 
-SELECT ?n2 ?ln ?fn
+SELECT ?n2 ?ln ?fn ?k
 WHERE {
     ?k bibo:isbn ?i .
     ?k dc:title ?t .
@@ -30,6 +30,7 @@ WHERE {
     ?c dul:introduces ?r . # join
     ?c foaf:firstName ?cfn .
     ?r schema:reviews ?k .
-    FILTER ( ?ln != "Archeer")
+    FILTER ( ?ln != "Archeer") .
+    TRANSFORM (?k?a.l.toInt.scl(+60) && ?a?in.r.toInt)
 }
  # ?r, ?k, ?in, ?a, ?e !!!! ?c

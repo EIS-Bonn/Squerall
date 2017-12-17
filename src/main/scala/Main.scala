@@ -26,7 +26,28 @@ object Main extends App {
     var queryFile = Config.get("query")
 
     val queryString = scala.io.Source.fromFile(queryFile)
-    val query = try queryString.mkString finally queryString.close()
+    var query = try queryString.mkString finally queryString.close()
+
+    // Transformations
+    val trans = query.substring(query.indexOf("TRANSFORM") + 9, query.lastIndexOf(")")) // E.g. ?k?a.toInt && ?a?l.r.toInt.scl(_+61)
+    val transformations = trans.trim().substring(1).split("&&") // [?k?a.l.+60, ?a?l.r.toInt]
+    var transmap_left : Map[String,(String, Array[String])] = Map.empty
+    var transmap_right : Map[String,Array[String]] = Map.empty
+    for (t <- transformations) { // E.g. ?a?l.r.toInt.scl[61]
+        val tbits = t.trim.split("\\.", 2) // E.g.[?a?l, r.toInt.scl(_+61)]
+        val vars = tbits(0).substring(1).split("\\?") // [a, l]
+        val operation = tbits(1) // E.g. r.toInt.scl(_+60)
+        val temp = operation.split("\\.", 2) // E.g. [r, toInt.scl(_+61)]
+        val lORr = temp(0) // E.g. r
+        val functions = temp(1).split(".") // E.g. [toInt, scl(_+61)]
+        if (lORr == "l")
+            transmap_left += (vars(0) -> (vars(1), functions))
+        else
+            transmap_right += (vars(1) -> functions)
+    }
+    var transMaps = (transmap_left, transmap_right)
+
+    query = query.replace("TRANSFORM" + trans + ")","")
 
     // 2. Extract star-shaped BGPs
     var qa = new QueryAnalyser(query)
@@ -50,14 +71,14 @@ object Main extends App {
     println("/*******************************************************************/")
     var pl = new Planner(stars._1)
     var pln = pl.generateJoinPlan
-    var sources = pln._1
-    var joinVars = sources.keySet()
+    var joins = pln._1
     var joinedToFlag = pln._2
     var joinedFromFlag = pln._3
+    var joinPairs = pln._4
 
     //println("JOINS detected: " + sources)
 
-    var neededPredicates = pl.getNeededPredicates(star_predicate_var, sources, select)
+    var neededPredicates = pl.getNeededPredicates(star_predicate_var, joins, select)
 
     val neededPredicatesAll = neededPredicates._1
     val neededPredicatesSelect = neededPredicates._2
@@ -70,6 +91,7 @@ object Main extends App {
     var mappingsFile = Config.get("mappings.file")
     var mappers = new Mapper(mappingsFile)
     var results = mappers.findDataSources(stars._1)
+
     var star_df : Map[String, DataFrame] = Map.empty
 
     println("\n---> GOING TO SPARK NOW TO JOIN STUFF")
@@ -80,19 +102,19 @@ object Main extends App {
 
         println("* Getting DF relevant to the start: " + star)
 
-        var spark = new Sparking(Config.get("spark.url"))
+        val spark = new Sparking(Config.get("spark.url"))
 
         var ds : DataFrame = null
         if (joinedToFlag.contains(star) || joinedFromFlag.contains(star)) {
             //println("TRUE: " + star)
             //println("-> datasources: " + datasources)
-            ds = spark.query(datasources, options, true, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters)
+            ds = spark.query(datasources, options, true, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, transMaps, joinPairs)
             println("...with DataFrame schema: " + ds)
             ds.printSchema()
         } else if (!joinedToFlag.contains(star) && !joinedFromFlag.contains(star)) {
             //println("FALSE: " + star)
             //println("-> datasources: " + datasources)
-            ds = spark.query(datasources, options, false, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters)
+            ds = spark.query(datasources, options, false, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, transMaps, joinPairs)
             println("...with DataFrame schema: " + ds)
             ds.printSchema()
         }
@@ -108,7 +130,7 @@ object Main extends App {
     println("- Here are the (Star, DataFrame) pairs: " + star_df)
     var df_join : DataFrame = null
 
-    println("- Here are join pairs: " + sources + "\n")
+    println("- Here are join pairs: " + joins + "\n")
 
     var firstTime = true
     val join = " x "
@@ -118,7 +140,7 @@ object Main extends App {
     var pendingJoins = mutable.Queue[(String, (String, String))]()
 
     var jDF : DataFrame = null
-    val it = sources.entries.iterator
+    val it = joins.entries.iterator
     while ({it.hasNext}) {
         val entry = it.next
 
@@ -139,7 +161,6 @@ object Main extends App {
         val df1 = star_df(op1)
         val df2 = star_df(op2)
 
-        // VARIATION 0
         if (firstTime) { // First time look for joins in the join hashmap
             println("ENTERED FIRST TIME")
             seenDF.add((op1, jVal))

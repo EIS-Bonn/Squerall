@@ -64,11 +64,20 @@ object Helpers {
         rtrn
     }
 
-    def getSelectColumnsFromSet(pred_attr: mutable.HashMap[String,String], star: String, prefixes: Map[String, String], select: util.List[String], star_predicate_var: mutable.HashMap[(String, String), String], neededPredicates: mutable.Set[String]): String = {
+    def getSelectColumnsFromSet(pred_attr: mutable.HashMap[String,String],
+                                star: String,
+                                prefixes: Map[String, String],
+                                select: util.List[String],
+                                star_predicate_var: mutable.HashMap[(String, String), String],
+                                neededPredicates: mutable.Set[String],
+                                transMaps: (Map[String, (String, Array[String])],Map[String, Array[String]]) // TODO: not ued?
+        ): String = {
+
         var columns = ""
         var i = 0
+
         for (v <- pred_attr) {
-            println("pred_attr: " + pred_attr)
+            //println("pred_attr: " + pred_attr)
             val attr = v._2
             val ns_predicate = Helpers.get_NS_predicate(v._1)
 

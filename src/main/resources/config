@@ -12,7 +12,8 @@
             "header": "true",
             "delimiter": ",",
             "mode": "DROPMALFORMED"
-        }
+        },
+        "entity": "Authors"
     },
     {
         "source": "/a/reviewers",
@@ -20,7 +21,8 @@
             "options": {
             "keyspace": "db",
             "table": "reviewers"
-         }
+        },
+        "entity": "Reviewers"
     },
     {
         "source": "/a/institutes",
@@ -29,7 +31,8 @@
             "url": "127.0.0.1",
             "database": "db",
             "collection": "institutes"
-        }
+        },
+        "entity": "Institutes"
     },
     {
        "source": "/a/editors",
@@ -40,16 +43,19 @@
             "dbtable": "editors",
             "user": "root",
             "password": "root"
-       }
+       },
+       "entity": "Editors"
     },
     {
-        "source": "/media/mmami/Extra/Datasets/chaires.csv",
+
         "type": "csv",
         "options": {
              "header": "true",
              "delimiter": ",",
              "mode": "DROPMALFORMED"
-        }
+        },
+        "source": "/media/mmami/Extra/Datasets/chaires.csv",
+        "entity": "Chaires"
     }
   ]
 }

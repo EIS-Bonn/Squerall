@@ -13,14 +13,14 @@ import collection.JavaConverters._
 class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[String, Tuple2[String,String]]) {
 
 
-    def getNeededPredicates(star_predicate_var: mutable.HashMap[(String, String), String], sources: ArrayListMultimap[String, (String, String)], select_vars: util.List[String]) : (Set[String],Set[(String,String)]) = {
+    def getNeededPredicates(star_predicate_var: mutable.HashMap[(String, String), String], joins: ArrayListMultimap[String, (String, String)], select_vars: util.List[String]) : (Set[String],Set[(String,String)]) = {
 
         println("star_predicate_var: "+ star_predicate_var)
         val predicates : Set[String] = Set.empty
         val predicatesForSelect : Set[(String,String)] = Set.empty
 
-        val join_left_vars = sources.keySet()
-        val join_right_vars = sources.values().asScala.map(x => x._1).toSet // asScala, converts Java Collection to Scala Collection
+        val join_left_vars = joins.keySet()
+        val join_right_vars = joins.values().asScala.map(x => x._1).toSet // asScala, converts Java Collection to Scala Collection
 
         val join_left_right_vars = join_right_vars.union(join_left_vars.asScala)
 
@@ -46,14 +46,15 @@ class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[S
         (predicates,predicatesForSelect)
     }
 
-    def generateJoinPlan: (ArrayListMultimap[String, (String,String)], Set[String], Set[String]) = {
+    def generateJoinPlan: (ArrayListMultimap[String, (String,String)], Set[String], Set[String], Map[(String, String), String]) = {
 
         var keys = stars.keySet.toSeq
         println("Stars: " + keys.toString())
         var joins : ArrayListMultimap[String, (String,String)] = ArrayListMultimap.create[String,(String,String)]()
+        var joinPairs : Map[(String,String), String] = Map.empty
 
-        var joinedToFlag : Set[String] = Set()
-        var joinedFromFlag : Set[String] = Set()
+        val joinedToFlag : Set[String] = Set()
+        val joinedFromFlag : Set[String] = Set()
 
         for(i <- keys.indices) {
             var currentSubject = keys(i)
@@ -67,13 +68,14 @@ class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[S
                     var p = p_o._1
                     //println(currentSubject + "---(" + o + ", " + p + ")")
                     joins.put(currentSubject, (o, p))
+                    joinPairs += (Helpers.omitQuestionMark(currentSubject),Helpers.omitQuestionMark(o)) -> p
                     joinedToFlag.add(o)
                     joinedFromFlag.add(currentSubject)
                 }
             }
         }
 
-        (joins, joinedToFlag, joinedFromFlag)
+        (joins, joinedToFlag, joinedFromFlag, joinPairs)
     }
 }
  /*

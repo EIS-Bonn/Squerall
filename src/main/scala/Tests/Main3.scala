@@ -1,5 +1,6 @@
 package Tests
 
+
 import scala.collection.mutable
 
 /**
@@ -40,6 +41,67 @@ object Main3 extends App {
         }
 
         println("pendingJoins " + q)
+
+        /*var parquet_schema: String = "java -jar /media/mmami/Extra/Scala/Web/parquet-mr/parquet-tools/target/parquet-tools-1.9.0.jar schema /media/mmami/Extra/Datasets/books.parquet" !!
+
+        println(parquet_schema)
+
+        parquet_schema  = parquet_schema.substring(parquet_schema.indexOf('\n') + 1)
+
+        var set = parquet_schema.split("\n").toSeq.map(_.trim).filter(_ != "}").map(f => f.split(" ")(2))
+
+        var schema = ""
+        for (s <- set) {
+            schema = schema + "," + s
+        }
+
+        schema = schema.substring(1)*/
+
+
+        // To directly connect to the default server localhost on port 27017
+        /*val client: MongoClient = MongoClient("mongodb://127.0.0.1:27017")
+        val database: MongoDatabase = client.getDatabase("db")
+        val collection: MongoCollection[Document] = database.getCollection("col")
+
+        val replacementDoc: Document = Document("_id" -> 1, "x" -> 2, "y" -> 3)
+
+        collection.find().collect().subscribe((results: Seq[Document]) => println(s"Found: #${results.size}"))*/
+
+        /*val client: MongoClient = MongoClient()
+        val database: MongoDatabase = client.getDatabase("db")
+        val collection: MongoCollection[Document] = database.getCollection("institutes")
+
+        // insert a document
+        /*val document: Document = Document("IID" -> 2, "Name" -> "FFA")
+        val insertObservable: SingleObservable[Completed] = collection.insertOne(document)
+
+        insertObservable.subscribe(new Observer[Completed] {
+            override def onNext(result: Completed): Unit = println(s"onNext: $result")
+            override def onError(e: Throwable): Unit = println(s"onError: $e")
+            override def onComplete(): Unit = println("onComplete")
+        })*/
+
+
+        // collection.find().collect().subscribe((results: Seq[Document]) => println(s"Found: #${results.size}"))
+        // collection.find().subscribe((doc: Document) => println(doc.toJson()))
+
+        var fields = ""
+        for(x <- collection.find().limit(10)) {
+            for(i <- x) {
+                println("dddd " + i._1)
+            }
+        }
+
+        println("fields: " + fields)
+
+        scala.Console.readLine()
+        client.close()*/
+
+        var query = "TRANSFORM (?k?a.l.remove(\"a\") && ?k?l.right+16)\n}"
+
+        val requiredString = query.substring(query.indexOf("TRANSFORM") + 9, query.lastIndexOf(")"))
+
+        println("requiredString: " + requiredString)
     }
 }
 
