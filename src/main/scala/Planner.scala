@@ -7,6 +7,7 @@ import scala.collection.mutable.{HashMap, MultiMap, Set}
 
 import collection.JavaConverters._
 
+import Helpers._
 /**
   * Created by mmami on 06.07.17.
   */
@@ -68,7 +69,7 @@ class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[S
                     var p = p_o._1
                     //println(currentSubject + "---(" + o + ", " + p + ")")
                     joins.put(currentSubject, (o, p))
-                    joinPairs += (Helpers.omitQuestionMark(currentSubject),Helpers.omitQuestionMark(o)) -> p
+                    joinPairs += (omitQuestionMark(currentSubject), omitQuestionMark(o)) -> p
                     joinedToFlag.add(o)
                     joinedFromFlag.add(currentSubject)
                 }

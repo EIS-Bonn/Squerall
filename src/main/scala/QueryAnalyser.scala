@@ -7,6 +7,7 @@ import org.apache.jena.sparql.syntax.{ElementFilter, ElementVisitorBase, Element
 import scala.collection.mutable
 import scala.collection.mutable.{HashMap, MultiMap, Set}
 
+import Helpers._
 /**
   * Created by mmami on 05.07.17.
   */
@@ -17,7 +18,7 @@ class QueryAnalyser(query: String) {
         val q = QueryFactory.create(query)
         val prolog = q.getPrologue().getPrefixMapping.getNsPrefixMap
 
-        val prefix: Map[String, String] = Helpers.invertMap(prolog)
+        val prefix: Map[String, String] = invertMap(prolog)
 
         println("\n- Prefixes: " + prefix)
 

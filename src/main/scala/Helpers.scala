@@ -69,8 +69,7 @@ object Helpers {
                                 prefixes: Map[String, String],
                                 select: util.List[String],
                                 star_predicate_var: mutable.HashMap[(String, String), String],
-                                neededPredicates: mutable.Set[String],
-                                transMaps: (Map[String, (String, Array[String])],Map[String, Array[String]]) // TODO: not ued?
+                                neededPredicates: mutable.Set[String]
         ): String = {
 
         var columns = ""
