@@ -1,3 +1,5 @@
+package org.sparkall
+
 import java.util
 
 import Helpers.get_NS_predicate
@@ -18,7 +20,7 @@ import scala.collection.mutable.{HashMap, Set}
 import Helpers._
 import org.apache.log4j.{Level, Logger}
 
-class Sparking(sparkURI: String) {
+class QueryExecuter(sparkURI: String, mappingsFile: String) {
 
     def query (sources : Set[(HashMap[String, String], String, String)],
                optionsMap: HashMap[String, Map[String, String]],
@@ -62,7 +64,7 @@ class Sparking(sparkURI: String) {
             println("...with the following configuration options: " + options)
 
             if (toJoinWith) { // That kind of table that is the 1st or 2nd operand of a join operation
-                val id = getID(sourcePath)
+                val id = getID(sourcePath, mappingsFile)
                 println("...is to be joined with using the ID: " + omitQuestionMark(star) + "_" + id + " (obtained from subjectMap)")
                 if(columns == "") {
                     //println("heeey id = " + id + " star " + star)
@@ -72,6 +74,7 @@ class Sparking(sparkURI: String) {
             }
 
             println("star_predicate_var: " + star_predicate_var)
+            println("sourceType: " + sourceType)
 
             var df : DataFrame = null
             sourceType match {
@@ -103,20 +106,23 @@ class Sparking(sparkURI: String) {
             }
 
             // Transformations
-            if(leftJoinTransformations._2 != null) {
-                val column : String = leftJoinTransformations._1
+            if (leftJoinTransformations != null && leftJoinTransformations._2 != null) {
+                val column: String = leftJoinTransformations._1
                 println("leftJoinTransformations: " + column + " - " + leftJoinTransformations._2.mkString("."))
                 val ns_pred = get_NS_predicate(column)
                 val ns = prefixes(ns_pred._1)
                 val pred = ns_pred._2
                 val col = omitQuestionMark(star) + "_" + pred + "_" + ns
                 finalDF = transform(finalDF, col, leftJoinTransformations._2)
+
             }
-            if(!rightJoinTransformations.isEmpty) {
+            if (rightJoinTransformations != null && !rightJoinTransformations.isEmpty) {
                 println("rightJoinTransformations: " + rightJoinTransformations.mkString("_"))
                 val col = omitQuestionMark(star) + "_ID"
                 finalDF = transform(finalDF, col, rightJoinTransformations)
             }
+
+
         }
 
         println("\n- filters: " + filters + " ======= " + star)
@@ -141,11 +147,12 @@ class Sparking(sparkURI: String) {
 
                 while (conditions.hasNext) {
                     val operand_value = conditions.next()
-                    println("operand_value" + operand_value)
+                    println("operand_value: " + operand_value)
                     whereString = column + operand_value._1 + operand_value._2
                     println("whereString: " + whereString)
                     finalDF = finalDF.filter(whereString)
                 }
+                //finalDF.show()
             }
         }
 
@@ -154,30 +161,48 @@ class Sparking(sparkURI: String) {
 
     def transform (df: DataFrame, column: String, transformationsArray : Array[String]): DataFrame = {
 
-        var ndf : DataFrame = null
+        var ndf : DataFrame = df
         for (t <- transformationsArray) {
+            println("Transformation next: " + t)
             t match {
-                case "toInt" => ndf = df.withColumn(column, df(column).cast(IntegerType))
-                // From SO: values not castable will become null
+                case "toInt" =>
+                    println("TOINT found")
+                    ndf = ndf.withColumn(column, ndf(column).cast(IntegerType))
+                    // From SO: values not castable will become null
                 case s if s.contains("scl") =>
                     val scaleValue = s.replace("scl","").trim.stripPrefix("(").stripSuffix(")")
                     println("SCL found: " + scaleValue)
                     val operation = scaleValue.charAt(0)
                     operation match {
-                        case '+' => ndf = df.withColumn(column, df(column) + scaleValue.substring(0).toInt)
-                        case '-' => ndf = df.withColumn(column, df(column) - scaleValue.substring(0).toInt)
+                        case '+' => ndf = ndf.withColumn(column, ndf(column) + scaleValue.substring(1).toInt)
+                        case '-' => ndf = ndf.withColumn(column, ndf(column) - scaleValue.substring(1).toInt)
+                        case '*' => ndf = ndf.withColumn(column, ndf(column) * scaleValue.substring(1).toInt)
                     }
                 case s if s.contains("skp") =>
                     val skipValue = s.replace("skp","").trim.stripPrefix("(").stripSuffix(")")
                     println("SKP found: " + skipValue)
-                    ndf = df.filter(!df(column).equalTo(skipValue))
-                case s if s.contains("replc") =>
-                    val replaceValues = s.replace("replc","").trim.stripPrefix("(").stripSuffix(")").split("\\,")
+                    ndf = ndf.filter(!ndf(column).equalTo(skipValue))
+                case s if s.contains("substit") =>
+                    val replaceValues = s.replace("substit","").trim.stripPrefix("(").stripSuffix(")").split("\\,")
                     val valToReplace = replaceValues(0)
                     val valToReplaceWith = replaceValues(1)
-                    println("REPLC found: " + replaceValues.mkString(" "))
-                    ndf = df.withColumn(column, when(col(column).equalTo(valToReplace), valToReplaceWith))
+                    println("SUBSTIT found: " + replaceValues.mkString(" -> "))
+                    ndf = ndf.withColumn(column, when(col(column).equalTo(valToReplace), valToReplaceWith))
                     //ndf = df.withColumn(column, when(col(column) === valToReplace, valToReplaceWith).otherwise(col(column)))
+                case s if s.contains("replc") =>
+                    val replaceValues = s.replace("replc","").trim.stripPrefix("(").stripSuffix(")").split("\\,")
+                    val valToReplace = replaceValues(0).replace("\"","")
+                    val valToReplaceWith = replaceValues(1).replace("\"","")
+                    println("REPLC found: " + replaceValues.mkString(" -> ") + " on column: " + column)
+                    ndf = ndf.withColumn(column, when(col(column).contains(valToReplace), regexp_replace(ndf(column), valToReplace, valToReplaceWith)))
+                case s if s.contains("prefix") =>
+                    val prefix = s.replace("prfix","").trim.stripPrefix("(").stripSuffix(")")
+                    println("PREFIX found: " + prefix)
+                    ndf = ndf.withColumn(column, concat(lit(prefix), ndf.col(column)))
+                case s if s.contains("postfix") =>
+                    val postfix = s.replace("postfix","").trim.stripPrefix("(").stripSuffix(")")
+                    println("POSTFIX found: " + postfix)
+                    ndf = ndf.withColumn(column, concat(lit(ndf.col(column), postfix)))
                 case _ =>
             }
         }

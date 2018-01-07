@@ -6,7 +6,7 @@
 @prefix bibo: <http://purl.org/ontology/bibo/> .
 @prefix schema: <http://schema.org/> .
 @prefix ql: <http://semweb.mmlab.be/ns/ql#> .
-@prefix sa: <http://sparkall.com/ns/spec/> .
+@prefix nosql: <http://purl.org/db/nosql#> .
 @prefix person: <http://www.w3.org/ns/person#> .
 @prefix nlon: <http://lod.nl.go.kr/ontology/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -15,13 +15,14 @@
 @prefix saws: <http://purl.org/saws/ontology#> .
 @prefix swc: <http://data.semanticweb.org/ns/swc/ontology#> .
 @prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#>
+@prefix drm: <http://vocab.data.gov/def/drm#>
 
 
 <#Author>
     rml:logicalSource [
 	    rml:source "/media/mmami/Extra/Datasets/authors.csv";
         rml:referenceFormulation ql:SQL;
-        sa:store sa:csv
+        nosql:store nosql:csv
     ];
 
     rr:subjectMap [
@@ -40,15 +41,15 @@
     ];
 
     rr:predicateObjectMap [
-         rr:predicate vivo:Institute;
+         rr:predicate drm:worksFor;
          rr:objectMap [ rml:reference "Institute" ]
     ].
 
 <#Reviewer>
     rml:logicalSource [
 	    rml:source "/a/reviewers";
-        rml:referenceFormulation sa:CQL;
-        sa:store sa:cassandra
+        rml:referenceFormulation nosql:CQL;
+        nosql:store nosql:cassandra
     ];
 
     rr:subjectMap [
@@ -80,7 +81,7 @@
     rml:logicalSource [
 	    rml:source "/media/mmami/Extra/Datasets/books.parquet";
         rml:referenceFormulation ql:SQL;
-        sa:store sa:parquet
+        nosql:store nosql:parquet
     ];
 
     rr:subjectMap [
@@ -112,7 +113,7 @@
     rml:logicalSource [
 	    rml:source "/a/institutes";
         rml:referenceFormulation ql:Document;
-        sa:store sa:mongodb
+        nosql:store nosql:mongodb
     ];
 
     rr:subjectMap [
@@ -129,7 +130,7 @@
     rml:logicalSource [
 	    rml:source "/a/editors";
         rml:referenceFormulation ql:sql;
-        sa:store sa:jdbc
+        nosql:store nosql:jdbc
     ];
 
     rr:subjectMap [
@@ -146,7 +147,7 @@
     rml:logicalSource [
 	    rml:source "/media/mmami/Extra/Datasets/chaires.csv";
         rml:referenceFormulation ql:SQL;
-        sa:store sa:csv
+        nosql:store nosql:csv
     ];
 
     rr:subjectMap [

@@ -1,3 +1,5 @@
+package org.sparkall
+
 /**
   * Created by mmami on 26.01.17.
   */

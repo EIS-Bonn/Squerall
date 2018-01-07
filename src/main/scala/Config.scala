@@ -1,3 +1,5 @@
+package org.sparkall
+
 import com.typesafe.config.ConfigFactory
 
 /**

@@ -1,7 +1,7 @@
 /**
   * Created by mmami on 30.01.17.
   */
-//import com.typesafe.scalalogging._
+package org.sparkall
 
 import org.apache.jena.query.{QueryExecutionFactory, QueryFactory}
 import org.apache.jena.rdf.model.ModelFactory
@@ -21,7 +21,7 @@ class Mapper (mappingFile: String) {
 
     //val logger = Logger("name")
 
-    def findDataSources(stars: mutable.HashMap[String, mutable.Set[(String, String)]] with mutable.MultiMap[String, (String, String)]) : mutable.Set[(String,Set[(mutable.HashMap[String, String], String, String)],HashMap[String, Map[String, String]])] = {
+    def findDataSources(stars: mutable.HashMap[String, mutable.Set[(String, String)]] with mutable.MultiMap[String, (String, String)], configFile: String) : mutable.Set[(String,Set[(mutable.HashMap[String, String], String, String)],HashMap[String, Map[String, String]])] = {
 
         //logger.info(queryString)
         var starSources :
@@ -51,7 +51,8 @@ class Mapper (mappingFile: String) {
                 val src = d._2
                 //val srcType = d._3
 
-                var configFile = Config.get("datasets.descr")
+                //var configFile = Config.get("datasets.descr")
+
                 val queryString = scala.io.Source.fromFile(configFile)
                 val configJSON = try queryString.mkString finally queryString.close()
 
@@ -114,11 +115,11 @@ class Mapper (mappingFile: String) {
         var queryString = "PREFIX rml: <http://semweb.mmlab.be/ns/rml#>" +
                             "PREFIX rr: <http://www.w3.org/ns/r2rml#>" +
                             "PREFIX foaf: <http://xmlns.com/foaf/spec/>" +
-                            "PREFIX sa: <http://sparkall.com/ns/spec/>" +
+                            "PREFIX nosql: <http://purle.org/db/mysql#>" +
             "SELECT distinct ?src ?type WHERE {" +
                 "?mp rml:logicalSource ?ls . " +
                 "?ls rml:source ?src . " +
-                "?ls sa:store ?type . " +
+                "?ls nosql:store ?type . " +
                 //"?mp rr:predicateObjectMap ?pom . " +
                 //"?pom rr:objectMap ?om . " +
                 //"?om rml:reference ?r . " +
@@ -126,19 +127,19 @@ class Mapper (mappingFile: String) {
             "}"
 
         println("...for this, the following query will be executed: " + queryString)
-        var query = QueryFactory.create(queryString)
+        val query = QueryFactory.create(queryString)
 
-        var in = FileManager.get().open(mappingFile)
+        val in = FileManager.get().open(mappingFile)
         if (in == null) {
             throw new IllegalArgumentException("File: " + queryString + " not found")
         }
 
-        var model = ModelFactory.createDefaultModel()
+        val model = ModelFactory.createDefaultModel()
         model.read(in, null, "TURTLE")
 
         // Execute the query and obtain results
-        var qe = QueryExecutionFactory.create(query, model)
-        var results = qe.execSelect()
+        val qe = QueryExecutionFactory.create(query, model)
+        val results = qe.execSelect()
 
         while(results.hasNext) { // only one result expected (for the moment)
             val soln = results.nextSolution()

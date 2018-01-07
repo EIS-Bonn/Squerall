@@ -1,3 +1,5 @@
+package org.sparkall
+
 import java.util
 
 import org.apache.jena.query.{QueryExecutionFactory, QueryFactory}
@@ -57,7 +59,7 @@ object Helpers {
     }
 
     def getTypeFromURI(typeURI: String) : String = {
-        var dataType = typeURI.split("/")
+        var dataType = typeURI.split("#") // from nosql ns
 
         var rtrn = dataType(dataType.length-1)
 
@@ -90,20 +92,19 @@ object Helpers {
 
             //if (select.contains(objVar.replace("?",""))) {
             if (neededPredicates.contains(v._1)) {
-                val c = attr + " AS " + star + "_" + predicate + "_" + prefixes(NS)
+                val c = attr + " AS `" + star + "_" + predicate + "_" + prefixes(NS) + "`"
                 //println("SELECT CLAUSE: " + c)
                 //columns = if(i == 0) columns + v else columns + "," + columns
                 if (i == 0) columns += c else columns += "," + c
                 i += 1
             }
-
         }
 
         columns
     }
 
-    def getID(sourcePath: String): String = {
-        var mappingsFile = Config.get("mappings.file")
+    def getID(sourcePath: String, mappingsFile: String): String = {
+        //var mappingsFile = Config.get("mappings.file")
 
         var getID = "PREFIX rml: <http://semweb.mmlab.be/ns/rml#>" +
             "PREFIX rr: <http://www.w3.org/ns/r2rml#>" +

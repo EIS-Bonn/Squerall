@@ -1,3 +1,5 @@
+package org.sparkall
+
 import java.util
 
 import com.google.common.collect.ArrayListMultimap
@@ -8,6 +10,7 @@ import scala.collection.mutable.{HashMap, MultiMap, Set}
 import collection.JavaConverters._
 
 import Helpers._
+
 /**
   * Created by mmami on 06.07.17.
   */
@@ -25,7 +28,7 @@ class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[S
 
         val join_left_right_vars = join_right_vars.union(join_left_vars.asScala)
 
-        println("-->Left & right join operands: " + join_left_right_vars)
+        println("--> Left & right join operands: " + join_left_right_vars)
 
         for (t <- star_predicate_var) {
             val s_p = t._1

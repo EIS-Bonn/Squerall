@@ -11,6 +11,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX saws: <http://purl.org/saws/ontology#>
 PREFIX swc: <http://data.semanticweb.org/ns/swc/ontology#>
 PREFIX dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#>
+PREFIX drm: <http://vocab.data.gov/def/drm#>
 
 SELECT ?n2 ?ln ?k
 WHERE {
@@ -20,8 +21,8 @@ WHERE {
     ?k bibo:editor ?e . # join __
     ?a foaf:firstName ?fn .
     ?a foaf:lastName ?ln .
-    #?a rdf:type nlon:Author .
-    ?a vivo:Institute ?in . # join __
+    #?a rdf:type nlon:Author . # type __
+    ?a drm:worksFor ?in . # join __
     ?in rdfs:label ?n1 .
     ?in a vivo:Institute . # type __
     ?e rdfs:label ?n2 .
@@ -31,6 +32,6 @@ WHERE {
     ?c foaf:firstName ?cfn .
     ?r schema:reviews ?k .
     FILTER ( ?ln != "Archeer") .
-    TRANSFORM (?k?a.l.toInt.scl(+0).skp(2).replc(4,3) && ?a?in.r.toInt)
+    TRANSFORM (?k?a.l.toInt && ?a?in.r.toInt)
 }
  # ?r, ?k, ?in, ?a, ?e !!!! ?c

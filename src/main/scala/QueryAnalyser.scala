@@ -1,3 +1,5 @@
+package org.sparkall
+
 import java.util
 
 import com.google.common.collect.ArrayListMultimap
@@ -8,6 +10,7 @@ import scala.collection.mutable
 import scala.collection.mutable.{HashMap, MultiMap, Set}
 
 import Helpers._
+
 /**
   * Created by mmami on 05.07.17.
   */
@@ -100,4 +103,26 @@ class QueryAnalyser(query: String) {
 
         // TODO: Support OPTIONAL later
     }
+
+    def getTransformations (trans: String) = {
+        // Transformations
+        val transformations = trans.trim().substring(1).split("&&") // [?k?a.l.+60, ?a?l.r.toInt]
+        var transmap_left : Map[String,(String, Array[String])] = Map.empty
+        var transmap_right : Map[String,Array[String]] = Map.empty
+        for (t <- transformations) { // E.g. ?a?l.r.toInt.scl[61]
+            val tbits = t.trim.split("\\.", 2) // E.g.[?a?l, r.toInt.scl(_+61)]
+        val vars = tbits(0).substring(1).split("\\?") // [a, l]
+        val operation = tbits(1) // E.g. r.toInt.scl(_+60)
+        val temp = operation.split("\\.", 2) // E.g. [r, toInt.scl(_+61)]
+        val lORr = temp(0) // E.g. r
+        val functions = temp(1).split("\\.") // E.g. [toInt, scl(_+61)]
+            if (lORr == "l") {
+                transmap_left += (vars(0) -> (vars(1), functions))
+            } else
+                transmap_right += (vars(1) -> functions)
+        }
+
+        (transmap_left, transmap_right)
+    }
+
 }
