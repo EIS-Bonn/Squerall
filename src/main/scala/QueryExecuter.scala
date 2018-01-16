@@ -87,8 +87,9 @@ class QueryExecuter(sparkURI: String, mappingsFile: String) {
                 case "mongodb" =>
                     //spark.conf.set("spark.mongodb.input.uri", "mongodb://127.0.0.1/test.myCollection")
                     val values = options.values.toList
-                    val mongoConf = makeMongoURI(values(0), values(1), values(2))
-                    val mongoOptions: ReadConfig = ReadConfig(Map("uri" -> mongoConf))
+                    val mongoConf = if (values.length == 4) makeMongoURI(values(0), values(1), values(2), values(3))
+                                    else makeMongoURI(values(0), values(1), values(2), null)
+                        val mongoOptions: ReadConfig = ReadConfig(Map("uri" -> mongoConf, "partitioner" -> "MongoPaginateBySizePartitioner"))
                     df = spark.read.format("com.mongodb.spark.sql").options(mongoOptions.asOptions).load
                 case "jdbc" =>
                     df = spark.read.format("jdbc").options(options).load()

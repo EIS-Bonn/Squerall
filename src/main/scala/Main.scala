@@ -193,8 +193,8 @@ object Main extends App {
             // Join level 1
             jDF = df1.join(df2, df1.col(omitQuestionMark(op1) + "_" + omitNamespace(jVal) + "_" + ns).equalTo(df2(omitQuestionMark(op2) + "_ID")))
 
-            println("Nbr: " + jDF.count)
-            jDF.show()
+            //println("Nbr: " + jDF.count)
+            //jDF.show()
         } else {
             val dfs_only = seenDF.map(_._1)
             if (dfs_only.contains(op1) && !dfs_only.contains(op2)) {
@@ -206,8 +206,8 @@ object Main extends App {
 
                 seenDF.add((op2,"ID"))
 
-                println("Nbr: " + jDF.count)
-                jDF.show()
+                //println("Nbr: " + jDF.count)
+                //jDF.show()
             } else if (!dfs_only.contains(op1) && dfs_only.contains(op2)) {
                 println("ENTERED NEXT TIME << " + dfs_only)
 
@@ -217,8 +217,8 @@ object Main extends App {
 
                 seenDF.add((op1,jVal))
 
-                println("Nbr: " + jDF.count)
-                jDF.show()
+                //println("Nbr: " + jDF.count)
+                //jDF.show()
             } else if (!dfs_only.contains(op1) && !dfs_only.contains(op2)) {
                 println("GOING TO THE QUEUE")
                 pendingJoins.enqueue((op1, (op2, jVal)))

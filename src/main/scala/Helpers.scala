@@ -139,7 +139,15 @@ object Helpers {
         id
     }
 
-    def makeMongoURI(uri:String, database:String, collection:String) =
-        s"mongodb://${uri}/${database}.${collection}"
+    def makeMongoURI(uri: String, database: String, collection: String, options: String) = {
+        if(options == null)
+            s"mongodb://${uri}/${database}.${collection}"
+        else
+            s"mongodb://${uri}/${database}.${collection}?${options}"
+        //mongodb://db1.example.net,db2.example.net:27002,db3.example.net:27003/?db_name&replicaSet=YourReplicaSetName
+        //mongodb://172.18.160.16,172.18.160.17,172.18.160.18/db.offer?replicaSet=mongo-rs
+    }
+
+
 
 }
