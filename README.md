@@ -1,4 +1,4 @@
-# sparkall
+# Sparkall
 An implementation of the so-called Semantic Data Lake, using Apache Spark.
 
 To run Sparkall, use spark-submit giving in args three files built using Sparkall-GUI, see above.
