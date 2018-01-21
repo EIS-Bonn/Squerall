@@ -2,7 +2,6 @@
 An implementation of the so-called Semantic Data Lake, using Apache Spark.
 
 ## Execution
---
 To run Sparkall, use `spark-submit` giving in args three files built using [Sparkall-GUI](https://github.com/mnmami/spakall-gui) (see below).
 The command line looks like:
 `/bin/spark-submit --class [Main classpath] --master [master URI] --executor-memory [memory reserved to the app] sparkall.jar [query file] [mappings file] [config file] [master URI]`
