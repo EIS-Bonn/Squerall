@@ -13,7 +13,7 @@ The command line looks like:
 Sparkall has 3 interfaces to (1) provide access configuration to data in the Data Lake, (1) map data to ontology terms and (3) query the mapped data. Refer to Sparkall-GUI repository here: [Sparkall-GUI](https://github.com/mnmami/spakall-gui) for more information.
 
 ## Publication
-Sparkall is described in a paper ["Teach me to fish" Querying Semantic Data Lakes](https://www.researchgate.net/publication/322526357_%27Teach_me_to_fish%27_Querying_Semantic_Data_Lakes). The paper details all the building blocks and experiments conducted to demonstrate its mertits.
+Sparkall is described in a paper ["Teach me to fish" Querying Semantic Data Lakes](https://www.researchgate.net/publication/322526357_%27Teach_me_to_fish%27_Querying_Semantic_Data_Lakes). The paper details all the building blocks and experiments conducted to demonstrate Sparkall's mertits.
 
 ### Evaluation
 To test out the performence of Sparkall, i.e., querying heterogeneous data residing in a Data Lake, we have generated data using Berlin Bernchmark (BSBM). We have taken 5 tables: Product, Producer, Offer, Review, and Person , and saved them in Cassandra, MySQL, Mon-goDB, Parquet and CSV, respectively.
