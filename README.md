@@ -25,4 +25,4 @@ We have generated three sizes of the data using the following BSBM scale factors
 
 'Teach me to fish' Querying Semantic Data Lakes. Available from: https://www.researchgate.net/publication/322526357_%27Teach_me_to_fish%27_Querying_Semantic_Data_Lakes [accessed Jan 21 2018]. 
 
-More info to come soon. Contact me on: mami@cs.uni-bonn.de
+For more enquireis, contact me on: mami@cs.uni-bonn.de
