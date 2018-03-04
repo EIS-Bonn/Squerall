@@ -1,61 +1,84 @@
 {
-  "sources": [
-    {
-        "source": "/media/mmami/Extra/Datasets/books.parquet",
-        "type": "parquet",
-        "options": {}
-    },
-    {
-        "source": "/media/mmami/Extra/Datasets/authors.csv",
-        "type": "csv",
-        "options": {
+    "sources": [
+        {
+         "source": "/media/mmami/Extra/Datasets/books.parquet",
+         "type": "parquet",
+         "options": {
+
+         }
+        },
+        {
+         "source": "/media/mmami/Extra/Datasets/authors.csv",
+         "type": "csv",
+         "options": {
             "header": "true",
             "delimiter": ",",
             "mode": "DROPMALFORMED"
+         },
+         "entity": "Authors"
         },
-        "entity": "Authors"
-    },
-    {
-        "source": "/a/reviewers",
-        "type": "cassandra",
-            "options": {
+        {
+         "source": "/a/reviewers",
+         "type": "cassandra",
+         "options": {
             "keyspace": "db",
             "table": "reviewers"
+         },
+         "entity": "Reviewers"
         },
-        "entity": "Reviewers"
-    },
-    {
-        "source": "/a/institutes",
-        "type": "mongodb",
-        "options": {
+        {
+         "source": "/a/institutes",
+         "type": "mongodb",
+         "options": {
             "url": "127.0.0.1",
             "database": "db",
             "collection": "institutes"
+         },
+         "entity": "Institutes"
         },
-        "entity": "Institutes"
-    },
-    {
-       "source": "/a/editors",
-       "type": "jdbc:mysql",
-       "options": {
+        {
+         "source": "/a/editors",
+         "type": "jdbc:mysql",
+         "options": {
             "url": "jdbc:mysql://localhost:3306/db?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC",
             "driver": "com.mysql.jdbc.Driver",
             "dbtable": "editors",
             "user": "root",
             "password": "root"
-       },
-       "entity": "Editors"
-    },
-    {
-
-        "type": "csv",
-        "options": {
-             "header": "true",
-             "delimiter": ",",
-             "mode": "DROPMALFORMED"
+         },
+         "entity": "Editors"
         },
-        "source": "/media/mmami/Extra/Datasets/chaires.csv",
-        "entity": "Chaires"
-    }
-  ]
+        {
+         "type": "csv",
+         "options": {
+            "header": "true",
+            "delimiter": ",",
+            "mode": "DROPMALFORMED"
+         },
+         "source": "/media/mmami/Extra/Datasets/chaires.csv",
+         "entity": "Chaires"
+        }
+    ],
+    "weights": [
+        {
+            "datasource": "cassandra",
+            "weight": 3
+        },
+        {
+            "datasource": "mongodb",
+            "weight": 2
+        },
+        {
+            "datasource": "parquet",
+            "weight": 2
+        },
+        {
+            "datasource": "csv",
+            "weight": 1
+        },
+        {
+        "datasource": "jdbc",
+            "weight": 3
+        }
+    ]
 }

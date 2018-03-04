@@ -13,7 +13,7 @@ PREFIX swc: <http://data.semanticweb.org/ns/swc/ontology#>
 PREFIX dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#>
 PREFIX drm: <http://vocab.data.gov/def/drm#>
 
-SELECT ?n2 ?ln ?k
+SELECT ?n2 ?ln ?fn
 WHERE {
     ?k bibo:isbn ?i .
     ?k dc:title ?t .
@@ -31,7 +31,9 @@ WHERE {
     ?c dul:introduces ?r . # join
     ?c foaf:firstName ?cfn .
     ?r schema:reviews ?k .
-    FILTER ( ?ln != "Archeer") .
+    FILTER (?ln != "Archeer") .
+    FILTER (?ln != "dddd") .
+    FILTER (?n1 != "zzzz") .
     TRANSFORM (?k?a.l.toInt && ?a?in.r.toInt)
 }
  # ?r, ?k, ?in, ?a, ?e !!!! ?c

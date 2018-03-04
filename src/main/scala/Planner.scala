@@ -7,15 +7,17 @@ import com.google.common.collect.ArrayListMultimap
 import scala.collection.mutable
 import scala.collection.mutable.{HashMap, MultiMap, Set}
 
-import collection.JavaConverters._
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{Json, Reads, __}
 
 import Helpers._
+
+import collection.JavaConverters._
 
 /**
   * Created by mmami on 06.07.17.
   */
 class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[String, Tuple2[String,String]]) {
-
 
     def getNeededPredicates(star_predicate_var: mutable.HashMap[(String, String), String], joins: ArrayListMultimap[String, (String, String)], select_vars: util.List[String]) : (Set[String],Set[(String,String)]) = {
 
@@ -81,15 +83,72 @@ class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[S
 
         (joins, joinedToFlag, joinedFromFlag, joinPairs)
     }
+
+    def reorder(joins: Map[String, String], starDataTypesMap: Map[String, mutable.Set[String]], filters: Map[String, Integer], configFile: String) = {
+
+        //var configFile = Config.get("datasets.weights")
+
+        println("************REORDERING JOINS**************")
+
+        val queryString = scala.io.Source.fromFile(configFile)
+        val configJSON = try queryString.mkString finally queryString.close()
+
+        case class ConfigObject(datasource: String, weight: Double)
+
+        implicit val userReads: Reads[ConfigObject] = (
+            (__ \ 'datasource).read[String] and
+            (__ \ 'weight).read[Double]
+        )(ConfigObject)
+
+        val weights = (Json.parse(configJSON) \ "weights").as[Seq[ConfigObject]]
+
+        var scoresByDatasource : Map[String, Double] = Map()
+        for (w <- weights) {
+            scoresByDatasource += w.datasource -> w.weight
+        }
+
+        println(s"===> To reorder the following joins: $joins...")
+        println(s"===> Where the stars have the following relevant datasource(s) types: $starDataTypesMap...")
+        println(s"===> We use the following scores of the datasource types: $scoresByDatasource \n")
+
+        val scores = starScores(starDataTypesMap, scoresByDatasource, filters)
+        println("===> Scores: " + scores)
+
+        val scoredJoins = getScoredJoins(joins, scores)
+
+        println("===> Scored joins: " + scoredJoins)
+    }
+
+    def starScores(starDataTypesMap: Map[String, mutable.Set[String]], weightsByDatasource: Map[String, Double], filters: Map[String, Integer]) = {
+        var scores : Map[String, Double] = Map()
+
+        var datasourceTypeWeight = 0.0 // Coucou!
+
+        for (s <- starDataTypesMap) {
+            val star = s._1 // eg. ?r
+            val datasourceTypeURI_s = s._2 // eg. http://purl.org/db/nosql#cassandra
+
+            val nbrFilters = filters(star).toInt
+
+            if (datasourceTypeURI_s.size == 1) { // only one relevant datasource
+                val datasourceType = datasourceTypeURI_s.head.split("#")(1) // eg. cassandra
+
+                datasourceTypeWeight = weightsByDatasource(datasourceType) + nbrFilters
+                // Add up the number of filters to the score of the star
+            }
+            // else, we keep 0, as we are assuming if there are more than 1 data sources, queryig & union-ing them would be expensive
+            scores += (star -> datasourceTypeWeight)
+        }
+
+        scores
+    }
+
+    def getScoredJoins(joins : Map[String, String], scores: Map[String, Double]) = {
+        var scoredJoins : Map[(String, String), Double] = Map()
+
+        for (j <- joins)
+            scoredJoins += (j._1, j._2) -> (scores(j._1) + scores(j._2))
+
+        scoredJoins
+    }
 }
- /*
- * Map(
- *  ?b -> Set(
- *      (<http://semweb.mmlab.be/ns/rml#logicalSource3>,?c),
- *      (<http://semweb.mmlab.be/ns/rml#logicalSource5>,?c),
- *      (<http://semweb.mmlab.be/ns/rml#logicalSource4>,?c),
- *      (<http://semweb.mmlab.be/ns/rml#logicalSource2>,?c)
- *  ),
- *  ?a -> Set((<http://semweb.mmlab.be/ns/rml#logicalSource1>,?b))
- * )
- */

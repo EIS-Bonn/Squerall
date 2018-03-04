@@ -34,7 +34,7 @@ class QueryExecuter(sparkURI: String, mappingsFile: String) {
                leftJoinTransformations: (String, Array[String]),
                rightJoinTransformations: Array[String],
                joinPairs: Map[(String,String), String]
-        ): DataFrame = {
+        ): (DataFrame, Integer) = {
 
         Logger.getLogger("org").setLevel(Level.OFF)
         Logger.getLogger("akka").setLevel(Level.OFF)
@@ -123,12 +123,13 @@ class QueryExecuter(sparkURI: String, mappingsFile: String) {
                 finalDF = transform(finalDF, col, rightJoinTransformations)
             }
 
-
         }
 
         println("\n- filters: " + filters + " ======= " + star)
 
         var whereString = ""
+
+        var nbrOfFiltersOfThisStar = 0
 
         val it = filters.keySet().iterator()
         while (it.hasNext) {
@@ -139,13 +140,14 @@ class QueryExecuter(sparkURI: String, mappingsFile: String) {
                 filter(t => t._1 == star).
                 map(f => f._2).toList
 
-            if(predicate.nonEmpty) {
+            if (predicate.nonEmpty) {
                 val ns_p = get_NS_predicate(predicate.head) // Head because only one value is expected to be attached to the same star an same (object) variable
                 val column = omitQuestionMark(star) + "_" + ns_p._2 + "_" + prefixes(ns_p._1)
                 println("column: " + column)
 
-                val conditions = filters.get(value).iterator()
+                nbrOfFiltersOfThisStar = filters.get(value).size()
 
+                val conditions = filters.get(value).iterator()
                 while (conditions.hasNext) {
                     val operand_value = conditions.next()
                     println("operand_value: " + operand_value)
@@ -157,7 +159,9 @@ class QueryExecuter(sparkURI: String, mappingsFile: String) {
             }
         }
 
-        finalDF
+        println(s"Number of filters of this star is: $nbrOfFiltersOfThisStar")
+
+        (finalDF, nbrOfFiltersOfThisStar)
     }
 
     def transform (df: DataFrame, column: String, transformationsArray : Array[String]): DataFrame = {

@@ -32,7 +32,7 @@ class QueryAnalyser(query: String) {
         val q = QueryFactory.create(query)
         val project = q.getResultVars
 
-        println("\n- Projected vars: " + project)
+        println(s"\n- Projected vars: $project")
         project
     }
 
@@ -69,12 +69,12 @@ class QueryAnalyser(query: String) {
         // Multi-map to add/append elements to the value
 
         // Save [star]_[predicate]
-        var star_pred_var : HashMap[(String,String), String] = HashMap()
+        val star_pred_var : HashMap[(String,String), String] = HashMap()
 
-        for(i <- tps.indices) { //i <- 0 until tps.length
+        for (i <- tps.indices) { //i <- 0 until tps.length
             val triple = tps(i).trim
 
-            println("triple: " + triple)
+            println(s"triple: $triple")
 
             if(!triple.contains(';')) { // only one predicate attached to the subject
                 val trplBits = triple.split(" ")
@@ -100,7 +100,6 @@ class QueryAnalyser(query: String) {
         }
 
         (stars, star_pred_var)
-
         // TODO: Support OPTIONAL later
     }
 
@@ -111,14 +110,14 @@ class QueryAnalyser(query: String) {
         var transmap_right : Map[String,Array[String]] = Map.empty
         for (t <- transformations) { // E.g. ?a?l.r.toInt.scl[61]
             val tbits = t.trim.split("\\.", 2) // E.g.[?a?l, r.toInt.scl(_+61)]
-        val vars = tbits(0).substring(1).split("\\?") // [a, l]
-        val operation = tbits(1) // E.g. r.toInt.scl(_+60)
-        val temp = operation.split("\\.", 2) // E.g. [r, toInt.scl(_+61)]
-        val lORr = temp(0) // E.g. r
-        val functions = temp(1).split("\\.") // E.g. [toInt, scl(_+61)]
-            if (lORr == "l") {
+            val vars = tbits(0).substring(1).split("\\?") // [a, l]
+            val operation = tbits(1) // E.g. r.toInt.scl(_+60)
+            val temp = operation.split("\\.", 2) // E.g. [r, toInt.scl(_+61)]
+            val lORr = temp(0) // E.g. r
+            val functions = temp(1).split("\\.") // E.g. [toInt, scl(_+61)]
+            if (lORr == "l")
                 transmap_left += (vars(0) -> (vars(1), functions))
-            } else
+            else
                 transmap_right += (vars(1) -> functions)
         }
 

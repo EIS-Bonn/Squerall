@@ -2,12 +2,11 @@ package org.sparkall
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.DataFrame
+import org.sparkall.Helpers._
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-
-import Helpers._
 
 /**
   * Created by mmami on 26.01.17.
@@ -51,9 +50,14 @@ object Main extends App {
     val select = qa.getProject
     val filters = qa.getFilters
 
+    /*println(s"filterfilters: $filters")
+    var a = filters.asMap.map(f => (f._1 -> f._2.size()))
+    println(s"aaaaaaaaaaaaaaaaaaaaa $a")
+    var filtersByStar : Map[String, Integer] = Map()*/
+
     println("\n- Predicates per star:")
     for (v <- stars._1) {
-        println("* " + v._1 + ") " + v._2)
+        println(s"* $v._1) $v._2")
     }
 
     // Build ((s,p) -> o) map to check later if predicates appearing in WHERE appears actually in SELECT
@@ -63,16 +67,16 @@ object Main extends App {
     println("\n/*******************************************************************/")
     println("/*                  PLAN GENERATION & MAPPINGS                     */")
     println("/*******************************************************************/")
-    var pl = new Planner(stars._1)
-    var pln = pl.generateJoinPlan
-    var joins = pln._1
-    var joinedToFlag = pln._2
-    var joinedFromFlag = pln._3
-    var joinPairs = pln._4
+    val pl = new Planner(stars._1)
+    val pln = pl.generateJoinPlan
+    val joins = pln._1
+    val joinedToFlag = pln._2
+    val joinedFromFlag = pln._3
+    val joinPairs = pln._4
 
     //println("JOINS detected: " + sources)
 
-    var neededPredicates = pl.getNeededPredicates(star_predicate_var, joins, select)
+    val neededPredicates = pl.getNeededPredicates(star_predicate_var, joins, select)
 
     val neededPredicatesAll = neededPredicates._1
     val neededPredicatesSelect = neededPredicates._2
@@ -83,13 +87,21 @@ object Main extends App {
     // 4. Check mapping file
     println("---> MAPPING CONSULTATION")
     //var mappingsFile = Config.get("mappings.file")
-    var mappingsFile = args(1)
-    var configFile = args(2)
+    val mappingsFile = args(1)
+    val configFile = args(2)
 
-    var mappers = new Mapper(mappingsFile)
-    var results = mappers.findDataSources(stars._1, configFile)
+    val mappers = new Mapper(mappingsFile)
+    val results = mappers.findDataSources(stars._1, configFile)
 
     var star_df : Map[String, DataFrame] = Map.empty
+    var star_nbrFilters : Map[String, Integer] = Map()
+
+    //val executorID = Config.get("spark.url")
+    val executorID = args(3)
+
+    val executor = new QueryExecuter(executorID, mappingsFile)
+
+    var starDataTypesMap : Map[String, mutable.Set[String]] = Map()
 
     println("\n---> GOING TO SPARK NOW TO JOIN STUFF")
     for (s <- results) {
@@ -97,12 +109,11 @@ object Main extends App {
         val datasources = s._2
         val options = s._3
 
+        val dataTypes = datasources.map(d => d._3)
+
+        starDataTypesMap += (star -> dataTypes)
+
         println("* Getting DF relevant to the start: " + star)
-
-        //val executorID = Config.get("spark.url")
-        val executorID = args(3)
-
-        val executor = new QueryExecuter(executorID, mappingsFile)
 
         // Transformations
         var leftJoinTransformations : (String, Array[String]) = null
@@ -128,23 +139,28 @@ object Main extends App {
         }
 
         var ds : DataFrame = null
+        var numberOfFiltersOfThisStar = 0
+        var queryResults: (DataFrame,Integer) = null
         if (joinedToFlag.contains(star) || joinedFromFlag.contains(star)) {
             //println("TRUE: " + star)
             //println("-> datasources: " + datasources)
-            ds = executor.query(datasources, options, true, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
+            queryResults = executor.query(datasources, options, true, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
+            ds = queryResults._1
             println("...with DataFrame schema: " + ds)
             ds.printSchema()
         } else if (!joinedToFlag.contains(star) && !joinedFromFlag.contains(star)) {
             //println("FALSE: " + star)
             //println("-> datasources: " + datasources)
-            ds = executor.query(datasources, options, false, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
+            queryResults = executor.query(datasources, options, false, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
+            ds = queryResults._1
             println("...with DataFrame schema: " + ds)
             ds.printSchema()
         }
 
-        //ds.collect().foreach(s => println(s))
-
         star_df += (star -> ds) // DataFrame representing a star
+
+        numberOfFiltersOfThisStar = queryResults._2
+        star_nbrFilters += star -> numberOfFiltersOfThisStar
     }
 
     println("\n/*******************************************************************/")
@@ -153,7 +169,8 @@ object Main extends App {
     println("- Here are the (Star, DataFrame) pairs: " + star_df)
     var df_join : DataFrame = null
 
-    println("- Here are join pairs: " + joins + "\n")
+    println(s"- Here are join pairs: $joins \n")
+    println(s"star_nbrFilters: $star_nbrFilters")
 
     var firstTime = true
     val join = " x "
@@ -161,6 +178,13 @@ object Main extends App {
     val seenDF : ListBuffer[(String,String)] = ListBuffer()
 
     var pendingJoins = mutable.Queue[(String, (String, String))]()
+
+    var joinsToreorder : Map[String, String] = Map()
+
+    for (j <- joins.entries)
+        joinsToreorder += j.getKey -> j.getValue._1
+
+    pl.reorder(joinsToreorder, starDataTypesMap, star_nbrFilters, configFile)
 
     var jDF : DataFrame = null
     val it = joins.entries.iterator
@@ -172,7 +196,7 @@ object Main extends App {
         val jVal = entry.getValue._2
         // TODO: add omitQuestionMark and omit it from the next
 
-        println("-> Joining (" + op1 + join + op2 + ") using " + jVal + "...")
+        println(s"-> Joining (" + op1 + join + op2 + ") using $jVal...")
 
         val njVal = get_NS_predicate(jVal)
         val ns = prefixes(njVal._1)
@@ -239,7 +263,7 @@ object Main extends App {
         var njVal = get_NS_predicate(jVal)
         var ns = prefixes(njVal._1)
 
-        println("-> Joining (" + op1 + join + op2 + ") using " + jVal + "...")
+        println(s"-> Joining ($op1 $join $op2 + ) using $jVal...")
 
         val df1 = star_df(op1)
         val df2 = star_df(op2)
@@ -267,7 +291,7 @@ object Main extends App {
 
     //println("\n--Join series: " + seenDF)
 
-    println("--> Needed predicates select: " + neededPredicatesSelect)
+    println(s"--> Needed predicates select: $neededPredicatesSelect")
 
     var columnNames = Seq[String]()
 
@@ -281,14 +305,14 @@ object Main extends App {
         columnNames = columnNames :+ selected_predicate
     }
 
-    println("columnNames: " + columnNames)
+    println(s"columnNames: $columnNames")
     jDF = jDF.select(columnNames.head, columnNames.tail: _*)
 
     println("- Final results DF schema: ")
     jDF.printSchema()
 
     val cnt = jDF.count()
-    println("results (" + cnt + "): ")
+    println(s"Number of results ($cnt): ")
     jDF.show()
     //df_join.collect().foreach(t => println(t))
 

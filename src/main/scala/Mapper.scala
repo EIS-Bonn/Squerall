@@ -17,7 +17,7 @@ import play.api.libs.json._
 
 import scala.collection.mutable.{HashMap, Set}
 
-class Mapper (mappingFile: String) {
+class Mapper (mappingsFile: String) {
 
     //val logger = Logger("name")
 
@@ -32,12 +32,14 @@ class Mapper (mappingFile: String) {
             )] = mutable.Set()
 
         var count = 0
-        
+
+        var starDatasourceTypeMap : Map[String, String] = Map()
+
         for(s <-stars) {
             val subject = s._1 // core of the star
             val predicates_objects = s._2
 
-            println("\n- Going to find datasources related to " + subject + "...")
+            println(s"\n- Going to find datasources relevant to $subject...")
             val ds = findDataSource(predicates_objects) // One or more relevant data sources
             count = count + 1
 
@@ -83,7 +85,6 @@ class Mapper (mappingFile: String) {
     }
 
     private def findDataSource(predicates_objects: Set[(String, String)]) : Set[(HashMap[String, String], String, String)] = {
-                            // Set((<http://xmlns.com/foaf/spec/firstName>,?fn), (<http://xmlns.com/foaf/spec/firstName>,?ln))
         var listOfPredicatesForQuery = ""
         val listOfPredicates : Set[String] = Set()
         val returnedSources : Set[(HashMap[String, String], String, String)] = Set()
@@ -115,7 +116,7 @@ class Mapper (mappingFile: String) {
         var queryString = "PREFIX rml: <http://semweb.mmlab.be/ns/rml#>" +
                             "PREFIX rr: <http://www.w3.org/ns/r2rml#>" +
                             "PREFIX foaf: <http://xmlns.com/foaf/spec/>" +
-                            "PREFIX nosql: <http://purle.org/db/mysql#>" +
+                            "PREFIX nosql: <http://purl.org/db/nosql#>" +
             "SELECT distinct ?src ?type WHERE {" +
                 "?mp rml:logicalSource ?ls . " +
                 "?ls rml:source ?src . " +
@@ -126,10 +127,10 @@ class Mapper (mappingFile: String) {
                 listOfPredicatesForQuery +
             "}"
 
-        println("...for this, the following query will be executed: " + queryString)
+        println("...for this, the following query will be executed: " + queryString + " on " + mappingsFile)
         val query = QueryFactory.create(queryString)
 
-        val in = FileManager.get().open(mappingFile)
+        val in = FileManager.get().open(mappingsFile)
         if (in == null) {
             throw new IllegalArgumentException("File: " + queryString + " not found")
         }
@@ -146,7 +147,7 @@ class Mapper (mappingFile: String) {
             val src = soln.get("src").toString
             val srcType = soln.get("type").toString
 
-            println(">>> Relevant source detected [" + src + "] of type [" + srcType + "]") //NOTE: considering first only one src
+            println(">>> Relevant source detected [" + src + "] of type [" + srcType + "]") //NOTE: considering first only one src (??)
 
             val pred_attr: HashMap[String, String] = HashMap()
 
