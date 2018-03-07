@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: com.datastax.spark:spark-cassandra-connector_2.11:2.0.0:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.datastax.spark/spark-cassandra-connector_2.11/jars/spark-cassandra-connector_2.11-2.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.datastax.spark/spark-cassandra-connector_2.11/srcs/spark-cassandra-connector_2.11-2.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

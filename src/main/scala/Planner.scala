@@ -6,13 +6,12 @@ import com.google.common.collect.ArrayListMultimap
 
 import scala.collection.mutable
 import scala.collection.mutable.{HashMap, MultiMap, Set}
-
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Json, Reads, __}
-
 import Helpers._
 
 import collection.JavaConverters._
+import scala.collection.immutable.ListMap
 
 /**
   * Created by mmami on 06.07.17.
@@ -117,6 +116,11 @@ class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[S
         val scoredJoins = getScoredJoins(joins, scores)
 
         println("===> Scored joins: " + scoredJoins)
+
+        val sortedScoredJoins  = ListMap(scoredJoins.toSeq.sortWith(_._2 > _._2):_*)
+
+        println("===> Sorted scored joins: " + sortedScoredJoins)
+
     }
 
     def starScores(starDataTypesMap: Map[String, mutable.Set[String]], weightsByDatasource: Map[String, Double], filters: Map[String, Integer]) = {

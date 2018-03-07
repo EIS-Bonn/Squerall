@@ -2,27 +2,20 @@ package org.sparkall
 
 import java.util
 
-import Helpers.get_NS_predicate
 import com.google.common.collect.ArrayListMultimap
 import com.mongodb.spark.config.ReadConfig
+import org.apache.log4j.{Level, Logger}
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.apache.spark.sql.functions._
+import org.sparkall.Helpers._
 
 import scala.collection.mutable
 import scala.collection.mutable.{HashMap, Set}
 
+class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecutor[DataFrame] {
 
-/**
-  * Created by mmami on 30.01.17.
-  */
-
-import Helpers._
-import org.apache.log4j.{Level, Logger}
-
-class QueryExecuter(sparkURI: String, mappingsFile: String) {
-
-    def query (sources : Set[(HashMap[String, String], String, String)],
+    def query(sources : Set[(HashMap[String, String], String, String)],
                optionsMap: HashMap[String, Map[String, String]],
                toJoinWith: Boolean,
                star: String,
@@ -164,7 +157,7 @@ class QueryExecuter(sparkURI: String, mappingsFile: String) {
         (finalDF, nbrOfFiltersOfThisStar)
     }
 
-    def transform (df: DataFrame, column: String, transformationsArray : Array[String]): DataFrame = {
+    def transform(df: DataFrame, column: String, transformationsArray : Array[String]): DataFrame = {
 
         var ndf : DataFrame = df
         for (t <- transformationsArray) {
@@ -213,5 +206,130 @@ class QueryExecuter(sparkURI: String, mappingsFile: String) {
         }
 
         ndf
+    }
+
+    def join(joins: ArrayListMultimap[String, (String, String)], prefixes: Map[String, String], star_df: Map[String, DataFrame]): DataFrame = {
+        import scala.collection.JavaConversions._
+        import scala.collection.mutable.ListBuffer
+
+        var pendingJoins = mutable.Queue[(String, (String, String))]()
+        val seenDF : ListBuffer[(String,String)] = ListBuffer()
+        var firstTime = true
+        val join = " x "
+        var jDF : DataFrame = null
+
+        val it = joins.entries.iterator
+        while ({it.hasNext}) {
+            val entry = it.next
+
+            val op1 = entry.getKey
+            val op2 = entry.getValue._1
+            val jVal = entry.getValue._2
+            // TODO: add omitQuestionMark and omit it from the next
+
+            println(s"-> Joining (" + op1 + join + op2 + ") using $jVal...")
+
+            val njVal = get_NS_predicate(jVal)
+            val ns = prefixes(njVal._1)
+
+            println("njVal: " + ns)
+
+            it.remove
+
+            val df1 = star_df(op1)
+            val df2 = star_df(op2)
+
+            if (firstTime) { // First time look for joins in the join hashmap
+                println("ENTERED FIRST TIME")
+                seenDF.add((op1, jVal))
+                seenDF.add((op2, "ID"))
+                firstTime = false
+
+                // Join level 1
+                jDF = df1.join(df2, df1.col(omitQuestionMark(op1) + "_" + omitNamespace(jVal) + "_" + ns).equalTo(df2(omitQuestionMark(op2) + "_ID")))
+
+            } else {
+                val dfs_only = seenDF.map(_._1)
+                if (dfs_only.contains(op1) && !dfs_only.contains(op2)) {
+                    println("ENTERED NEXT TIME >> " + dfs_only)
+
+                    val leftJVar = omitQuestionMark(op1) + "_" + omitNamespace(jVal) + "_" + ns
+                    val rightJVar = omitQuestionMark(op2) + "_ID"
+                    jDF = jDF.join(df2, jDF.col(leftJVar).equalTo(df2.col(rightJVar)))
+
+                    seenDF.add((op2,"ID"))
+
+                    //println("Nbr: " + jDF.count)
+                    //jDF.show()
+                } else if (!dfs_only.contains(op1) && dfs_only.contains(op2)) {
+                    println("ENTERED NEXT TIME << " + dfs_only)
+
+                    val leftJVar = omitQuestionMark(op1) + "_" + omitNamespace(jVal) + "_" + ns
+                    val rightJVar = omitQuestionMark(op2) + "_ID"
+                    jDF = df1.join(jDF, df1.col(leftJVar).equalTo(jDF.col(rightJVar)))
+
+                    seenDF.add((op1,jVal))
+
+                    //println("Nbr: " + jDF.count)
+                    //jDF.show()
+                } else if (!dfs_only.contains(op1) && !dfs_only.contains(op2)) {
+                    println("GOING TO THE QUEUE")
+                    pendingJoins.enqueue((op1, (op2, jVal)))
+                }
+            }
+        }
+
+        while (pendingJoins.nonEmpty) {
+            println("ENTERED QUEUED AREA: " + pendingJoins)
+            val dfs_only = seenDF.map(_._1)
+
+            val e = pendingJoins.head
+
+            val op1 = e._1
+            val op2 = e._2._1
+            val jVal = e._2._2
+
+            var njVal = get_NS_predicate(jVal)
+            var ns = prefixes(njVal._1)
+
+            println(s"-> Joining ($op1 $join $op2 + ) using $jVal...")
+
+            val df1 = star_df(op1)
+            val df2 = star_df(op2)
+
+            if (dfs_only.contains(op1) && !dfs_only.contains(op2)) {
+                val leftJVar = omitQuestionMark(op1) + "_" + omitNamespace(jVal) + "_" + ns
+                val rightJVar = omitQuestionMark(op2) + "_ID"
+                jDF = jDF.join(df2, jDF.col(leftJVar).equalTo(df2.col(rightJVar))) // deep-left
+                //jDF = df2.join(jDF, jDF.col(leftJVar).equalTo(df2.col(rightJVar)))
+
+                seenDF.add((op2,"ID"))
+            } else if (!dfs_only.contains(op1) && dfs_only.contains(op2)) {
+                val leftJVar = omitQuestionMark(op1) + "_" + omitNamespace(jVal) + "_" + ns
+                val rightJVar = omitQuestionMark(op2) + "_ID"
+                jDF = jDF.join(df1, df1.col(leftJVar).equalTo(jDF.col(rightJVar))) // deep-left
+                //jDF = df1.join(jDF, df1.col(leftJVar).equalTo(jDF.col(rightJVar)))
+
+                seenDF.add((op1,jVal))
+            } else if (!dfs_only.contains(op1) && !dfs_only.contains(op2)) {
+                pendingJoins.enqueue((op1, (op2, jVal)))
+            }
+
+            pendingJoins = pendingJoins.tail
+        }
+
+        jDF
+    }
+
+    def project(jDF: DataFrame, columnNames: Seq[String]): DataFrame = {
+        jDF.select(columnNames.head, columnNames.tail: _*)
+    }
+
+    def schemaOf(jDF: DataFrame) = {
+        jDF.printSchema()
+    }
+
+    def count(jDF: DataFrame): Long = {
+        jDF.count()
     }
 }

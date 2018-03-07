@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: com.twitter:jsr166e:1.1.0:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.twitter/jsr166e/jars/jsr166e-1.1.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.twitter/jsr166e/srcs/jsr166e-1.1.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
