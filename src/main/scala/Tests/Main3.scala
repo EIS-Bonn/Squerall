@@ -1,8 +1,5 @@
 package Tests
 
-
-import scala.collection.mutable
-
 /**
   * Created by mmami on 07.03.17.
   */
@@ -11,7 +8,7 @@ object Main3 extends App {
 
     override def main(args: Array[String]) = {
 
-        var q = mutable.Queue[String]()
+        /*var q = mutable.Queue[String]()
 
         q.enqueue("1")
         q.enqueue("3")
@@ -40,7 +37,7 @@ object Main3 extends App {
             q = q.tail
         }
 
-        println("pendingJoins " + q)
+        println("pendingJoins " + q)*/
 
         /*var parquet_schema: String = "java -jar /media/mmami/Extra/Scala/Web/parquet-mr/parquet-tools/target/parquet-tools-1.9.0.jar schema /media/mmami/Extra/Datasets/books.parquet" !!
 
@@ -97,11 +94,51 @@ object Main3 extends App {
         scala.Console.readLine()
         client.close()*/
 
-        var query = "TRANSFORM (?k?a.l.remove(\"a\") && ?k?l.right+16)\n}"
+        /*var query = "TRANSFORM (?k?a.l.remove(\"a\") && ?k?l.right+16)\n}"
 
         val requiredString = query.substring(query.indexOf("TRANSFORM") + 9, query.lastIndexOf(")"))
 
-        println("requiredString: " + requiredString)
+        println("requiredString: " + requiredString)*/
+
+        var scores = Map("a" -> 1, "in" -> 2, "r" -> 2, "k" -> 3, "c" -> 3, "e" -> 3)
+
+        println("initial scores: " + scores)
+
+        var i = 0
+        while (scores.size > 0 && i < 100) {
+            val it = scores.iterator
+            while ({it.hasNext}) {
+                val nxt = it.next()
+                val a = nxt._1
+                if(a == "e") {
+                    scores -= a
+                }
+
+                scores -= "in"
+
+                i = i + 1
+
+                if(a == "in" && i < 4)
+                    scores -= a
+
+                if(a == "a" && i > 6)
+                    scores -= a
+
+                if(a == "c" && i > 8)
+                    scores -= a
+
+                if(a == "r" && i < 10)
+                    scores -= a
+
+                if(a == "k" && i > 12)
+                    scores -= a
+
+                println("scores: " + scores)
+            }
+        }
+
+        println("final scores: " + scores)
+
     }
 }
 

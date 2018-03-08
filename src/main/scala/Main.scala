@@ -49,7 +49,6 @@ object Main extends App {
     val select = qa.getProject
     val filters = qa.getFilters
 
-
     println("\n- Predicates per star:")
     for (v <- stars._1) {
         println(s"* $v._1) $v._2")
@@ -89,7 +88,7 @@ object Main extends App {
     val results = mappers.findDataSources(stars._1, configFile)
 
     var star_df : Map[String, DataFrame] = Map.empty
-    var star_nbrFilters : Map[String, Integer] = Map()
+    var starNbrFilters : Map[String, Integer] = Map()
 
     //val executorID = Config.get("spark.url")
     val executorID = args(3)
@@ -155,35 +154,41 @@ object Main extends App {
         star_df += (star -> ds) // DataFrame representing a star
 
         numberOfFiltersOfThisStar = queryResults._2
-        star_nbrFilters += star -> numberOfFiltersOfThisStar
+        starNbrFilters += star -> numberOfFiltersOfThisStar
     }
 
     println("\n/*******************************************************************/")
     println("/*                         QUERY EXECUTION                         */")
     println("/*******************************************************************/")
-    println("- Here are the (Star, DataFrame) pairs: " + star_df)
-    var df_join : DataFrame = null
+    println(s"- Here are the (Star, DataFrame) pairs: \n $star_df")
+    println(s"- Here are join pairs: $joins")
+    println(s"- Number of predicates per star: $starNbrFilters ")
 
-    println(s"- Here are join pairs: $joins \n")
-    println(s"star_nbrFilters: $star_nbrFilters")
+    val starWeights = pl.sortStarsByWeight(starDataTypesMap, starNbrFilters, configFile)
+    println(s"- Stars weighted (performance + nbr of filters): $starWeights \n")
 
-    var joinsToReorder : Map[String, String] = Map()
+    val sortedScoredJoins = pl.reorder(joins, starDataTypesMap, starNbrFilters, starWeights, configFile)
+    println("- Sorted scored joins: " + sortedScoredJoins)
+    val startingJoin = sortedScoredJoins.head
 
-    for (j <- joins.entries)
-        joinsToReorder += j.getKey -> j.getValue._1
+    // Convert starting join to: (leftStar, (rightStar, joinVar)) so we can remove it from $joins
+    var firstJoin : (String, (String, String)) = null
+    for(j <- joins.entries) {
+        if(j.getKey == startingJoin._1._1 && j.getValue._1 == startingJoin._1._2)
+            firstJoin = startingJoin._1._1 -> (startingJoin._1._2, j.getValue._2)
+    }
+    println(s"- Starting join: $firstJoin \n")
 
-    pl.reorder(joinsToReorder, starDataTypesMap, star_nbrFilters, configFile)
+    //joins.remove(firstJoin._1,firstJoin._2)
 
-    var jDF : DataFrame = executor.join(joins,prefixes,star_df)
+    // Final global join
+    //var jDF  = executor.join(joins,prefixes,star_df)
+    var jDF  = executor.joinReordered(joins,prefixes,star_df,firstJoin,starWeights)
 
-    //println("\n--Join series: " + seenDF)
-
-    println(s"--> Needed predicates select: $neededPredicatesSelect")
-
+    // Project out columns from the final global join results
     var columnNames = Seq[String]()
-
+    println(s"\n--> Needed predicates select: $neededPredicatesSelect")
     for (i <- neededPredicatesSelect) {
-
         val star = i._1
         val ns_predicate = i._2
         val bits = get_NS_predicate(ns_predicate)
@@ -191,9 +196,7 @@ object Main extends App {
         val selected_predicate = omitQuestionMark(star) + "_" + bits._2 + "_" + prefixes(bits._1)
         columnNames = columnNames :+ selected_predicate
     }
-
     println(s"Select column names: $columnNames")
-
     jDF = executor.project(jDF,columnNames)
 
     println("- Final results DF schema: ")
@@ -202,7 +205,5 @@ object Main extends App {
     val cnt = executor.count(jDF)
     println(s"Number of results ($cnt): ")
     jDF.show()
-
-    //df_join.collect().foreach(t => println(t))
 
 }

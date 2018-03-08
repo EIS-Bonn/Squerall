@@ -3,15 +3,15 @@ package org.sparkall
 import java.util
 
 import com.google.common.collect.ArrayListMultimap
-
-import scala.collection.mutable
-import scala.collection.mutable.{HashMap, MultiMap, Set}
+import org.sparkall.Helpers._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Json, Reads, __}
-import Helpers._
 
-import collection.JavaConverters._
+import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.immutable.ListMap
+import scala.collection.mutable
+import scala.collection.mutable.{HashMap, ListBuffer, MultiMap, Set}
 
 /**
   * Created by mmami on 06.07.17.
@@ -83,11 +83,38 @@ class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[S
         (joins, joinedToFlag, joinedFromFlag, joinPairs)
     }
 
-    def reorder(joins: Map[String, String], starDataTypesMap: Map[String, mutable.Set[String]], filters: Map[String, Integer], configFile: String) = {
+    def reorder(joins: ArrayListMultimap[String, (String, String)], starDataTypesMap: Map[String, mutable.Set[String]], starNbrFilters: Map[String, Integer], starWeights: Map[String, Double], configFile: String) = {
 
         //var configFile = Config.get("datasets.weights")
 
         println("************REORDERING JOINS**************")
+
+        var joinsToReorder : ListBuffer[(String, String)] = ListBuffer()
+
+        for (j <- joins.entries) {
+            joinsToReorder += ((j.getKey, j.getValue._1))
+        }
+
+        val scoredJoins = getScoredJoins(joins, starWeights)
+
+        val sortedScoredJoins  = ListMap(scoredJoins.toSeq.sortWith(_._2 > _._2):_*)
+
+        sortedScoredJoins
+    }
+
+    def getScoredJoins(joins : ArrayListMultimap[String, (String, String)], scores: Map[String, Double]) = {
+        var scoredJoins : Map[(String, String), Double] = Map()
+
+        for (j <- joins.entries)
+            scoredJoins += (j.getKey, j.getValue._1) -> (scores(j.getKey) + scores(j.getValue._1))
+
+        scoredJoins
+    }
+
+    def sortStarsByWeight(starDataTypesMap: Map[String, mutable.Set[String]], filters: Map[String, Integer], configFile: String) = {
+        //var configFile = Config.get("datasets.weights")
+
+        //println("************REORDERING STARS**************")
 
         val queryString = scala.io.Source.fromFile(configFile)
         val configJSON = try queryString.mkString finally queryString.close()
@@ -96,8 +123,8 @@ class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[S
 
         implicit val userReads: Reads[ConfigObject] = (
             (__ \ 'datasource).read[String] and
-            (__ \ 'weight).read[Double]
-        )(ConfigObject)
+                (__ \ 'weight).read[Double]
+            )(ConfigObject)
 
         val weights = (Json.parse(configJSON) \ "weights").as[Seq[ConfigObject]]
 
@@ -106,21 +133,11 @@ class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[S
             scoresByDatasource += w.datasource -> w.weight
         }
 
-        println(s"===> To reorder the following joins: $joins...")
-        println(s"===> Where the stars have the following relevant datasource(s) types: $starDataTypesMap...")
-        println(s"===> We use the following scores of the datasource types: $scoresByDatasource \n")
+        println(s"- We use the following scores of the datasource types: $scoresByDatasource \n")
 
         val scores = starScores(starDataTypesMap, scoresByDatasource, filters)
-        println("===> Scores: " + scores)
 
-        val scoredJoins = getScoredJoins(joins, scores)
-
-        println("===> Scored joins: " + scoredJoins)
-
-        val sortedScoredJoins  = ListMap(scoredJoins.toSeq.sortWith(_._2 > _._2):_*)
-
-        println("===> Sorted scored joins: " + sortedScoredJoins)
-
+        scores
     }
 
     def starScores(starDataTypesMap: Map[String, mutable.Set[String]], weightsByDatasource: Map[String, Double], filters: Map[String, Integer]) = {
@@ -145,14 +162,5 @@ class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[S
         }
 
         scores
-    }
-
-    def getScoredJoins(joins : Map[String, String], scores: Map[String, Double]) = {
-        var scoredJoins : Map[(String, String), Double] = Map()
-
-        for (j <- joins)
-            scoredJoins += (j._1, j._2) -> (scores(j._1) + scores(j._2))
-
-        scoredJoins
     }
 }
