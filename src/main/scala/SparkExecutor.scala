@@ -12,6 +12,7 @@ import org.sparkall.Helpers._
 
 import scala.collection.mutable
 import scala.collection.mutable.{HashMap, Set}
+import scala.collection.immutable.ListMap
 
 class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecutor[DataFrame] {
 
@@ -326,7 +327,6 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
         import scala.collection.JavaConversions._
         import scala.collection.mutable.ListBuffer
 
-        var pendingJoins = mutable.Queue[(String, (String, String))]()
         val seenDF : ListBuffer[(String,String)] = ListBuffer()
         val joinSymbol = " x "
         var jDF : DataFrame = null
@@ -339,7 +339,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
         val df1 = star_df(op1)
         val df2 = star_df(op2)
 
-        println(s"-> DOING FIRST JOIN ($op1 $joinSymbol $op2 ) USING $jVal (namespace: $ns)")
+        println(s"-> DOING FIRST JOIN ($op1 $joinSymbol $op2) USING $jVal (namespace: $ns)")
 
         seenDF.add((op1, jVal))
         seenDF.add((op2, "ID")) // TODO: implement join var in the right side too
@@ -353,92 +353,105 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
 
         println("...done!")
 
-        val it = joins.entries.iterator
-        while ({it.hasNext}) {
-            val entry = it.next
-
-            val op1 = entry.getKey
-            val op2 = entry.getValue._1
-            val jVal = entry.getValue._2
-            // TODO: add omitQuestionMark and omit it from the next
-
-            val njVal = get_NS_predicate(jVal)
-            val ns = prefixes(njVal._1)
-            println(s"-> NEXT, GOING TO JOIN ($op1 $joinSymbol $op2 ) USING $jVal (namespace: $ns)")
-
-            it.remove
-
-            val df1 = star_df(op1)
-            val df2 = star_df(op2)
-
-            val dfs_only = seenDF.map(_._1)
-            println("...checking the prev. joined DataFrames: " + dfs_only)
-            if (dfs_only.contains(op1) && !dfs_only.contains(op2)) {
-                println("...aaand we can join (this direction >>) ")
-
-                val leftJVar = omitQuestionMark(op1) + "_" + omitNamespace(jVal) + "_" + ns
-                val rightJVar = omitQuestionMark(op2) + "_ID"
-                jDF = jDF.join(df2, jDF.col(leftJVar).equalTo(df2.col(rightJVar)))
-
-                seenDF.add((op2,"ID"))
-
-                //println("Nbr: " + jDF.count)
-                //jDF.show()
-            } else if (!dfs_only.contains(op1) && dfs_only.contains(op2)) {
-                println("...aaand we can join (this direction <<) ")
-
-                val leftJVar = omitQuestionMark(op1) + "_" + omitNamespace(jVal) + "_" + ns
-                val rightJVar = omitQuestionMark(op2) + "_ID"
-                jDF = df1.join(jDF, df1.col(leftJVar).equalTo(jDF.col(rightJVar)))
-
-                seenDF.add((op1,jVal))
-
-                //println("Nbr: " + jDF.count)
-                //jDF.show()
-            } else if (!dfs_only.contains(op1) && !dfs_only.contains(op2)) {
-                println("...no join possible -> GOING TO THE QUEUE")
-                pendingJoins.enqueue((op1, (op2, jVal)))
-            }
-            //}
+        var joinsMap : Map[(String,String),String] = Map()
+        for (jj <- joins.entries()) {
+            joinsMap += (jj.getKey, jj.getValue._1) -> jj.getValue._2
+        }
+        val seenDF1 : Set[(String,String)] =  Set()
+        for (s <- seenDF) {
+            seenDF1 += s
         }
 
-        while (pendingJoins.nonEmpty) {
-            println("ENTERED QUEUED AREA: " + pendingJoins)
+        println("joinsMap: " + joinsMap)
+        while(joinsMap.size() > 0) {
+
             val dfs_only = seenDF.map(_._1)
+            println(s"-> Looking for join(s) that join(s) with: $dfs_only")
 
-            val e = pendingJoins.head
+            var joinable : Map[(String, String), String] = Map.empty // or Map()
 
-            val op1 = e._1
-            val op2 = e._2._1
-            val jVal = e._2._2
+            val j = joinsMap.iterator
+            while ({j.hasNext}) {
+                val entry = j.next
 
-            val njVal = get_NS_predicate(jVal)
-            val ns = prefixes(njVal._1)
+                val op1 = entry._1._1
+                val op2 = entry._1._2
+                val jVal = entry._2
 
-            println(s"-> Joining ($op1 $joinSymbol $op2 + ) using $jVal...")
+                val njVal = get_NS_predicate(jVal)
+                val ns = prefixes(njVal._1)
 
-            val df1 = star_df(op1)
-            val df2 = star_df(op2)
-
-            if (dfs_only.contains(op1) && !dfs_only.contains(op2)) {
-                val leftJVar = omitQuestionMark(op1) + "_" + omitNamespace(jVal) + "_" + ns
-                val rightJVar = omitQuestionMark(op2) + "_ID"
-                jDF = jDF.join(df2, jDF.col(leftJVar).equalTo(df2.col(rightJVar))) // deep-left
-
-                seenDF.add((op2,"ID"))
-            } else if (!dfs_only.contains(op1) && dfs_only.contains(op2)) {
-                val leftJVar = omitQuestionMark(op1) + "_" + omitNamespace(jVal) + "_" + ns
-                val rightJVar = omitQuestionMark(op2) + "_ID"
-                jDF = jDF.join(df1, df1.col(leftJVar).equalTo(jDF.col(rightJVar))) // deep-left
-
-                seenDF.add((op1,jVal))
-            } else if (!dfs_only.contains(op1) && !dfs_only.contains(op2)) {
-                pendingJoins.enqueue((op1, (op2, jVal)))
+                if (dfs_only.contains(op1) || dfs_only.contains(op2)) {
+                    joinable += ((op1,op2) -> jVal)
+                    joinsMap -= ((op1,op2))
+                }
             }
 
-            pendingJoins = pendingJoins.tail
-        }
+            println("Found those: " + joinable)
 
+            var weighedJoins : Map[(String,(String,String),String),Double] = Map()
+            for(jj <- joinable) {
+                val op1 = jj._1._1
+                val op2 = jj._1._2
+                val jVal = jj._2
+
+                if (dfs_only.contains(op1) && !dfs_only.contains(op2)) {
+                    println(s"...getting weight of join variable $op2")
+
+                    weighedJoins += (op1,(op2,jVal),"op2") -> starWeights(op2)
+
+                } else if (!dfs_only.contains(op1) && dfs_only.contains(op2)) {
+                    println(s"...getting weight of join variable $op1")
+
+                    weighedJoins += (op1,(op2,jVal),"op1") -> starWeights(op1)
+                }
+            }
+
+            // Sort joins by their weight on the joining side
+            println(s"weighedJoins: $weighedJoins")
+
+            val sortedWeighedJoins = ListMap(weighedJoins.toSeq.sortWith(_._2 > _._2):_*)
+
+            println(s"sortedWeighedJoins: $sortedWeighedJoins")
+
+            for(s <- sortedWeighedJoins) {
+
+                val op1 = s._1._1
+                val op2 = (s._1)._2._1
+                val jVal = (s._1)._2._2
+                val njVal = get_NS_predicate(jVal)
+                val ns = prefixes(njVal._1)
+                val joinSide = (s._1)._3
+
+                val df1 = star_df(op1)
+                val df2 = star_df(op2)
+
+                println(s"---- $op1 -- $op2 -- $joinSide -- $jVal")
+
+
+                if (joinSide.equals("op2")) {
+                    println("...we can join (this direction >>) ")
+
+                    val leftJVar = omitQuestionMark(op1) + "_" + omitNamespace(jVal) + "_" + ns
+                    val rightJVar = omitQuestionMark(op2) + "_ID"
+
+                    println(s"$leftJVar XXX $rightJVar")
+                    jDF = jDF.join(df2, jDF.col(leftJVar).equalTo(df2.col(rightJVar)))
+
+                    seenDF.add((op2,"ID"))
+                } else if (joinSide.equals("op1")) {
+                    println("...we can join (this direction <<) ")
+
+                    val leftJVar = omitQuestionMark(op1) + "_" + omitNamespace(jVal) + "_" + ns
+                    val rightJVar = omitQuestionMark(op2) + "_ID"
+                    jDF = df1.join(jDF, df1.col(leftJVar).equalTo(jDF.col(rightJVar)))
+
+                    seenDF.add((op1,jVal))
+                }
+            }
+            println(s"-> Fully joined: $seenDF \n")
+        }
+        
         jDF
     }
 

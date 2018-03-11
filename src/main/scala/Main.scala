@@ -147,7 +147,7 @@ object Main extends App {
             //println("-> datasources: " + datasources)
             queryResults = executor.query(datasources, options, false, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
             ds = queryResults._1
-            println("...with DataFrame schema: " + ds)
+            println("...with DataFrame schemaa: " + ds)
             ds.printSchema()
         }
 
@@ -182,8 +182,8 @@ object Main extends App {
     //joins.remove(firstJoin._1,firstJoin._2)
 
     // Final global join
-    //var jDF  = executor.join(joins,prefixes,star_df)
-    var jDF  = executor.joinReordered(joins,prefixes,star_df,firstJoin,starWeights)
+    var jDF  = executor.join(joins,prefixes,star_df)
+    //var jDF  = executor.joinReordered(joins,prefixes,star_df,firstJoin,starWeights)
 
     // Project out columns from the final global join results
     var columnNames = Seq[String]()
