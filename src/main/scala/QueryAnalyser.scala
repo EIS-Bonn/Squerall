@@ -17,6 +17,7 @@ import Helpers._
 
 class QueryAnalyser(query: String) {
 
+
     def getPrefixes : Map[String, String] = {
         val q = QueryFactory.create(query)
         val prolog = q.getPrologue().getPrefixMapping.getNsPrefixMap
@@ -54,6 +55,20 @@ class QueryAnalyser(query: String) {
         filters
     }
 
+    def getOrderBy = {
+        val q = QueryFactory.create(query)
+
+        val orderBy = q.getOrderBy.iterator()
+        var orderBys : Set[(String,String)] = Set()
+        while(orderBy.hasNext) {
+            val it = orderBy.next()
+
+            orderBys += ((it.direction.toString,it.expression.toString))
+        }
+
+        orderBys
+    }
+
     def getStars : (mutable.HashMap[String, mutable.Set[(String, String)]] with mutable.MultiMap[String, (String, String)], mutable.HashMap[(String,String), String]) = {
 
         val q = QueryFactory.create(query)
@@ -61,6 +76,8 @@ class QueryAnalyser(query: String) {
 
         val bgp = originalBGP.replaceAll("\n", "").replaceAll("\\s+", " ").replace("{"," ").replace("}"," ") // See example below + replace breaklines + remove extra white spaces
         val tps = bgp.split("\\.(?![^\\<\\[]*[\\]\\>])")
+
+        val orderBy = q.getOrderBy.toArray
 
         println("\n- The BGP of the input query:  " + originalBGP)
         println("\n- Number of triple-stars detected: " + tps.length)
@@ -120,6 +137,7 @@ class QueryAnalyser(query: String) {
             else
                 transmap_right += (vars(1) -> functions)
         }
+
 
         (transmap_left, transmap_right)
     }

@@ -67,7 +67,6 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
                     columns = columns + "," + id + " AS " + omitQuestionMark(star) + "_ID"
             }
 
-            println("star_predicate_var: " + star_predicate_var)
             println("sourceType: " + sourceType)
 
             var df : DataFrame = null
@@ -91,11 +90,10 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
             }
 
             df.createOrReplaceTempView("table")
-            var newDF = spark.sql("SELECT " + columns + " FROM table")
+            val newDF = spark.sql("SELECT " + columns + " FROM table")
 
             if(datasource_count == 1) {
                 finalDF = newDF
-
             } else {
                 finalDF = finalDF.union(newDF)
             }
@@ -120,6 +118,8 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
         }
 
         println("\n- filters: " + filters + " ======= " + star)
+
+        println("Number of executors: " + spark.sparkContext.getExecutorStorageStatus.length)
 
         var whereString = ""
 

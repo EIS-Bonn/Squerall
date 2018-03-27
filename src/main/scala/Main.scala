@@ -1,7 +1,10 @@
 package org.sparkall
 
+import org.apache.commons.lang.time.StopWatch
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions._
+
 import org.sparkall.Helpers._
 
 import scala.collection.JavaConversions._
@@ -48,14 +51,42 @@ object Main extends App {
     val prefixes = qa.getPrefixes
     val select = qa.getProject
     val filters = qa.getFilters
+    val orderBys = qa.getOrderBy
+
+    println(s"orderBys: ${orderBys}")
 
     println("\n- Predicates per star:")
+
+    // Create a map between the variable and its star and predicate URL
+    // Need e.g. to create the column to SQL ORDER BY from SPARQL ORDER BY
+    var variablePredicateStar : Map[String,(String,String)]= Map()
     for (v <- stars._1) {
-        println(s"* $v._1) $v._2")
+        val star = v._1
+        val predicate_variable_set = v._2
+        for(pv <- predicate_variable_set) {
+            val predicate = pv._1
+            val variable = pv._2
+
+            variablePredicateStar += (variable -> (star,predicate))
+        }
     }
 
-    // Build ((s,p) -> o) map to check later if predicates appearing in WHERE appears actually in SELECT
-    val star_predicate_var = stars._2 // assuming no (star,predicate) with two vars?
+    println(s"predicateStar: $variablePredicateStar")
+
+    var orderByList : Set[(String,String)] = Set()
+    for(o <- orderBys) {
+        val orderDirection = o._1
+        val str = variablePredicateStar(o._2)._1
+        val vr = variablePredicateStar(o._2)._2
+        val ns_p = get_NS_predicate(vr)
+        val column = omitQuestionMark(str) + "_" + ns_p._2 + "_" + prefixes(ns_p._1)
+        orderByList += ((column, orderDirection))
+        //println(s"- Order $column by $orderDirection (-1 ASC, -2 DESC)")
+    }
+
+    // Build ((s,p) -> o) map to check later if predicates appearing in WHERE actually appear also in SELECT
+    val star_predicate_var = stars._2 // TODO: assuming no (star,predicate) with two vars?
+    println("star_predicate_var: " + star_predicate_var)
 
     // 3. Generate plan of joins
     println("\n/*******************************************************************/")
@@ -114,6 +145,7 @@ object Main extends App {
         var rightJoinTransformations : Array[String]  = null
         if (transformExist) {
             val (transmap_left, transmap_right) = qa.getTransformations(trans)
+
             val str = omitQuestionMark(star)
             if (transmap_left.keySet.contains(str)) {
                 // Get wth whom there is a join
@@ -135,6 +167,7 @@ object Main extends App {
         var ds : DataFrame = null
         var numberOfFiltersOfThisStar = 0
         var queryResults: (DataFrame,Integer) = null
+        // TODO: the else block looks like not being reached, check its validity
         if (joinedToFlag.contains(star) || joinedFromFlag.contains(star)) {
             //println("TRUE: " + star)
             //println("-> datasources: " + datasources)
@@ -147,7 +180,7 @@ object Main extends App {
             //println("-> datasources: " + datasources)
             queryResults = executor.query(datasources, options, false, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
             ds = queryResults._1
-            println("...with DataFrame schemaa: " + ds)
+            println("...with DataFrame schema: " + ds)
             ds.printSchema()
         }
 
@@ -182,8 +215,17 @@ object Main extends App {
     //joins.remove(firstJoin._1,firstJoin._2)
 
     // Final global join
-    var jDF  = executor.join(joins,prefixes,star_df)
-    //var jDF  = executor.joinReordered(joins,prefixes,star_df,firstJoin,starWeights)
+    var jDF: DataFrame = null
+    println("args.length: " + args.length)
+    if(args.length == 5) {
+        val mode = args(4) // reorder or not
+        println("mode: " + mode)
+
+        if (mode == "r")
+            jDF = executor.joinReordered(joins, prefixes, star_df, firstJoin, starWeights)
+    } else
+        jDF  = executor.join(joins,prefixes,star_df)
+
 
     // Project out columns from the final global join results
     var columnNames = Seq[String]()
@@ -196,14 +238,38 @@ object Main extends App {
         val selected_predicate = omitQuestionMark(star) + "_" + bits._2 + "_" + prefixes(bits._1)
         columnNames = columnNames :+ selected_predicate
     }
-    println(s"Select column names: $columnNames")
+
+    println(s"ORDER BY list: $orderByList (-1 ASC, -2 DESC)") // TODO: (-1 ASC, -2 DESC) confirm with multiple order-by's
+    println(s"SELECTED column names: $columnNames") // TODO: check the order of PROJECT and ORDER-BY
+    for(o <- orderByList) {
+        val variable = o._1
+        val direction = o._2
+
+        if(direction == "-1") {
+            jDF = jDF.orderBy(asc(variable))
+            println("ORDERING ASC")
+        } else if(direction == "-2") {
+            jDF = jDF.orderBy(desc(variable))
+            println("ORDERING DESC")
+        }
+    }
+
     jDF = executor.project(jDF,columnNames)
 
     println("- Final results DF schema: ")
     executor.schemaOf(jDF)
 
+    val stopwatch : StopWatch = new StopWatch
+    stopwatch.start
+
     val cnt = executor.count(jDF)
     println(s"Number of results ($cnt): ")
     jDF.show()
+
+    stopwatch.stop
+
+    val timeTaken = stopwatch.getTime
+
+    println(s"timeTaken: $timeTaken")
 
 }
