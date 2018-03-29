@@ -3,8 +3,6 @@ package org.sparkall
 import org.apache.commons.lang.time.StopWatch
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions._
-
 import org.sparkall.Helpers._
 
 import scala.collection.JavaConversions._
@@ -48,17 +46,9 @@ object Main extends App {
     var qa = new QueryAnalyser(query)
 
     var stars = qa.getStars
-    val prefixes = qa.getPrefixes
-    val select = qa.getProject
-    val filters = qa.getFilters
-    val orderBys = qa.getOrderBy
 
-    println(s"orderBys: ${orderBys}")
-
-    println("\n- Predicates per star:")
-
-    // Create a map between the variable and its star and predicate URL
-    // Need e.g. to create the column to SQL ORDER BY from SPARQL ORDER BY
+    // Create a map between the variable and its star and predicate URL [variable -> (star,predicate)]
+    // Need e.g. to create the column to 'SQL ORDER BY' from 'SPARQL ORDER BY'
     var variablePredicateStar : Map[String,(String,String)]= Map()
     for (v <- stars._1) {
         val star = v._1
@@ -73,16 +63,14 @@ object Main extends App {
 
     println(s"predicateStar: $variablePredicateStar")
 
-    var orderByList : Set[(String,String)] = Set()
-    for(o <- orderBys) {
-        val orderDirection = o._1
-        val str = variablePredicateStar(o._2)._1
-        val vr = variablePredicateStar(o._2)._2
-        val ns_p = get_NS_predicate(vr)
-        val column = omitQuestionMark(str) + "_" + ns_p._2 + "_" + prefixes(ns_p._1)
-        orderByList += ((column, orderDirection))
-        //println(s"- Order $column by $orderDirection (-1 ASC, -2 DESC)")
-    }
+
+    val prefixes = qa.getPrefixes
+    val select = qa.getProject
+    val filters = qa.getFilters
+    val orderBys = qa.getOrderBy
+    val groupBys = qa.getGroupBy(variablePredicateStar,prefixes)
+
+    println("\n- Predicates per star:")
 
     // Build ((s,p) -> o) map to check later if predicates appearing in WHERE actually appear also in SELECT
     val star_predicate_var = stars._2 // TODO: assuming no (star,predicate) with two vars?
@@ -99,12 +87,9 @@ object Main extends App {
     val joinedFromFlag = pln._3
     val joinPairs = pln._4
 
-    //println("JOINS detected: " + sources)
-
     val neededPredicates = pl.getNeededPredicates(star_predicate_var, joins, select)
-
-    val neededPredicatesAll = neededPredicates._1
-    val neededPredicatesSelect = neededPredicates._2
+    val neededPredicatesAll = neededPredicates._1 // all predicates used
+    val neededPredicatesSelect = neededPredicates._2 // only projected out predicates
 
     //println("joinedToFlag: " + joinedToFlag)
     println("--> Needed predicates all: " + neededPredicatesAll)
@@ -235,22 +220,45 @@ object Main extends App {
         val ns_predicate = i._2
         val bits = get_NS_predicate(ns_predicate)
 
-        val selected_predicate = omitQuestionMark(star) + "_" + bits._2 + "_" + prefixes(bits._1)
+        val selected_predicate = omitQuestionMark(star) + "_" + bits._2 + "_" + prefixes(bits._1) // TODO: this is recurrent, need to create a (helping) methode for it
         columnNames = columnNames :+ selected_predicate
     }
 
-    println(s"ORDER BY list: $orderByList (-1 ASC, -2 DESC)") // TODO: (-1 ASC, -2 DESC) confirm with multiple order-by's
-    println(s"SELECTED column names: $columnNames") // TODO: check the order of PROJECT and ORDER-BY
-    for(o <- orderByList) {
-        val variable = o._1
-        val direction = o._2
+    for(gb <- groupBys._2) {
+        println("-> Add to Project list:" + gb._2)
+        columnNames = columnNames :+ gb._2 + "(" + gb._1 + ")"
+    }
 
-        if(direction == "-1") {
-            jDF = jDF.orderBy(asc(variable))
-            println("ORDERING ASC")
-        } else if(direction == "-2") {
-            jDF = jDF.orderBy(desc(variable))
-            println("ORDERING DESC")
+    println(s"SELECTED column names: $columnNames") // TODO: check the order of PROJECT and ORDER-BY
+
+    if(groupBys != null) {
+        println(s"groupBys: $groupBys")
+
+        jDF = executor.groupBy(jDF,groupBys)
+    }
+
+    if(orderBys != null) {
+        println(s"orderBys: $orderBys")
+
+        var orderByList: Set[(String, String)] = Set()
+        for (o <- orderBys) {
+            val orderDirection = o._1
+            val str = variablePredicateStar(o._2)._1
+            val vr = variablePredicateStar(o._2)._2
+            val ns_p = get_NS_predicate(vr)
+            val column = omitQuestionMark(str) + "_" + ns_p._2 + "_" + prefixes(ns_p._1)
+            orderByList += ((column, orderDirection))
+            //println(s"- Order $column by $orderDirection (-1 ASC, -2 DESC)")
+        }
+
+        println(s"ORDER BY list: $orderByList (-1 ASC, -2 DESC)") // TODO: (-1 ASC, -2 DESC) confirm with multiple order-by's
+
+        for (o <- orderByList) {
+            val variable = o._1
+            val direction = o._2
+
+            jDF = executor.orderBy(jDF,direction,variable)
+
         }
     }
 

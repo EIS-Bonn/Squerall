@@ -16,7 +16,7 @@ import scala.collection.mutable.{HashMap, ListBuffer, MultiMap, Set}
 /**
   * Created by mmami on 06.07.17.
   */
-class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[String, Tuple2[String,String]]) {
+class Planner(stars: HashMap[String, Set[(String, String)]] with MultiMap[String, (String, String)]) {
 
     def getNeededPredicates(star_predicate_var: mutable.HashMap[(String, String), String], joins: ArrayListMultimap[String, (String, String)], select_vars: util.List[String]) : (Set[String],Set[(String,String)]) = {
 
@@ -30,6 +30,9 @@ class Planner(stars: HashMap[String, Set[Tuple2[String,String]]] with MultiMap[S
         val join_left_right_vars = join_right_vars.union(join_left_vars.asScala)
 
         println("--> Left & right join operands: " + join_left_right_vars)
+
+        //println("select_vars: " + select_vars)
+        //println("star_predicate_varr: " + star_predicate_var.mkString(", "))
 
         for (t <- star_predicate_var) {
             val s_p = t._1

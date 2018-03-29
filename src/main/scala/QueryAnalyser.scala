@@ -7,8 +7,8 @@ import org.apache.jena.query.QueryFactory
 import org.apache.jena.sparql.syntax.{ElementFilter, ElementVisitorBase, ElementWalker}
 
 import scala.collection.mutable
-import scala.collection.mutable.{HashMap, MultiMap, Set}
-
+import scala.collection.mutable.{HashMap, ListBuffer, MultiMap, Set}
+import scala.collection.JavaConversions._
 import Helpers._
 
 /**
@@ -57,16 +57,57 @@ class QueryAnalyser(query: String) {
 
     def getOrderBy = {
         val q = QueryFactory.create(query)
-
-        val orderBy = q.getOrderBy.iterator()
         var orderBys : Set[(String,String)] = Set()
-        while(orderBy.hasNext) {
-            val it = orderBy.next()
 
-            orderBys += ((it.direction.toString,it.expression.toString))
-        }
+        if(q.hasOrderBy) {
+            val orderBy = q.getOrderBy.iterator()
+
+            while(orderBy.hasNext) {
+                val it = orderBy.next()
+
+                orderBys += ((it.direction.toString,it.expression.toString))
+            }
+        } else
+            orderBys = null
 
         orderBys
+    }
+
+    def getGroupBy(variablePredicateStar: Map[String, (String, String)], prefixes: Map[String, String]) = {
+        val q = QueryFactory.create(query)
+        val groupByCols : ListBuffer[String] = ListBuffer()
+        var aggregationFunctions : Set[(String,String)] = Set()
+
+        if (q.hasGroupBy) {
+            val groupByVars = q.getGroupBy.getVars.toList
+            for(gbv <- groupByVars) {
+                val str = variablePredicateStar(gbv.toString())._1
+                val vr = variablePredicateStar(gbv.toString())._2
+                val ns_p = get_NS_predicate(vr)
+                val column = omitQuestionMark(str) + "_" + ns_p._2 + "_" + prefixes(ns_p._1)
+
+                groupByCols.add(column)
+            }
+
+            val agg = q.getAggregators
+            println("agg: " + agg)
+            for(ag <- agg) { // toPrefixString returns (aggregate_function aggregate_var) eg. (sum ?price)
+                val bits = ag.getAggregator.toPrefixString.split(" ")
+
+                val aggCol = "?" + bits(1).dropRight(1).substring(1) // ? added eg ?price in variablePredicateStar
+                val str = variablePredicateStar(aggCol)._1
+                val vr = variablePredicateStar(aggCol)._2
+                val ns_p = get_NS_predicate(vr)
+                val column = omitQuestionMark(str) + "_" + ns_p._2 + "_" + prefixes(ns_p._1)
+
+                aggregationFunctions += ((column, bits(0).substring(1))) // o_price_cbo -> sum
+            }
+
+            (groupByCols,aggregationFunctions)
+
+        } else
+            null
+
     }
 
     def getStars : (mutable.HashMap[String, mutable.Set[(String, String)]] with mutable.MultiMap[String, (String, String)], mutable.HashMap[(String,String), String]) = {
@@ -76,8 +117,6 @@ class QueryAnalyser(query: String) {
 
         val bgp = originalBGP.replaceAll("\n", "").replaceAll("\\s+", " ").replace("{"," ").replace("}"," ") // See example below + replace breaklines + remove extra white spaces
         val tps = bgp.split("\\.(?![^\\<\\[]*[\\]\\>])")
-
-        val orderBy = q.getOrderBy.toArray
 
         println("\n- The BGP of the input query:  " + originalBGP)
         println("\n- Number of triple-stars detected: " + tps.length)

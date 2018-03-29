@@ -7,12 +7,12 @@ import com.mongodb.spark.config.ReadConfig
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import org.sparkall.Helpers._
 
-import scala.collection.mutable
-import scala.collection.mutable.{HashMap, Set}
 import scala.collection.immutable.ListMap
+import scala.collection.mutable
+import scala.collection.mutable.{HashMap, ListBuffer, Set}
 
 class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecutor[DataFrame] {
 
@@ -466,4 +466,41 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
     def count(jDF: DataFrame): Long = {
         jDF.count()
     }
+
+    def orderBy(jDF: DataFrame, direction: String, variable: String): DataFrame = {
+        println("ORDERING...")
+
+        if (direction == "-1") {
+            jDF.orderBy(asc(variable))
+        } else { // TODO: assuming the other case is automatically -1 IFNOT change to "else if (direction == "-2") {"
+            jDF.orderBy(desc(variable))
+        }
+    }
+
+    def groupBy(jDF: DataFrame, groupBys: (ListBuffer[String], Set[(String,String)])): DataFrame = {
+
+        val groupByVars = groupBys._1
+        val aggregationFunctions = groupBys._2
+
+        val cols : ListBuffer[Column] = ListBuffer  ()
+        for(gbv <- groupByVars) {
+            cols += col(gbv)
+        }
+        println("aggregationFunctions: " + aggregationFunctions)
+
+        var aggSet : Set[(String,String)] = Set()
+        for (af <- aggregationFunctions){
+            aggSet += ((af._1,af._2))
+        }
+        val aa = aggSet.toList
+        val newJDF : DataFrame = jDF.groupBy(cols: _*).agg(aa.head, aa.tail : _*)
+
+
+        // df.groupBy("department").agg(max("age"), sum("expense"))
+        // ("o_price_cbo","sum"),("o_price_cbo","max")
+        newJDF.printSchema()
+
+        newJDF
+    }
+
 }
