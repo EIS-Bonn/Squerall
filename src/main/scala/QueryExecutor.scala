@@ -36,7 +36,7 @@ trait QueryExecutor[T] { // T is a ParSet (Parallel dataSet)
     def join(joins: ArrayListMultimap[String, (String, String)], prefixes: Map[String, String], star_df: Map[String, T]): T
 
     /* Generates a new ParSet projecting out one or more attributes */
-    def project(jDF: T, columnNames: Seq[String]): T
+    def project(jDF: T, columnNames: Seq[String], distinct: Boolean): T
 
     /* Counts the number of tuples of a ParSet */
     def count(jDF: T): Long

@@ -65,7 +65,7 @@ object Main extends App {
 
 
     val prefixes = qa.getPrefixes
-    val select = qa.getProject
+    val (select,distinct) = qa.getProject
     val filters = qa.getFilters
     val orderBys = qa.getOrderBy
     val groupBys = qa.getGroupBy(variablePredicateStar,prefixes)
@@ -267,7 +267,8 @@ object Main extends App {
         }
     }
 
-    jDF = executor.project(jDF,columnNames)
+    println("|__ Has distinct? " + distinct)
+    jDF = executor.project(jDF,columnNames,distinct)
 
     if (limit > 0)
         jDF =   executor.limit(jDF,limit)

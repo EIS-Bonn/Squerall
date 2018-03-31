@@ -28,12 +28,13 @@ class QueryAnalyser(query: String) {
         prefix
     }
 
-    def getProject : util.List[String] = {
+    def getProject : (util.List[String], Boolean) = {
         val q = QueryFactory.create(query)
         val project = q.getResultVars
 
         println(s"\n- Projected vars: $project")
-        project
+
+        (project,q.isDistinct)
     }
 
     def getFilters : ArrayListMultimap[String, (String, String)] = {

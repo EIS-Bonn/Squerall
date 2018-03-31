@@ -16,8 +16,7 @@ import scala.collection.mutable.{HashMap, ListBuffer, Set}
 
 class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecutor[DataFrame] {
 
-
-    def query(sources : Set[(HashMap[String, String], String, String)],
+    def query (sources : Set[(HashMap[String, String], String, String)],
                optionsMap: HashMap[String, Map[String, String]],
                toJoinWith: Boolean,
                star: String,
@@ -149,7 +148,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
 
                     println("colcolcol: " + finalDF(column).toString())
                     println("operand_value._2: " + operand_value._2.replace("\"",""))
-                    if(operand_value._1 != "regex")
+                    if (operand_value._1 != "regex")
                         finalDF = finalDF.filter(whereString)
                     else
                         finalDF = finalDF.filter(finalDF(column).like(operand_value._2.replace("\"","")))
@@ -464,8 +463,11 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
         jDF
     }
 
-    def project(jDF: DataFrame, columnNames: Seq[String]): DataFrame = {
-        jDF.select(columnNames.head, columnNames.tail: _*)
+    def project(jDF: DataFrame, columnNames: Seq[String], distinct: Boolean): DataFrame = {
+        if(!distinct)
+            jDF.select(columnNames.head, columnNames.tail: _*)
+        else
+            jDF.select(columnNames.head, columnNames.tail: _*).distinct()
     }
 
     def schemaOf(jDF: DataFrame) = {
