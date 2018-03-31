@@ -17,7 +17,6 @@ import Helpers._
 
 class QueryAnalyser(query: String) {
 
-
     def getPrefixes : Map[String, String] = {
         val q = QueryFactory.create(query)
         val prolog = q.getPrologue().getPrefixMapping.getNsPrefixMap
@@ -43,11 +42,12 @@ class QueryAnalyser(query: String) {
 
         ElementWalker.walk(q.getQueryPattern, new ElementVisitorBase() { // ...when it's a block of triples...
             override def visit(ef: ElementFilter): Unit = { // ...go through all the triples...
-                val bits = ef.getExpr.toString.replace("(","").replace(")","").split(" ")
+                val bits = ef.getExpr.toString.replace("(","").replace(")","").split(" ",3) // 3 not to split when the right operand is a string with possible white spaces
                 val operation = bits(1)
                 val leftOperand = bits(0)
                 val rightOperand = bits(2)
 
+                println(s"............-------........... $operation,($leftOperand,$rightOperand)")
                 filters.put(operation,(leftOperand,rightOperand))
             }
         })
@@ -133,11 +133,11 @@ class QueryAnalyser(query: String) {
             println(s"triple: $triple")
 
             if(!triple.contains(';')) { // only one predicate attached to the subject
-                val trplBits = triple.split(" ")
-                stars.addBinding(trplBits(0), (trplBits(1), trplBits(2)))
+                val tripleBits = triple.split(" ")
+                stars.addBinding(tripleBits(0), (tripleBits(1), tripleBits(2)))
                 // addBinding` because standard methods like `+` will overwrite the complete key-value pair instead of adding the value to the existing key
 
-                star_pred_var.put((trplBits(0), trplBits(1)), trplBits(2))
+                star_pred_var.put((tripleBits(0), tripleBits(1)), tripleBits(2))
             } else {
                 val triples = triple.split(";")
                 val firsTriple = triples(0)
@@ -180,5 +180,10 @@ class QueryAnalyser(query: String) {
 
         (transmap_left, transmap_right)
     }
+
+    def hasLimit: Boolean = QueryFactory.create(query).hasLimit
+
+    def getLimit() = QueryFactory.create(query).getLimit.toInt
+
 
 }

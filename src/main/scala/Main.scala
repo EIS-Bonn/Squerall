@@ -70,6 +70,10 @@ object Main extends App {
     val orderBys = qa.getOrderBy
     val groupBys = qa.getGroupBy(variablePredicateStar,prefixes)
 
+    var limit : Int = 0
+    if(qa.hasLimit)
+        limit = qa.getLimit()
+
     println("\n- Predicates per star:")
 
     // Build ((s,p) -> o) map to check later if predicates appearing in WHERE actually appear also in SELECT
@@ -224,18 +228,19 @@ object Main extends App {
         columnNames = columnNames :+ selected_predicate
     }
 
-    for(gb <- groupBys._2) {
-        println("-> Add to Project list:" + gb._2)
-        columnNames = columnNames :+ gb._2 + "(" + gb._1 + ")"
-    }
-
-    println(s"SELECTED column names: $columnNames") // TODO: check the order of PROJECT and ORDER-BY
-
     if(groupBys != null) {
         println(s"groupBys: $groupBys")
 
         jDF = executor.groupBy(jDF,groupBys)
+
+        // Add aggregation columns to the final project ones
+        for(gb <- groupBys._2) {
+            println("-> Add to Project list:" + gb._2)
+            columnNames = columnNames :+ gb._2 + "(" + gb._1 + ")"
+        }
     }
+
+    println(s"SELECTED column names: $columnNames") // TODO: check the order of PROJECT and ORDER-BY
 
     if(orderBys != null) {
         println(s"orderBys: $orderBys")
@@ -264,6 +269,9 @@ object Main extends App {
 
     jDF = executor.project(jDF,columnNames)
 
+    if (limit > 0)
+        jDF =   executor.limit(jDF,limit)
+
     println("- Final results DF schema: ")
     executor.schemaOf(jDF)
 
@@ -272,7 +280,9 @@ object Main extends App {
 
     val cnt = executor.count(jDF)
     println(s"Number of results ($cnt): ")
-    jDF.show()
+
+    //jDF.show()
+    jDF.take(10).foreach(println)
 
     stopwatch.stop
 

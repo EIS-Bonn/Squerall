@@ -16,6 +16,7 @@ import scala.collection.mutable.{HashMap, ListBuffer, Set}
 
 class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecutor[DataFrame] {
 
+
     def query(sources : Set[(HashMap[String, String], String, String)],
                optionsMap: HashMap[String, Map[String, String]],
                toJoinWith: Boolean,
@@ -119,8 +120,6 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
 
         println("\n- filters: " + filters + " ======= " + star)
 
-        println("Number of executors: " + spark.sparkContext.getExecutorStorageStatus.length)
-
         var whereString = ""
 
         var nbrOfFiltersOfThisStar = 0
@@ -137,23 +136,33 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
             if (predicate.nonEmpty) {
                 val ns_p = get_NS_predicate(predicate.head) // Head because only one value is expected to be attached to the same star an same (object) variable
                 val column = omitQuestionMark(star) + "_" + ns_p._2 + "_" + prefixes(ns_p._1)
-                println("column: " + column)
+                println("--- Filter column: " + column)
 
                 nbrOfFiltersOfThisStar = filters.get(value).size()
 
                 val conditions = filters.get(value).iterator()
                 while (conditions.hasNext) {
                     val operand_value = conditions.next()
-                    println("operand_value: " + operand_value)
+                    println("--- Operand - Value: " + operand_value)
                     whereString = column + operand_value._1 + operand_value._2
-                    println("whereString: " + whereString)
-                    finalDF = finalDF.filter(whereString)
+                    println("--- WHERE string: " + whereString)
+
+                    println("colcolcol: " + finalDF(column).toString())
+                    println("operand_value._2: " + operand_value._2.replace("\"",""))
+                    if(operand_value._1 != "regex")
+                        finalDF = finalDF.filter(whereString)
+                    else
+                        finalDF = finalDF.filter(finalDF(column).like(operand_value._2.replace("\"","")))
+                        // regular expression with _ matching an arbitrary character and % matching an arbitrary sequence
                 }
                 //finalDF.show()
             }
         }
 
         println(s"Number of filters of this star is: $nbrOfFiltersOfThisStar")
+
+        /*******THIS IS JUST FOR TEST - REMOVE LATER*******/
+        println("Number of Spark executors (JUST FOR TEST): " + spark.sparkContext.getExecutorStorageStatus.length)
 
         (finalDF, nbrOfFiltersOfThisStar)
     }
@@ -502,5 +511,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
 
         newJDF
     }
+
+    def limit(jDF: DataFrame, limitValue: Int) : DataFrame = jDF.limit(limitValue)
 
 }

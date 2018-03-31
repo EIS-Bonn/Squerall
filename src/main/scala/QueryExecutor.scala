@@ -5,7 +5,7 @@ import java.util
 import com.google.common.collect.ArrayListMultimap
 
 import scala.collection.mutable
-import scala.collection.mutable.{HashMap, Set}
+import scala.collection.mutable.{HashMap, ListBuffer, Set}
 
 
 /**
@@ -37,4 +37,16 @@ trait QueryExecutor[T] { // T is a ParSet (Parallel dataSet)
 
     /* Generates a new ParSet projecting out one or more attributes */
     def project(jDF: T, columnNames: Seq[String]): T
+
+    /* Counts the number of tuples of a ParSet */
+    def count(jDF: T): Long
+
+    /* Sort tuples of a ParSet based on an attribute variable */
+    def orderBy(jDF: T, direction: String, variable: String): T
+
+    /* Group attributes based on aggregates function(s) */
+    def groupBy(jDF: T, groupBys: (ListBuffer[String], Set[(String,String)])): T
+
+    /* Return the first 'limitValue' values of the ParSet */
+    def limit(jDF: T, limitValue: Int) : T
 }
