@@ -22,17 +22,20 @@ RESULT_FILE=$7; #Filename where the query output will be stored
 
 for i in `ls $QUERIES_LOCATION/*.sparql`; do
 
+  # sudo echo "------- FLUSHING CACHE -------" >> $RESULT_FILE;
   for n in "${Nodes_list[@]}"
   do
-      echo "Clearing cache of: " $n
-      ssh hduser@$n "sync && echo 3 | sudo tee /proc/sys/vm/drop_caches"
+      # echo "Clearing cache of: " $n
+      echo "Clearing cache of: " $n | sudo tee --append $RESULT_FILE > /dev/null
+      ssh hduser@$n "echo sync && echo 3 | sudo tee /proc/sys/vm/drop_caches"
   done;
   wait
 
-  echo $i >> $RESULT_FILE;
+  echo $i | sudo tee --append $RESULT_FILE > /dev/null
+  # echo $i >> $RESULT_FILE;
 
   # Run
-  time ($SPARK/spark-submit --class org.sparkall.Main --executor-memory $EXECUTOR_MEMORY --master $SPARK_MASTER $SPARKALL_HOME/sparkall.jar $i $MAPPINGS_FILE $CONFIG_FILE $SPARK_MASTER $REORDER_FLAG) > /dev/null 2>> $RESULT_FILE;
+  /usr/bin/time  -f "%e" $SPARK/spark-submit --class org.sparkall.Main --executor-memory $EXECUTOR_MEMORY --master $SPARK_MASTER $SPARKALL_HOME/sparkall.jar $i $MAPPINGS_FILE $CONFIG_FILE $SPARK_MASTER $REORDER_FLAG |&  sudo tee --append $RESULT_FILE > /dev/null
 
   # ../spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class org.sparkall.Main --executor-memory 200G --master spark://host:port sparkall.jar query3.sparql mappings.ttl config spark://host:port r
 done
