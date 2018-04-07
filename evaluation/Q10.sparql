@@ -1,0 +1,25 @@
+PREFIX bsbm : < http :// www4 . wiwiss .fu - berlin . de / bizer / bsbm / v01 / vocabulary />
+PREFIX xsd : < http :// www . w3 . org /2001/ XMLSchema # >
+PREFIX dc : < http :// purl . org / dc / elements /1.1/ >
+PREFIX rdfs : < http :// www . w3 . org /2000/01/ rdf - schema # >
+PREFIX edm : < http :// www . europeana . eu / schemas / edm />
+PREFIX foaf : < http :// xmlns . com / foaf / spec / >
+SELECT DISTINCT ? price ? deliveryDays ? date ?c
+WHERE {
+? offer bsbm : product ? product .
+? offer bsbm : vendor ? vendor .
+? offer dc : publisher ? publisher .
+? offer bsbm : deliveryDays ? deliveryDays .
+? offer bsbm : price ? price .
+? offer bsbm : validTo ? date .
+? offer bsbm : producer ? producer .
+? product rdfs : label ? label .
+? product bsbm : productPropertyTextual5 ? pt .
+? producer edm : country ? c .
+? producer foaf : homepage ?h .
+FILTER (? product > 9)
+FILTER (? deliveryDays <= 7)
+FILTER (? c = " DE " )
+}
+ORDER BY ? price
+LIMIT 10
