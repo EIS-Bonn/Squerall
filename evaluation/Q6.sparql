@@ -1,0 +1,16 @@
+REFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX bsbm: <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/>
+PREFIX schema: <http://schema.org/>
+
+SELECT ?label
+WHERE {
+    ?product rdfs:label ?label .
+    ?product rdf:type bsbm:Product .
+    ?product bsbm:producer ?producer .
+    ?review bsbm:reviewFor ?product .
+    ?review rdf:type schema:Review .
+    ?offer bsbm:product ?product .
+    ?offer rdf:type schema:Offer .
+    FILTER regex(?label, "%prelate%")
+}
