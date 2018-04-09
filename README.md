@@ -16,7 +16,7 @@ Sparkall has 3 interfaces to (1) provide access configuration to data in the Dat
 Sparkall is described in a paper ["Teach me to fish" Querying Semantic Data Lakes](https://www.researchgate.net/publication/322526357_%27Teach_me_to_fish%27_Querying_Semantic_Data_Lakes). The paper details all the building blocks and experiments conducted to demonstrate Sparkall's mertits.
 
 ### Evaluation
-To test out the feasibility and performence of Sparkall, i.e., querying heterogeneous data residing in a Data Lake, we have generated data using Berlin Bernchmark (BSBM). We have taken 5 tables: Product, Producer, Offer, Review, and Person , and saved them in Cassandra, MySQL, MongoDB, Parquet and CSV, respectively.
+We provide the script, queries and docker for evaluating Sparkall on your own. Refer to the dedicated page: https://github.com/EIS-Bonn/sparkall/tree/master/evaluation
 
 We have generated three sizes of the data using the following BSBM scale factors (number of products): 500k, 1,5m, and 5m. To give a sense of the size of data, we provide how much those scale factors would generate of RDF triples: the 1,5m scale factor generates 500m triples, and the 5m scale factor generates 1,75b triples. As we took 5 tables, the previous numbers are not accurate, there are 5 more tables not considered. However, the taken tables contain most of the data.
 
