@@ -18,8 +18,6 @@ Sparkall is described in a paper ["Teach me to fish" Querying Semantic Data Lake
 ### Evaluation
 We provide the script, queries and docker for evaluating Sparkall on your own. Refer to the dedicated page: https://github.com/EIS-Bonn/sparkall/tree/master/evaluation
 
-We have generated three sizes of the data using the following BSBM scale factors (number of products): 500k, 1,5m, and 5m. To give a sense of the size of data, we provide how much those scale factors would generate of RDF triples: the 1,5m scale factor generates 500m triples, and the 5m scale factor generates 1,75b triples. As we took 5 tables, the previous numbers are not accurate, there are 5 more tables not considered. However, the taken tables contain most of the data.
-
 'Teach me to fish' Querying Semantic Data Lakes. Available from: https://www.researchgate.net/publication/322526357_%27Teach_me_to_fish%27_Querying_Semantic_Data_Lakes [accessed Jan 21 2018]. 
 
 For more enquireis, contact me on: mami@cs.uni-bonn.de
