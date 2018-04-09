@@ -9,3 +9,6 @@ Original BSBM queries do not best serve Sparkall purpose, that of querying diffe
 we also immited three queries that have unsupported syntax: DESCRIBE (Q9), UNION (Q11), and CONSTRUCT (Q12).
 
 Full list of queries is available in this repo along this readme.
+
+## Docker
+Docker image will be provided soon, to pull, use and evaluate Sparkall.
