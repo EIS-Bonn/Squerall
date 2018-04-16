@@ -2,9 +2,11 @@
 An implementation of the so-called Semantic Data Lake, using Apache Spark.
 
 ## Execution
-To run Sparkall, use `spark-submit` giving in args three files built using [Sparkall-GUI](https://github.com/EIS-Bonn/spakall-gui) (see below).
+- Clone the repository and package the project. As Sparkall is built using Scala, the SBT build tool was used. Hence, SBT needs to be installed beforehand. Refer to the official documentation for the [installation](https://www.scala-sbt.org/1.0/docs/Setup.html) setps.
+- Once SBT is installed, run: `sudo sbt assembly`, this will generate a JAR file called sparkall_01.jar.
+- To run Sparkall, use `spark-submit` giving in args three files built using [Sparkall-GUI](https://github.com/EIS-Bonn/spakall-gui) (see below).
 The command line looks like:
-`/bin/spark-submit --class [Main classpath] --master [master URI] --executor-memory [memory reserved to the app] sparkall.jar [query file] [mappings file] [config file] [master URI]`
+`/bin/spark-submit --class [Main classpath] --master [master URI] --executor-memory [memory reserved to the app] sparkall_01.jar [query file] [mappings file] [config file] [master URI]`
 
 ### Example:
 `/bin/spark-submit --class org.sparkall.Main --master spark://172.14.160.146:3077 --executor-memory 250G sparkall.jar query.sparql mappings.ttl config spark://172.14.160.146:3077`
