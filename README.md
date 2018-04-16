@@ -9,7 +9,7 @@ The command line looks like:
 `/bin/spark-submit --class [Main classpath] --master [master URI] --executor-memory [memory reserved to the app] sparkall_01.jar [query file] [mappings file] [config file] [master URI]`
 
 ### Example:
-`/bin/spark-submit --class org.sparkall.Main --master spark://172.14.160.146:3077 --executor-memory 250G sparkall.jar query.sparql mappings.ttl config spark://172.14.160.146:3077`
+`/bin/spark-submit --class org.sparkall.Main --master spark://172.14.160.146:3077 --executor-memory 250G sparkall_01.jar query.sparql mappings.ttl config spark://172.14.160.146:3077`
 
 ## Sparkall-GUI
 Sparkall has 3 interfaces to (1) provide access configuration to data in the Data Lake, (2) map data to ontology terms and (3) query the mapped data. Refer to Sparkall-GUI repository here: [Sparkall-GUI](https://github.com/EIS-Bonn/sparkall-gui) for more information.
