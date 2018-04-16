@@ -1,2 +1,4 @@
 theme: jekyll-theme-cayman
-title: Sparkall, query data lakes uniformely 
+title: Sparkall
+description: [Query heterogeneous big data residing in data lakes using one query language]
+
