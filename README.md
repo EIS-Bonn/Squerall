@@ -28,6 +28,6 @@ License
 -------
 
 This project is openly shared under the terms of the __Apache License
-v2.0__ [here](./LICENSE).
+v2.0__ ([read for more](./LICENSE)).
 
 
