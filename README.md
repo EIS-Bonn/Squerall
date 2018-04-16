@@ -23,3 +23,11 @@ We provide the script, queries and docker for anyone who wants to try Sparkall o
 'Teach me to fish' Querying Semantic Data Lakes. Available from: https://www.researchgate.net/publication/322526357_%27Teach_me_to_fish%27_Querying_Semantic_Data_Lakes [accessed Jan 21 2018]. 
 
 For more enquireis, contact me on: mami@cs.uni-bonn.de
+
+License
+-------
+
+This project is openly shared under the terms of the __Apache License
+v2.0__ [here](./LICENSE).
+
+
