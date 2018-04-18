@@ -1,3 +1,24 @@
+import AssemblyKeys._ // put this at the top of the file
+assemblySettings
+
+test in assembly := {}
+
+jarName in assembly := "sparkall_01.jar"
+
+mainClass in assembly := Option("org.sparkall.Main")
+
+mergeStrategy in assembly := {
+  case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
+  case PathList("META-INF", "DUMMY.SF") => MergeStrategy.discard
+  //case PathList("META-INF", xs @ _*) =>
+    //(xs map {_.toLowerCase}) match {
+      //case ("manifest.mf" :: Nil) => MergeStrategy.discard
+      //  case ("manifest.mf" :: Nil) | ("index.list" :: Nil) | ("dependencies" :: Nil) => MergeStrategy.discard
+      //case _ => MergeStrategy.discard
+    //}
+  case _ => MergeStrategy.first
+}
+
 name := "Sparkall"
 
 version := "1.0"
