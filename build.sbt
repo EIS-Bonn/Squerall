@@ -10,18 +10,12 @@ mainClass in assembly := Option("org.sparkall.Main")
 mergeStrategy in assembly := {
   case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
   case PathList("META-INF", "DUMMY.SF") => MergeStrategy.discard
-  //case PathList("META-INF", xs @ _*) =>
-    //(xs map {_.toLowerCase}) match {
-      //case ("manifest.mf" :: Nil) => MergeStrategy.discard
-      //  case ("manifest.mf" :: Nil) | ("index.list" :: Nil) | ("dependencies" :: Nil) => MergeStrategy.discard
-      //case _ => MergeStrategy.discard
-    //}
   case _ => MergeStrategy.first
 }
 
 name := "Sparkall"
 
-version := "1.0"
+version := "0.1"
 
 scalaVersion := "2.11.8"
 
