@@ -7,7 +7,7 @@ jarName in assembly := "sparkall_01.jar"
 
 mainClass in assembly := Option("org.sparkall.Main")
 
-mergeStrategy in assembly := {
+assemblyMergeStrategy in assembly := {
   case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
   case PathList("META-INF", "DUMMY.SF") => MergeStrategy.discard
   case _ => MergeStrategy.first
