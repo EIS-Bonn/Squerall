@@ -3,7 +3,7 @@ assemblySettings
 
 test in assembly := {}
 
-jarName in assembly := "sparkall_01.jar"
+assemblyJarName in assembly := "sparkall_01.jar"
 
 mainClass in assembly := Option("org.sparkall.Main")
 
