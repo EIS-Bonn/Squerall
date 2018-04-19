@@ -2,9 +2,6 @@ FROM ubuntu:16.04
 
 MAINTAINER Mohamed Nadjib Mami <mami@cs.uni-bonn.de>
 
-ENV HADOOP_URL http://mirror.synyx.de/apache/hadoop/common/hadoop-2.8.3/hadoop-2.8.3.tar.gz
-ENV HADOOP_VERSION 2.8.3
-
 RUN set -x && \
     # Install Java 8
     apt-get update --fix-missing && \
@@ -18,18 +15,20 @@ RUN set -x && \
     apt-get clean
 
 # Update environment
-ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
+ENV HADOOP_VERSION 2.8.3
+ENV HADOOP_URL http://mirror.synyx.de/apache/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz
 
 RUN set -x && \
     # Install Hadoop
-    curl -fSL -o - "$HADOOP_URL" | tar xz -C /opt/ && \
-    ln -s /opt/hadoop-$HADOOP_VERSION/etc/hadoop /etc/hadoop && \
-    cp /etc/hadoop/mapred-site.xml.template /etc/hadoop/mapred-site.xml && \
-    mkdir /opt/hadoop-$HADOOP_VERSION/logs
+    curl -fSL -o - "$HADOOP_URL" | tar xz -C /usr/local && \
+    ln -s /usr/local/hadoop-$HADOOP_VERSION /hadoop && \
+    cp /hadoop/etc/hadoop/mapred-site.xml.template /hadoop/etc/hadoop/mapred-site.xml && \
+    mkdir /usr/local/hadoop-$HADOOP_VERSION/logs
 
 # Update environment
-ENV HADOOP_PREFIX=/opt/hadoop-$HADOOP_VERSION \
-    HADOOP_CONF_DIR=/etc/hadoop
+ENV HADOOP_PREFIX /opt/hadoop-$HADOOP_VERSION \
+    HADOOP_CONF_DIR /etc/hadoop
 
 RUN set -x && \
     # Install MongoDB
@@ -60,6 +59,13 @@ RUN set -x  && \
     # chown -R mysql:mysql /var/lib/mysql /var/run/mysqld && \
     # sed -i -e "s/^bind-address\s*=\s*127.0.0.1/bind-address = 0.0.0.0/" /etc/mysql/my.cnf && \
     # /etc/init.d/mysql start
+
+ENV SPARK_VERSION 2.1.2
+
+RUN set -x  && \
+    # Install Spark
+    curl -fSL -o - http://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop2.7.tgz | tar xz -C /usr/local && \
+    ln -s /usr/local/spark-${SPARK_VERSION}-bin-hadoop2.7 /spark
 
 RUN set -x  && \
     # Install Sparkall
