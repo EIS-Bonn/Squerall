@@ -42,8 +42,6 @@ RUN set -x && \
 
 # EXPOSE 27017
 
-CMD ["mongod", "-DFOREGROUND"]
-
 RUN set -x && \
     # Install Cassandra
     echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list && \
@@ -52,4 +50,15 @@ RUN set -x && \
     apt-key adv --keyserver pool.sks-keyservers.net --recv-key A278B781FE4B2BDA && \
     apt-get -y install cassandra
 
-CMD ["cassandra","-R", "-DFOREGROUND"]
+RUN set -x  && \
+    # Install MySQL
+    echo 'mysql-server mysql-server/root_password password root' | debconf-set-selections  && \
+    echo 'mysql-server mysql-server/root_password_again password root' | debconf-set-selections && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends vim && \
+    apt-get -y install mysql-server 
+    # chown -R mysql:mysql /var/lib/mysql /var/run/mysqld && \
+    # sed -i -e "s/^bind-address\s*=\s*127.0.0.1/bind-address = 0.0.0.0/" /etc/mysql/my.cnf && \
+    # /etc/init.d/mysql start
+
+CMD ["bash"]
