@@ -56,9 +56,16 @@ RUN set -x  && \
     echo 'mysql-server mysql-server/root_password_again password root' | debconf-set-selections && \
     apt-get update && \
     apt-get install -y --no-install-recommends vim && \
-    apt-get -y install mysql-server 
+    apt-get -y install mysql-server
     # chown -R mysql:mysql /var/lib/mysql /var/run/mysqld && \
     # sed -i -e "s/^bind-address\s*=\s*127.0.0.1/bind-address = 0.0.0.0/" /etc/mysql/my.cnf && \
     # /etc/init.d/mysql start
+
+RUN set -x  && \
+    # Install Sparkall
+    cd /usr/local && \
+    git clone https://github.com/EIS-Bonn/sparkall.git && \
+    cd sparkall && \
+    sbt assembly
 
 CMD ["bash"]
