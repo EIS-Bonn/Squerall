@@ -21,7 +21,7 @@
 	,	{
 		"type": "mongodb",
 		"options": {
-			"url": "host1,host2,host3",
+			"url": "localhost",
 			"database": "bsbm",
 			"collection": "offers",
 			"options": "replicaSet=mongo-rs"
@@ -33,7 +33,7 @@
 		"type": "cassandra",
 		"options": {
 			"keyspace": "db",
-			"table": "product1"
+			"table": "product"
 		},
 		"source": "//Product",
 		"entity": "Product"
