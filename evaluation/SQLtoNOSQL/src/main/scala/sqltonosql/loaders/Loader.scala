@@ -44,7 +44,7 @@ case class Loader(configFile: String) {
 		spark.stop()
     }
 
-	def product(inputPath: String, table: String, keyspace: String) {
+	def product(inputPath: String, keyspace: String, table: String) {
 
         val spark = SparkSession.builder.master("local[*]").appName("SQL dump to NoSQL Loader").getOrCreate;
         spark.sparkContext.setLogLevel("ERROR")
