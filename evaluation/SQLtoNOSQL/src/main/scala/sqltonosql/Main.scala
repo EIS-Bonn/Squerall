@@ -28,17 +28,27 @@ object Main extends App {
                 val resCollection = JsonPath.query("$.sources[?(@.entity == 'Offer')].options.collection", json).right.map(_.toVector)
                 val collection = resCollection match { case Right(Vector(collection)) => collection case _ => /*default -> fail*/ }
 
-                println(s"$url + $database + $collection")
+                println(s"MongoDB: $url + $database + $collection")
 
                 val loader = new Loader(configFile)
 
                 loader.offer(inputSQLDump,url.toString,database.toString,collection.toString)
 
             case ("Product") =>
+                val resKeyspacel = JsonPath.query("$.sources[?(@.entity == 'Product')].options.keyspace", json).right.map(_.toVector)
+                val keyspace = resKeyspacel match { case Right(Vector(keyspace)) => keyspace case _ => /*default -> fail*/ }
+
+                val resTable = JsonPath.query("$.sources[?(@.entity == 'Product')].options.table", json).right.map(_.toVector)
+                val table = resTable match { case Right(Vector(table)) => table case _ => /*default -> fail*/ }
+
+                println(s"Cassandra: $keyspace + $table")
+
+                val loader = new Loader(configFile)
+
+                loader.product(inputSQLDump,keyspace.toString,table.toString)
             case ("Producer") =>
             case ("Review") =>
             case ("Person") =>
-
         }
 	}
 }
