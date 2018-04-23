@@ -11,4 +11,4 @@ we also immited three queries that have unsupported syntax: DESCRIBE (Q9), UNION
 Full list of queries is available in this repo along this readme.
 
 ## Docker
-Docker image will be provided soon, to pull, use and evaluate Sparkall.
+A [Dockerfile](https://github.com/EIS-Bonn/sparkall/blob/master/Dockerfile) is being consutrcted.
