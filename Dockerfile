@@ -95,4 +95,6 @@ RUN set -x  && \
 
 COPY evaluation/scripts/load-data.sh /root
 
-CMD ["bash"]
+CMD evaluation/scripts/welcome-script.sh
+
+#CMD ["bash"]
