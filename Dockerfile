@@ -55,8 +55,8 @@ RUN set -x  && \
     echo 'mysql-server mysql-server/root_password_again password root' | debconf-set-selections && \
     apt-get update && \
     apt-get install -y --no-install-recommends vim && \
-    apt-get -y install mysql-server
-    # chown -R mysql:mysql /var/lib/mysql /var/run/mysqld && \
+    apt-get -y install mysql-server 
+    # to solve "Can't open and lock privilege tables: Table storage engine for 'user' doesn't have this option"
     # sed -i -e "s/^bind-address\s*=\s*127.0.0.1/bind-address = 0.0.0.0/" /etc/mysql/my.cnf && \
     # /etc/init.d/mysql start
 
@@ -67,11 +67,34 @@ RUN set -x  && \
     curl -fSL -o - http://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop2.7.tgz | tar xz -C /usr/local && \
     ln -s /usr/local/spark-${SPARK_VERSION}-bin-hadoop2.7 /spark
 
+WORKDIR /root
+
+RUN set -x  && \
+	# Install further needed tools
+    apt-get install -y wget unzip && \
+	# Get BSBM data generator
+    wget -O bsbm.zip https://sourceforge.net/projects/bsbmtools/files/latest/download && \
+    unzip bsbm.zip && \
+    rm bsbm.zip && \
+    cd bsbmtools-0.2 && \
+    ./generate -fc -pc 1000 -s sql -fn data && \
+    cd data && \
+	# Remove not needed SQL dumps (eg Vendor)
+    rm 01* 02* 05* 06* 07* && \
+	# Get pre-configured Sparkall config file
+    wget https://raw.githubusercontent.com/EIS-Bonn/sparkall/master/evaluation/config
+
+#RUN pwd
+
 RUN set -x  && \
     # Install Sparkall
     cd /usr/local && \
     git clone https://github.com/EIS-Bonn/sparkall.git && \
     cd sparkall && \
-    sbt assembly
+    sbt assembly # to generate JAR to submit to spark-submit
 
-CMD ["bash"]
+COPY evaluation/scripts/load-data.sh /root
+
+CMD evaluation/scripts/welcome-script.sh
+
+#CMD ["bash"]
