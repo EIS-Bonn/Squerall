@@ -8,13 +8,11 @@ object Main extends App {
 
 	override def main(args: Array[String]) = {
 		val inputSQLDump = args(0) // /media/mmami/EIS_Ext/Sparkall/BSBM/bsbmtools-0.2/data/08Offer.sql
-        val entityName = args(1) // "Offer"
-        val configFile = args(2) // "/media/mmami/Extra/Scala/Web/play-scala-starter-example/conf/config"  
+        	val entityName = args(1) // "Offer"
+        	val configFile = args(2) // "/media/mmami/Extra/Scala/Web/play-scala-starter-example/conf/config"  
 
-
-        val fileContent = Source.fromFile(configFile).getLines.mkString
-
-        val json = (new ObjectMapper()).readValue(fileContent, classOf[Object])
+        	val fileContent = Source.fromFile(configFile).getLines.mkString
+        	val json = (new ObjectMapper()).readValue(fileContent, classOf[Object])
 
 
         entityName match {
