@@ -7,7 +7,7 @@
 			"delimiter": ",",
 			"mode": "DROPMALFORMED"
 		},
-		"source": "hdfs://host:port/inpu/person.csv",
+		"source": "/root/person.csv",
 		"entity": "Person"
 	}
 	,	{
@@ -15,7 +15,7 @@
 		"options": {
 			"spark_sql_parquet_filterPushdown": "true"
 		},
-		"source": "hdfs://host:port/inpu/review.parquet",
+		"source": "/root/review.parquet",
 		"entity": "Review"
 	}
 	,	{
