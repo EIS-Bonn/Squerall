@@ -55,7 +55,7 @@
 
 <#ReviewMapping>
 	rml:logicalSource [
-		rml:source "hdfs://172.18.160.17:54310/mohamed/review.parquet";
+		rml:source "/root/review.parquet";
 		nosql:store nosql:parquet
 	];
 	rr:subjectMap [
@@ -130,7 +130,7 @@
 
 <#PersonMapping>
 	rml:logicalSource [
-		rml:source "hdfs://172.18.160.17:54310/mohamed/person.csv";
+		rml:source "/root/person.csv";
 		nosql:store nosql:csv
 	];
 	rr:subjectMap [

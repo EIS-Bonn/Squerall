@@ -21,10 +21,10 @@
 	,	{
 		"type": "mongodb",
 		"options": {
-			"url": "localhost",
+			"url": "127.0.0.1",
 			"database": "bsbm",
 			"collection": "offers",
-			"options": "replicaSet=mongo-rs"
+			"options": ""
 		},
 		"source": "//Offer",
 		"entity": "Offer"
@@ -41,7 +41,7 @@
 	,	{
 		"type": "jdbc",
 		"options": {
-			"url": "jdbc:mysql://host:3306/db1?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC",
+			"url": "jdbc:mysql://host:3306/benchmark?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC",
 
 			"driver": "com.mysql.cj.jdbc.Driver",
 			"dbtable": "producer",

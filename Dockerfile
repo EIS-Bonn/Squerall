@@ -82,9 +82,14 @@ RUN set -x  && \
 	# Remove not needed SQL dumps (eg Vendor)
     rm 01* 02* 05* 06* 07* && \
 	# Get pre-configured Sparkall config file
-    wget https://raw.githubusercontent.com/EIS-Bonn/sparkall/master/evaluation/config
+    wget https://raw.githubusercontent.com/EIS-Bonn/sparkall/master/evaluation/config && \
+	# Due to a (yet) explaineable behavior from sbt assembly plugin, jena-arq is not being picked up during the assembly of Sparkall
+	# So we will provide it during spark submit
+	wget http://central.maven.org/maven2/org/apache/jena/jena-arq/3.1.1/jena-arq-3.1.1.jar && \
+	mv jena-arq-3.1.1.jar /root
+	
 
-#RUN pwd
+RUN pwd
 
 RUN set -x  && \
     # Install Sparkall
@@ -93,8 +98,10 @@ RUN set -x  && \
     cd sparkall && \
     sbt assembly # to generate JAR to submit to spark-submit
 
-COPY evaluation/scripts/load-data.sh /root
+COPY evaluation/scripts/* /root/
 
-CMD evaluation/scripts/welcome-script.sh
+#RUN [“chmod”, “+x”, "/root/welcome-script.sh”]
 
-#CMD ["bash"]
+#CMD /root/welcome-script.sh
+
+CMD ["bash"]
