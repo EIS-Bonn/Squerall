@@ -49,7 +49,7 @@ RUN set -x && \
     apt-key adv --keyserver pool.sks-keyservers.net --recv-key A278B781FE4B2BDA && \
     apt-get -y install cassandra
 
-RUN set -x  && \
+RUN set -x && \
     # Install MySQL
     echo 'mysql-server mysql-server/root_password password root' | debconf-set-selections  && \
     echo 'mysql-server mysql-server/root_password_again password root' | debconf-set-selections && \
@@ -69,29 +69,26 @@ RUN set -x  && \
 
 WORKDIR /root
 
-RUN set -x  && \
-	# Install further needed tools
+RUN set -x && \
+    # Install further needed tools
     apt-get install -y wget unzip && \
-	# Get BSBM data generator
+    # Get BSBM data generator
     wget -O bsbm.zip https://sourceforge.net/projects/bsbmtools/files/latest/download && \
     unzip bsbm.zip && \
     rm bsbm.zip && \
     cd bsbmtools-0.2 && \
     ./generate -fc -pc 1000 -s sql -fn data && \
     cd data && \
-	# Remove not needed SQL dumps (eg Vendor)
+    # Remove not needed SQL dumps (eg Vendor)
     rm 01* 02* 05* 06* 07* && \
-	# Get pre-configured Sparkall config file
+    # Get pre-configured Sparkall config file
     wget https://raw.githubusercontent.com/EIS-Bonn/sparkall/master/evaluation/config && \
-	# Due to a (yet) explaineable behavior from sbt assembly plugin, jena-arq is not being picked up during the assembly of Sparkall
-	# So we will provide it during spark submit
-	wget http://central.maven.org/maven2/org/apache/jena/jena-arq/3.1.1/jena-arq-3.1.1.jar && \
-	mv jena-arq-3.1.1.jar /root
+    # Due to a (yet) explaineable behavior from sbt assembly plugin, jena-arq is not being picked up during the assembly of Sparkall
+    # So we will provide it during spark submit
+    wget http://central.maven.org/maven2/org/apache/jena/jena-arq/3.1.1/jena-arq-3.1.1.jar && \
+    mv jena-arq-3.1.1.jar /root
 	
-
-RUN pwd
-
-RUN set -x  && \
+RUN set -x && \
     # Install Sparkall
     cd /usr/local && \
     git clone https://github.com/EIS-Bonn/sparkall.git && \
@@ -101,7 +98,6 @@ RUN set -x  && \
 COPY evaluation/scripts/* /root/
 
 #RUN [“chmod”, “+x”, "/root/welcome-script.sh”]
-
 #CMD /root/welcome-script.sh
 
 CMD ["bash"]
