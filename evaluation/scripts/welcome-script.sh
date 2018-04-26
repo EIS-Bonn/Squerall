@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ##################################################################
 ## A welcome script run after Sparkall docker image is built    ##
 ## in order to provide users with some instruction  .           ##

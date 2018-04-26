@@ -2,14 +2,11 @@
 
 ##
 # Script to run  a Query on Sparkall
-#
-
-# Cluster Nodes_list
-declare -a Nodes_list=("172.18.160.16" "172.18.160.17" "172.18.160.18")
+##
 
 #Settings
-export SPARK=/data/home/MohamedMami/spark-2.1.0-bin-hadoop2.7/bin
-export SPARKALL_HOME=/data/home/MohamedMami/evaluations/sparkall
+export SPARK=/usr/local/spark-2.1.2-bin-hadoop2.7/bin
+export SPARKALL_HOME=/usr/local/target/scala-2.11/sparkall_01.jar
 
 # Input Parameters
 SPARK_MASTER=$1; # Spark master
@@ -22,16 +19,10 @@ RESULT_FILE=$7; #Filename where the query output will be stored
 
 for i in `ls $QUERIES_LOCATION/*.sparql`; do
 
-  # sudo echo "------- FLUSHING CACHE -------" >> $RESULT_FILE;
-  for n in "${Nodes_list[@]}"
-  do
-      # echo "Clearing cache of: " $n
-      echo "Clearing cache of: " $n | sudo tee --append $RESULT_FILE > /dev/null
-      ssh hduser@$n "echo sync && echo 3 | sudo tee /proc/sys/vm/drop_caches"
-  done;
-  wait
+  echo "Clearing cache " | tee --append $RESULT_FILE > /dev/null
+  echo sync && echo 3 | tee /proc/sys/vm/drop_caches
 
-  echo $i | sudo tee --append $RESULT_FILE > /dev/null
+  echo $i | tee --append $RESULT_FILE > /dev/null
   # echo $i >> $RESULT_FILE;
 
   # Run
