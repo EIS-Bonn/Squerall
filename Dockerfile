@@ -71,7 +71,7 @@ WORKDIR /root
 
 RUN set -x && \
     # Install further needed tools
-    apt-get install -y wget unzip && \
+    apt-get install -y wget unzip time && \
     # Get BSBM data generator
     wget -O bsbm.zip https://sourceforge.net/projects/bsbmtools/files/latest/download && \
     unzip bsbm.zip && \
@@ -95,9 +95,14 @@ RUN set -x && \
     cd sparkall && \
     sbt assembly # to generate JAR to submit to spark-submit
 
+RUN pwd # just to force rebuild
+
 COPY evaluation/scripts/* /root/
+
+RUN echo "\nbash /root/welcome-script.sh\n" >> /root/.profile
+
+CMD ["/bin/bash","--login"]
 
 #RUN [“chmod”, “+x”, "/root/welcome-script.sh”]
 #CMD /root/welcome-script.sh
-
-CMD ["bash"]
+#CMD ["bash"]

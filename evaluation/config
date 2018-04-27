@@ -41,7 +41,7 @@
 	,	{
 		"type": "jdbc",
 		"options": {
-			"url": "jdbc:mysql://host:3306/benchmark?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC",
+			"url": "jdbc:mysql://localhost:3306/benchmark?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC",
 
 			"driver": "com.mysql.cj.jdbc.Driver",
 			"dbtable": "producer",
