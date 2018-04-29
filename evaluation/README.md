@@ -12,7 +12,7 @@ Full list of queries is available in this repo along this readme.
 
 ## Docker
 We provide a [Dockerfile](https://github.com/EIS-Bonn/sparkall/blob/master/Dockerfile) for a single-machine deployment.
-- Build the image as usual. Change directory to where the Dockerfile is and run: `docker build -t sparkall`. 
+- Build the image as usual. Change directory to where the Dockerfile is and run: `docker build -t sparkall .`. 
 - Run the image as usual. Run: `docker run -it sparkall`*. You will get a welcome screen explaining to you what you see and how to proceed.
 
 *if you get `cannot create /proc/sys/vm/drop_caches: Read-only file system` error running `load-data.sh` script, start the run command with the `--previleged` option (see [1](https://unix.stackexchange.com/questions/209244/which-linux-capability-do-i-need-in-order-to-write-to-proc-sys-vm-drop-caches/209412#209412)).
