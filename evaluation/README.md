@@ -16,4 +16,4 @@ We provide a [Dockerfile](https://github.com/EIS-Bonn/sparkall/blob/master/Docke
 - Run the image as usual. Run: `docker run -it sparkall`*. You will get a welcome screen explaining to you what you see and how to proceed.
 
 *if you get `cannot create /proc/sys/vm/drop_caches: Read-only file system` error running `load-data.sh` script, start the run command with the `--previleged` option (see [1](https://unix.stackexchange.com/questions/209244/which-linux-capability-do-i-need-in-order-to-write-to-proc-sys-vm-drop-caches/209412#209412)).
-If you get `cannot open shared object file: Permission denied` next, restar Docker daemon with `-s="devicemapper"` option (see [2](https://stackoverflow.com/questions/22473830/docker-and-mysql-libz-so-1-cannot-open-shared-object-file-permission-denied) [3](https://github.com/moby/moby/issues/7512)).
+If you get `cannot open shared object file: Permission denied` next, restart Docker daemon with `-s="devicemapper"` option (see [2](https://stackoverflow.com/questions/22473830/docker-and-mysql-libz-so-1-cannot-open-shared-object-file-permission-denied) [3](https://github.com/moby/moby/issues/7512)).
