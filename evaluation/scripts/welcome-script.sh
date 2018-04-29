@@ -7,7 +7,7 @@
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLACK='\033[0;33m'
-BLUE='\033[0;34m'
+BLUE='\033[0;34m'	
 NC='\033[0m'
 echo -e "/--------------------------------------------------------------------------------\\"
 echo -e "|                         ${Sparkall}=== Sparkall Demonstrator ===${NC}"
@@ -23,10 +23,11 @@ echo -e "|"
 echo -e "| ${GREEN}What to do?${NC}"
 echo -e "|   You run the following in this order:"
 echo -e "|      1. Load data using: ${RED}\`bash ~/load-data.sh\`${NC}."
-echo -e "|      2. Run queries over the loaded data: ${RED}\`bash ~/run-sparkall.sh\`${NC}."
-#echo -e "|     _. You provide BSBM data generation scale factor: ${RED}\`bash ~/run-sparkall.sh [scale_factore]\`${NC}."
+echo -e "|      2. Run queries over the loaded data (${BLACK}you can change 25GB (memory affected) and results.txt (output file) values${NC}): \n"
+echo -e "|      ${RED}\`bash ~/run-sparkall.sh local[*] 25G /usr/local/sparkall/evaluation/queries /usr/local/sparkall/evaluation/mappings.ttl /usr/local/sparkall/evaluation/config o results.txt\`${NC}"
 echo -e "|"
 echo -e "| ${GREEN}Credits:${NC}"
 echo -e "|   Mohamed Nadjib Mami, EIS @ Fraunhofer IAIS"
+echo -e "|   ${BLUE}mohamed.nadjib.mami@iais.Fraunhofer.de"${NC}
 echo -e "|   2018"
 echo -e "\\--------------------------------------------------------------------------------/"

@@ -11,4 +11,9 @@ we also immited three queries that have unsupported syntax: DESCRIBE (Q9), UNION
 Full list of queries is available in this repo along this readme.
 
 ## Docker
-A [Dockerfile](https://github.com/EIS-Bonn/sparkall/blob/master/Dockerfile) is being consutrcted.
+We provide a [Dockerfile](https://github.com/EIS-Bonn/sparkall/blob/master/Dockerfile) for a single-machine deployment.
+- Build the image as usual. Change directory to where the Dockerfile is and run: `docker build -t sparkall`. 
+- Run the image as usual. Run: `docker run -it sparkall`*. You will get a welcome screen explaining to you what you see and how to proceed.
+
+*if you get `cannot create /proc/sys/vm/drop_caches: Read-only file system` error running `load-data.sh` script, start the run command with the `--previleged` option (see [1](https://unix.stackexchange.com/questions/209244/which-linux-capability-do-i-need-in-order-to-write-to-proc-sys-vm-drop-caches/209412#209412)).
+If you get `cannot open shared object file: Permission denied` next, restar Docker daemon with `-s="devicemapper"` option (see [2](https://stackoverflow.com/questions/22473830/docker-and-mysql-libz-so-1-cannot-open-shared-object-file-permission-denied) [3](https://github.com/moby/moby/issues/7512)).
