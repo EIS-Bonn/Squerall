@@ -1,9 +1,17 @@
 # Sparkall
-An implementation of the so-called Semantic Data Lake, using Apache Spark.
+An implementation of the so-called Semantic Data Lake, using Apache Spark. Semantic Data Lake is a Data Lake accessed Semantic Web technologies: ontologies and query language (SPARQL).
 
 ## Setup and Execution
-- Clone the repository and package the project. As Sparkall is built using Scala, the SBT build tool (like Maven) is needed. Refer to the official documentation for the [installation](https://www.scala-sbt.org/1.0/docs/Setup.html) setps. Once SBT is installed, run: `sudo sbt assembly`, this will generate Sparkall executable file called *sparkall_01.jar*.
-- To run Sparkall, use `spark-submit` giving in args three files built using [Sparkall-GUI](https://github.com/EIS-Bonn/spakall-gui) (see below).
+- *Prerequisite:* As Sparkall is built using Scala, the SBT build tool (similar to Maven) is needed. Both Scala and SBT need to be installed beforehand. Refer to the official documentations for installation instructions: [Scala](https://www.scala-lang.org/download) and [SBT](https://www.scala-sbt.org/1.0/docs/Setup.html). Once that is installed, run:
+```
+git clone https://github.com/EIS-Bonn/sparkall.git
+cd sparkall
+sudo sbt assembly
+cd target/scala-xxx/ # xyz is the version of Scala installed
+```
+...you find a *sparkall_01.jar* file.
+
+- Now you can run Sparkall using `spark-submit` giving in args three files ---built using [Sparkall-GUI](https://github.com/EIS-Bonn/spakall-gui) (see below).
 The command line looks like:
 `/bin/spark-submit --class [Main classpath] --master [master URI] --executor-memory [memory reserved to the app] sparkall_01.jar [query file] [mappings file] [config file] [master URI]`
 
@@ -14,14 +22,12 @@ The command line looks like:
 Sparkall has 3 interfaces to (1) provide access configuration to data in the Data Lake, (2) map data to ontology terms and (3) query the mapped data. Refer to Sparkall-GUI repository here: [Sparkall-GUI](https://github.com/EIS-Bonn/sparkall-gui) for more information.
 
 ## Publication
-Sparkall is described in a paper ["Teach me to fish" Querying Semantic Data Lakes](https://www.researchgate.net/publication/322526357_%27Teach_me_to_fish%27_Querying_Semantic_Data_Lakes). The paper details all the building blocks and experiments conducted to demonstrate Sparkall's mertits.
+A preprint describing Sparkall can be found at ["Teach me to fish" Querying Semantic Data Lakes](https://www.researchgate.net/publication/322526357_%27Teach_me_to_fish%27_Querying_Semantic_Data_Lakes). The preprint details all the building blocks and show some experiments conducted to demonstrate Sparkall's mertits.
 
 ### Evaluation
-We provide the script, queries and docker for anyone who wants to try Sparkall on their own. Refer to the dedicated page: https://github.com/EIS-Bonn/sparkall/tree/master/evaluation
+We provide in this repository the code-source, queries and docker image for anyone who wants to try Sparkall on their own. Refer to the dedicated page: https://github.com/EIS-Bonn/sparkall/tree/master/evaluation
 
-'Teach me to fish' Querying Semantic Data Lakes. Available from: https://www.researchgate.net/publication/322526357_%27Teach_me_to_fish%27_Querying_Semantic_Data_Lakes [accessed Jan 21 2018]. 
-
-For more enquireis, contact me on: mami@cs.uni-bonn.de
+For any setup difficulties or other enquireis, please contact me on: mami@cs.uni-bonn.de
 
 License
 -------
