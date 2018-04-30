@@ -7,7 +7,7 @@ An implementation of the so-called Semantic Data Lake, using Apache Spark. Seman
 git clone https://github.com/EIS-Bonn/sparkall.git
 cd sparkall
 sudo sbt assembly
-cd target/scala-xxx/ # xyz is the version of Scala installed
+cd target/scala-xyz # xyz is the version of Scala installed
 ```
 ...you find a *sparkall_01.jar* file.
 
