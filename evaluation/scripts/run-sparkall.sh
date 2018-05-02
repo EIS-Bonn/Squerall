@@ -48,4 +48,4 @@ else
 fi
 
 
-cat $RESULT_FILE | grep -o -E "Number of results(.*?)|timeTaken(.*?)|Q(.*?).sparql"
+cat $RESULT_FILE | grep -o -E "Number of results(.*?)|time:(.*?)|Q(.*?).sparql"
