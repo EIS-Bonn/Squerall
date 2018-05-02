@@ -25,7 +25,7 @@ echo -e "|   You run the following in this order:"
 echo -e "|      1. Load data using: ${RED}\`bash ~/load-data.sh\`${NC}."
 echo -e "|      2. Run queries over the loaded data (${BLACK}you can change [*] (replace * with the nbr of cores to affect), 8GB (memory to affect) and results.txt (output file) values${NC}): \n"
 echo -e "|      ${RED}\`bash ~/run-sparkall.sh local[*] 25G /usr/local/sparkall/evaluation/queries /usr/local/sparkall/evaluation/mappings.ttl /usr/local/sparkall/evaluation/config r results.txt\`${NC}"
-echo -e "|   Yo can also run Sparkall over a single query, specify its file inside `queries` directory, e.g., `.../queries/Q7.sparql`
+echo -e "|   Yo can also run Sparkall over a single query, specify its file inside `queries` directory, e.g., `.../queries/Q7.sparql`"
 echo -e "|"
 echo -e "| ${GREEN}Credits:${NC}"
 echo -e "|   Mohamed Nadjib Mami, EIS @ Fraunhofer IAIS"
