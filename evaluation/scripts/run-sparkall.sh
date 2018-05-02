@@ -30,7 +30,7 @@ if [[ -d $QUERIE_S ]]; then
         # echo $i >> $RESULT_FILE;
 
         # Run
-        /usr/bin/time -f '%E' $SPARK/spark-submit --class org.sparkall.Main --executor-memory $EXECUTOR_MEMORY --master $SPARK_MASTER --jars /root/jena-arq-3.1.1.jar $SPARKALL_HOME/sparkall_01.jar $i $MAPPINGS_FILE $CONFIG_FILE $SPARK_MASTER $REORDER_FLAG |& tee $RESULT_FILE > /dev/null
+        (/usr/bin/time -f "time: %e (sec)" $SPARK/spark-submit --class org.sparkall.Main --executor-memory $EXECUTOR_MEMORY --master $SPARK_MASTER --jars /root/jena-arq-3.1.1.jar $SPARKALL_HOME/sparkall_01.jar $i $MAPPINGS_FILE $CONFIG_FILE $SPARK_MASTER $REORDER_FLAG) >> $RESULT_FILE 2>&1
 
         # ../spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class org.sparkall.Main --executor-memory 200G --master spark://host:port sparkall.jar query3.sparql mappings.ttl config spark://host:port r
     done
@@ -39,7 +39,7 @@ elif [[ -f $QUERIE_S ]]; then
     echo "***Executing one query: $QUERIE_S"
     echo "Clearing cache " | tee --append $RESULT_FILE > /dev/null
 
-    /usr/bin/time -f '%E' $SPARK/spark-submit --class org.sparkall.Main --executor-memory $EXECUTOR_MEMORY --master $SPARK_MASTER --jars /root/jena-arq-3.1.1.jar $SPARKALL_HOME/sparkall_01.jar $QUERIE_S $MAPPINGS_FILE $CONFIG_FILE $SPARK_MASTER $REORDER_FLAG |& tee $RESULT_FILE > /dev/null
+   (/usr/bin/time -f "time: %e (sec)" $SPARK/spark-submit --class org.sparkall.Main --executor-memory $EXECUTOR_MEMORY --master $SPARK_MASTER --jars /root/jena-arq-3.1.1.jar $SPARKALL_HOME/sparkall_01.jar $QUERIE_S $MAPPINGS_FILE $CONFIG_FILE $SPARK_MASTER $REORDER_FLAG) > $RESULT_FILE 2>&1
 else
     echo "$QUERIE_S is not a valid query file or queries directory"
     exit 1
