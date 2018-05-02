@@ -34,5 +34,5 @@ for i in `ls $QUERIES_LOCATION/*.sparql`; do
   # ../spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class org.sparkall.Main --executor-memory 200G --master spark://host:port sparkall.jar query3.sparql mappings.ttl config spark://host:port r
 done
 
-cat results_1.txt | grep -o -E "Number of results(.*?)|timeTaken(.*?)|Q(.*?).sparql"
+cat $RESULT_FILE | grep -o -E "Number of results(.*?)|timeTaken(.*?)|Q(.*?).sparql"
 
