@@ -17,6 +17,8 @@ CONFIG_FILE=$5 # Path to the config file
 REORDER_FLAG=$6 # Flag reordering
 RESULT_FILE=$7; #Filename where the query output will be stored
 
+[ -e $RESULT_FILE ] && rm $RESULT_FILE
+
 #TIMEFORMAT=%R
 if [[ -d $QUERIE_S ]]; then
     echo "***Executing all queries in $QUERIE_S"
