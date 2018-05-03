@@ -15,11 +15,15 @@ cd target/scala-xyz # xyz is the version of Scala installed
 The command line looks like:
 `/bin/spark-submit --class [Main classpath] --master [master URI] --executor-memory [memory reserved to the app] sparkall_01.jar [query file] [mappings file] [config file] [master URI]`
 
+* query file: a file containing a correct SPARQL query, only.
+* mappings file: a file contains RML mappings linking data to ontology terms (classes and properties), in JSON format.
+* config file: a file containing information about how to access data sources (eg. host, user, password), in JSON format.
+
 ### Example:
 `/bin/spark-submit --class org.sparkall.Main --master spark://172.14.160.146:3077 --executor-memory 250G sparkall_01.jar query.sparql mappings.ttl config spark://172.14.160.146:3077`
 
 ## Sparkall-GUI
-Sparkall has 3 interfaces to (1) provide access configuration to data in the Data Lake, (2) map data to ontology terms and (3) query the mapped data. Refer to Sparkall-GUI repository here: [Sparkall-GUI](https://github.com/EIS-Bonn/sparkall-gui) for more information.
+Sparkall has 3 interfaces to (1) provide access configuration to data in the Data Lake, (2) map data to ontology terms and (3) query the mapped data. The allow to create the needed input files: config, mappings and query. Refer to Sparkall-GUI repository here: [Sparkall-GUI](https://github.com/EIS-Bonn/sparkall-gui) for more information.
 
 ## Publication
 A preprint describing Sparkall can be found at ["Teach me to fish" Querying Semantic Data Lakes](https://www.researchgate.net/publication/322526357_%27Teach_me_to_fish%27_Querying_Semantic_Data_Lakes). The preprint details all the building blocks and show some experiments conducted to demonstrate Sparkall's mertits.
