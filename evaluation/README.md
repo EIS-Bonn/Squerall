@@ -1,3 +1,5 @@
+[![Gitter](https://img.shields.io/gitter/room/DAVFoundation/DAV-Contributors.svg?style=flat-square)](https://gitter.im/sparkall)
+
 # Evaluation
 To test out the feasibility and performence of Sparkall, i.e., querying heterogeneous data residing in a Data Lake, we have generated data using Berlin Bernchmark (BSBM). We have taken 5 tables: Product, Producer, Offer, Review, and Person , and saved them in Cassandra, MySQL, MongoDB, Parquet and CSV, respectively.
 
