@@ -31,7 +31,7 @@ Sparkall has 3 interfaces to (1) provide access configuration to data in the Dat
 A preprint describing Sparkall can be found at ["Teach me to fish" Querying Semantic Data Lakes](https://www.researchgate.net/publication/322526357_%27Teach_me_to_fish%27_Querying_Semantic_Data_Lakes). The preprint details all the building blocks and show some experiments conducted to demonstrate Sparkall's mertits.
 
 ### Evaluation
-We provide in this repository the code-source, queries and docker image for anyone who wants to try Sparkall on their own. Refer to the dedicated page: https://github.com/EIS-Bonn/sparkall/tree/master/evaluation
+We provide in this repository the code-source, queries and docker image for anyone who wants to try Sparkall on their own. Refer to the [dedicated page](https://github.com/EIS-Bonn/sparkall/tree/master/evaluation).
 
 For any setup difficulties or other enquireis, please contact me on: mami@cs.uni-bonn.de, or ask directly on [Gitter chat](https://gitter.im/sparkall).
 
