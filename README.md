@@ -15,9 +15,9 @@ cd target/scala-xyz # xyz is the version of Scala installed
 The command line looks like:
 `/bin/spark-submit --class [Main classpath] --master [master URI] --executor-memory [memory reserved to the app] sparkall_01.jar [query file] [mappings file] [config file] [master URI]`
 
-* query file: a file containing a correct SPARQL query, only.
-* mappings file: a file contains RML mappings linking data to ontology terms (classes and properties), in JSON format.
-* config file: a file containing information about how to access data sources (eg. host, user, password), in JSON format.
+  * query file: a file containing a correct SPARQL query, only.
+  * mappings file: a file contains RML mappings linking data to ontology terms (classes and properties), in JSON format.
+  * config file: a file containing information about how to access data sources (eg. host, user, password), in JSON format.
 
 ### Example:
 `/bin/spark-submit --class org.sparkall.Main --master spark://172.14.160.146:3077 --executor-memory 250G sparkall_01.jar query.sparql mappings.ttl config spark://172.14.160.146:3077`
