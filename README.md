@@ -1,3 +1,5 @@
+[![Gitter](https://img.shields.io/gitter/room/DAVFoundation/DAV-Contributors.svg?style=flat-square)](https://gitter.im/sparkall)
+
 # Sparkall
 An implementation of the so-called Semantic Data Lake, using Apache Spark. Semantic Data Lake is a Data Lake accessed Semantic Web technologies: ontologies and query language (SPARQL).
 
