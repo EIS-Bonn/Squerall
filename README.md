@@ -33,7 +33,7 @@ A preprint describing Sparkall can be found at ["Teach me to fish" Querying Sema
 ### Evaluation
 We provide in this repository the code-source, queries and docker image for anyone who wants to try Sparkall on their own. Refer to the dedicated page: https://github.com/EIS-Bonn/sparkall/tree/master/evaluation
 
-For any setup difficulties or other enquireis, please contact me on: mami@cs.uni-bonn.de
+For any setup difficulties or other enquireis, please contact me on: mami@cs.uni-bonn.de, or ask directly on [Gitter chat](https://gitter.im/sparkall).
 
 License
 -------
