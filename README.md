@@ -13,7 +13,7 @@ cd target/scala-xyz # xyz is the version of Scala installed
 ```
 ...you find a *sparkall_01.jar* file.
 
-- Now you can run Sparkall using `spark-submit` giving in args three files ---built using [Sparkall-GUI](https://github.com/EIS-Bonn/spakall-gui) (see below).
+- Now you can run Sparkall using `spark-submit` giving in args three files ---built using [Sparkall-GUI](https://github.com/EIS-Bonn/sparkall-gui) (see below).
 The command line looks like:
 `/bin/spark-submit --class [Main classpath] --master [master URI] --executor-memory [memory reserved to the app] sparkall_01.jar [query file] [mappings file] [config file] [master URI]`
 
