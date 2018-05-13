@@ -13,6 +13,8 @@ cd target/scala-xyz # xyz is the version of Scala installed
 ```
 ...you find a *sparkall_01.jar* file.
 
+- Sparkall uses Spark as query engine. Therefore Spark has to be installed. Download Spark from the [official website](https://spark.apache.org/downloads.html). Then configure a standalone cluster using the [official documentation page](https://spark.apache.org/docs/2.2.0/spark-standalone.html).
+
 - Now you can run Sparkall using `spark-submit` giving in args three files ---built using [Sparkall-GUI](https://github.com/EIS-Bonn/sparkall-gui) (see below).
 The command line looks like:
 `/bin/spark-submit --class [Main classpath] --master [master URI] --executor-memory [memory reserved to the app] sparkall_01.jar [query file] [mappings file] [config file] [master URI]`
