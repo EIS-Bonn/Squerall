@@ -17,6 +17,9 @@ object Main extends App {
     Logger.getLogger("org.BIU.utils.logging.ExperimentLogger").setLevel(Level.OFF)
     Logger.getRootLogger().setLevel(Level.OFF)
 
+    Logger.getLogger("org").setLevel(Level.ERROR)
+    Logger.getLogger("akka").setLevel(Level.ERROR)
+
     if (args.length == 1)
         println(s"Hello, ${args(0)}!")
     else
@@ -212,6 +215,8 @@ object Main extends App {
 
         if (mode == "r")
             jDF = executor.joinReordered(joins, prefixes, star_df, firstJoin, starWeights)
+        else
+            jDF = executor.join(joins,prefixes,star_df)
     } else
         jDF  = executor.join(joins,prefixes,star_df)
 

@@ -1,12 +1,7 @@
 package Tests
 
-import java.sql.{Connection, DriverManager}
+import org.apache.spark.sql.SparkSession
 
-import org.apache.jena.query.{QueryExecutionFactory, QueryFactory, ResultSetFactory}
-import org.apache.jena.rdf.model.ModelFactory
-import org.apache.jena.sparql.algebra.Algebra
-import org.apache.jena.sparql.syntax.{ElementPathBlock, ElementVisitorBase, ElementWalker}
-import org.apache.jena.util.FileManager
 /**
   * Created by mmami on 07.03.17.
   */
@@ -15,7 +10,7 @@ object Main2 extends App {
 
     override def main(args: Array[String]) = {
 
-        var queryString =
+        /*var queryString =
             "PREFIX rml: <http://semweb.mmlab.be/ns/rml#> " +
             "PREFIX ql: <http://semweb.mmlab.be/ns/ql#> " +
             "SELECT ?data_location " +
@@ -53,7 +48,7 @@ object Main2 extends App {
         var qe = QueryExecutionFactory.create(query, model)
 
         var results = qe.execSelect()
-        results = ResultSetFactory.copyResults(results);
+        results = ResultSetFactory.copyResults(results);*/
 
         // 4 show results
         /*var x = ""
@@ -98,7 +93,7 @@ object Main2 extends App {
         println(set.toString())
         mongoClient.close()*/
 
-        val driver = "com.mysql.cj.jdbc.Driver"
+        /*val driver = "com.mysql.cj.jdbc.Driver"
         val url = "jdbc:mysql://localhost/db"
         val username = "root"
         val password = "root"
@@ -121,14 +116,45 @@ object Main2 extends App {
         } catch {
             case e => e.printStackTrace
         }
-        connection.close()
+        connection.close()*/
+
+        // Test CouchBase Spark connector
+
+        val spark = SparkSession.builder.master("local[*]").appName("Sparkall")
+            .config("spark.couchbase.nodes", "127.0.0.1") // connect to couchbase on localhost
+            .config("spark.couchbase.bucket.Vendor", "Vendor") // open the travel-sample bucket with empty password
+            .getOrCreate;
+
+        spark.sparkContext.setLogLevel("ERROR")
+
+        //var options : Map[String, String] =  Map()
+        //options += ("spark.couchbase.nodes" -> "127.0.0.1")
+        //options += ("spark.couchbase.bucket.Vendor" -> "Vendor")
+        //options += ("com.couchbase.username" -> "couchbase")
+        //options += ("com.couchbase.password" -> "couchbase")
+        //options += ("schemaFilter" -> "type=\"airline\"")
+        //val df = spark.read.format("com.couchbase.spark.sql.DefaultSource").option("spark.couchbase.bucket.Vendor","Vendor").load()
+        //val df = spark.read.format("com.couchbase.spark.sql.DefaultSource").options(options).schema().load()
+        //val df = sqlContext.read.format("com.couchbase.spark.sql.DefaultSource").option("schemaFilter", "type=\"airline\"").load()
+        //val airlines = spark.read.couchbase(schemaFilter = EqualTo("type", "airline"))
+        //val df = spark.read.option("spark.couchbase.bucket.Vendor","Vendor").couchbase()
+
+        import com.couchbase.spark.sql._
+        val df = spark.read.couchbase()
+
+        df.show()
+
+        val options = Map("path" -> "bsbm/vendor", "es.nodes" -> "127.0.0.1", "es.port" -> "9200", "pushdown" -> "true")
+        // es.nodes is used when we want specific nodes, otherwise es.nodes.discovery default true will discover and query * nodes
+        val dfes = spark.read.format("org.elasticsearch.spark.sql").options(options).load // or load("index/type")
+        dfes.show()
 
     }
 }
 
 //var tp = scala.collection.mutable.Set[Triple]()
 
-class bgpWalker extends ElementVisitorBase {
+/*class bgpWalker extends ElementVisitorBase {
     override def visit(el: ElementPathBlock ) {
         // ...go through all the triples...
         val triples = el.patternElts();
@@ -138,4 +164,4 @@ class bgpWalker extends ElementVisitorBase {
             println("---" + triples.next().asTriple());
         }
     }
-}
+}*/

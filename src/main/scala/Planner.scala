@@ -117,8 +117,6 @@ class Planner(stars: HashMap[String, Set[(String, String)]] with MultiMap[String
     def sortStarsByWeight(starDataTypesMap: Map[String, mutable.Set[String]], filters: Map[String, Integer], configFile: String) = {
         //var configFile = Config.get("datasets.weights")
 
-        //println("************REORDERING STARS**************")
-
         val queryString = scala.io.Source.fromFile(configFile)
         val configJSON = try queryString.mkString finally queryString.close()
 
@@ -157,7 +155,11 @@ class Planner(stars: HashMap[String, Set[(String, String)]] with MultiMap[String
             if (datasourceTypeURI_s.size == 1) { // only one relevant datasource
                 val datasourceType = datasourceTypeURI_s.head.split("#")(1) // eg. cassandra
 
-                datasourceTypeWeight = weightsByDatasource(datasourceType) + nbrFilters
+                // datasourceTypeWeight = weightsByDatasource(datasourceType) + nbrFilters
+                if(nbrFilters > 0)
+                    datasourceTypeWeight = weightsByDatasource(datasourceType) + 1
+                else
+                    datasourceTypeWeight = weightsByDatasource(datasourceType)
                 // Add up the number of filters to the score of the star
             }
             // else, we keep 0, as we are assuming if there are more than 1 data sources, queryig & union-ing them would be expensive

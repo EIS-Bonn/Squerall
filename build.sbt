@@ -28,3 +28,12 @@ dependencyOverrides ++= Set("com.fasterxml.jackson.core" % "jackson-databind" % 
 
 // https://mvnrepository.com/artifact/org.mongodb/mongo-java-driver
 libraryDependencies += "org.mongodb" % "mongo-java-driver" % "3.5.0"
+
+// https://mvnrepository.com/artifact/io.gatling/jsonpath
+libraryDependencies += "io.gatling" %% "jsonpath" % "0.6.10"
+
+libraryDependencies += "com.couchbase.client" %% "spark-connector" % "2.1.0"
+
+libraryDependencies += "org.elasticsearch" %% "elasticsearch-spark-20" % "6.2.4"
+
+

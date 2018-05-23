@@ -4,7 +4,6 @@ import java.util
 
 import com.google.common.collect.ArrayListMultimap
 import com.mongodb.spark.config.ReadConfig
-import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
@@ -15,6 +14,7 @@ import scala.collection.mutable
 import scala.collection.mutable.{HashMap, ListBuffer, Set}
 
 class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecutor[DataFrame] {
+
 
     def query (sources : Set[(HashMap[String, String], String, String)],
                optionsMap: HashMap[String, Map[String, String]],
@@ -30,10 +30,10 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
                joinPairs: Map[(String,String), String]
         ): (DataFrame, Integer) = {
 
-        Logger.getLogger("org").setLevel(Level.OFF)
-        Logger.getLogger("akka").setLevel(Level.OFF)
-
         val spark = SparkSession.builder.master(sparkURI).appName("Sparkall").getOrCreate;
+        //TODO: get from the function if there is a relevant data source that requires setting config to SparkSession
+
+        spark.sparkContext.setLogLevel("ERROR")
 
         var finalDF : DataFrame = null
         var datasource_count = 0
@@ -74,15 +74,15 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
                 case "csv" => df = spark.read.options(options).csv(sourcePath)
                 case "parquet" => df = spark.read.options(options).parquet(sourcePath)
                 case "cassandra" =>
-                    //spark.conf.set("spark.cassandra.connection.host", "127.0.0.1")
-                    //println("CASSANDRA CONF:" + spark.conf.get("spark.cassandra.connection.host"))
                     df = spark.read.format("org.apache.spark.sql.cassandra").options(options).load
+                case "elasticsearch" =>
+                    df = spark.read.format("org.elasticsearch.spark.sql").options(options).load
                 case "mongodb" =>
                     //spark.conf.set("spark.mongodb.input.uri", "mongodb://127.0.0.1/test.myCollection")
                     val values = options.values.toList
                     val mongoConf = if (values.length == 4) makeMongoURI(values(0), values(1), values(2), values(3))
                                     else makeMongoURI(values(0), values(1), values(2), null)
-                        val mongoOptions: ReadConfig = ReadConfig(Map("uri" -> mongoConf, "partitioner" -> "MongoPaginateBySizePartitioner"))
+                    val mongoOptions: ReadConfig = ReadConfig(Map("uri" -> mongoConf, "partitioner" -> "MongoPaginateBySizePartitioner"))
                     df = spark.read.format("com.mongodb.spark.sql").options(mongoOptions.asOptions).load
                 case "jdbc" =>
                     df = spark.read.format("jdbc").options(options).load()
@@ -146,8 +146,8 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
                     whereString = column + operand_value._1 + operand_value._2
                     println("--- WHERE string: " + whereString)
 
-                    println("colcolcol: " + finalDF(column).toString())
-                    println("operand_value._2: " + operand_value._2.replace("\"",""))
+                    //println("colcolcol: " + finalDF(column).toString())
+                    //println("operand_value._2: " + operand_value._2.replace("\"",""))
                     if (operand_value._1 != "regex")
                         finalDF = finalDF.filter(whereString)
                     else
@@ -162,6 +162,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
 
         /*******THIS IS JUST FOR TEST - REMOVE LATER*******/
         println("Number of Spark executors (JUST FOR TEST): " + spark.sparkContext.getExecutorStorageStatus.length)
+        println("Master URI (JUST FOR TEST): " + spark.sparkContext.master)
 
         (finalDF, nbrOfFiltersOfThisStar)
     }

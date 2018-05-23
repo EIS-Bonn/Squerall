@@ -44,7 +44,7 @@ class Mapper (mappingsFile: String) {
             count = count + 1
 
             // Options of relevant sources of one star
-            var optionsPerStar : mutable.HashMap[String, Map[String,String]] = new HashMap()
+            val optionsPerStar : mutable.HashMap[String, Map[String,String]] = new HashMap()
 
             // Iterate through the relevant data sources to get options
             // One star can have many relevant sources (containing its predicates)
@@ -54,7 +54,7 @@ class Mapper (mappingsFile: String) {
                 //val srcType = d._3
 
                 //var configFile = Config.get("datasets.descr")
-
+                println("configFile: " + configFile)
                 val queryString = scala.io.Source.fromFile(configFile)
                 val configJSON = try queryString.mkString finally queryString.close()
 
@@ -113,7 +113,7 @@ class Mapper (mappingsFile: String) {
         }
 
         //println("- Predicates for the query " + listOfPredicatesForQuery)
-        var queryString = "PREFIX rml: <http://semweb.mmlab.be/ns/rml#>" +
+        val queryString = "PREFIX rml: <http://semweb.mmlab.be/ns/rml#>" +
                             "PREFIX rr: <http://www.w3.org/ns/r2rml#>" +
                             "PREFIX foaf: <http://xmlns.com/foaf/spec/>" +
                             "PREFIX nosql: <http://purl.org/db/nosql#>" +
@@ -169,12 +169,12 @@ class Mapper (mappingsFile: String) {
 
                 //println("GOING TO EXECUTE: " + getAttributeOfPredicate)
 
-                var query1 = QueryFactory.create(getAttributeOfPredicate)
-                var qe1 = QueryExecutionFactory.create(query1, model)
-                var results1 = qe1.execSelect()
+                val query1 = QueryFactory.create(getAttributeOfPredicate)
+                val qe1 = QueryExecutionFactory.create(query1, model)
+                val results1 = qe1.execSelect()
                 while (results1.hasNext) {
-                    var soln1 = results1.nextSolution()
-                    var attr = soln1.get("r").toString
+                    val soln1 = results1.nextSolution()
+                    val attr = soln1.get("r").toString
                     //println("- Predicate " + p + " corresponds to attribute " + attr + " in " + src)
                     pred_attr.put(p,attr)
 
