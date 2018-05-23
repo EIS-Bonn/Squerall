@@ -1,6 +1,18 @@
+test in assembly := {}
+
+assemblyJarName in assembly := "sparkall_01.jar"
+
+mainClass in assembly := Option("org.sparkall.Main")
+
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
+  case PathList("META-INF", "DUMMY.SF") => MergeStrategy.discard
+  case _ => MergeStrategy.first
+}
+
 name := "Sparkall"
 
-version := "1.0"
+version := "0.1"
 
 scalaVersion := "2.11.8"
 
