@@ -7,9 +7,9 @@ import org.codehaus.jackson.map.ObjectMapper
 object Main extends App {
 
 	override def main(args: Array[String]) = {
-		val inputSQLDump = args(0) // /media/mmami/EIS_Ext/Sparkall/BSBM/bsbmtools-0.2/data/08Offer.sql
-        	val entityName = args(1) // "Offer"
-        	val configFile = args(2) // "/media/mmami/Extra/Scala/Web/play-scala-starter-example/conf/config"  
+		val inputSQLDump = args(0) // /path/to/08Offer.sql
+        	val entityName = args(1) // e.g. "Offer"
+        	val configFile = args(2) // "/path to config file containing how to access database to store Offer, see evaluation/ folder for example "  
 
         	val fileContent = Source.fromFile(configFile).getLines.mkString
         	val json = (new ObjectMapper()).readValue(fileContent, classOf[Object])
