@@ -1,12 +1,5 @@
 package Tests
 
-import Tests.loaders.Loader
-import org.codehaus.jackson.map.ObjectMapper
-
-import scala.io.Source
-import io.gatling.jsonpath._
-
-
 /**
   * Created by mmami on 07.03.17.
   */
@@ -14,6 +7,8 @@ import io.gatling.jsonpath._
 object Main3 extends App {
 
     override def main(args: Array[String]) = {
+
+        var finalResults = Class.forName("org.apache.spark.sql.DataFrame").newInstance()
 
         /*var q = mutable.Queue[String]()
 
@@ -146,7 +141,7 @@ object Main3 extends App {
 
         println("final scores: " + scores)*/
 
-        val inputSQLDump = args(0) // /media/mmami/EIS_Ext/Sparkall/BSBM/bsbmtools-0.2/data
+        /*val inputSQLDump = args(0) // /media/mmami/EIS_Ext/Sparkall/BSBM/bsbmtools-0.2/data
         val entityName = "Offer"//args(1)
         val configFile = "/media/mmami/Extra/Scala/Web/play-scala-starter-example/conf/config" // args(2) //
 
@@ -213,7 +208,7 @@ object Main3 extends App {
                 val loader = new Loader(configFile)
 
                 loader.person(inputSQLDump,header.toString,delimiter.toString,mode.toString,outputFile.toString)
-        }
+        }*/
     }
 }
 

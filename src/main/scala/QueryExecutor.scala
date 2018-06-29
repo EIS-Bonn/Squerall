@@ -30,23 +30,23 @@ trait QueryExecutor[T] { // T is a ParSet (Parallel dataSet)
              ) : (T, Integer)
 
     /* Transforms a ParSet to another ParSet based on the SPARQL TRANSFORM clause */
-    def transform(df: T, column: String, transformationsArray : Array[String]): T
+    def transform(ps: T, column: String, transformationsArray : Array[String]): T
 
     /* Print the schema of the ParSet */
     def join(joins: ArrayListMultimap[String, (String, String)], prefixes: Map[String, String], star_df: Map[String, T]): T
 
     /* Generates a new ParSet projecting out one or more attributes */
-    def project(jDF: T, columnNames: Seq[String], distinct: Boolean): T
+    def project(jDF: Any, columnNames: Seq[String], distinct: Boolean): T
 
     /* Counts the number of tuples of a ParSet */
-    def count(jDF: T): Long
+    def count(joinPS: T): Long
 
     /* Sort tuples of a ParSet based on an attribute variable */
-    def orderBy(jDF: T, direction: String, variable: String): T
+    def orderBy(joinPS: Any, direction: String, variable: String): T
 
     /* Group attributes based on aggregates function(s) */
-    def groupBy(jDF: T, groupBys: (ListBuffer[String], Set[(String,String)])): T
+    def groupBy(joinPS: Any, groupBys: (ListBuffer[String], Set[(String,String)])): T
 
     /* Return the first 'limitValue' values of the ParSet */
-    def limit(jDF: T, limitValue: Int) : T
+    def limit(joinPS: Any, limitValue: Int) : T
 }

@@ -15,7 +15,7 @@ object Main extends App {
 
     Logger.getLogger("ac.biu.nlp.nlp.engineml").setLevel(Level.OFF)
     Logger.getLogger("org.BIU.utils.logging.ExperimentLogger").setLevel(Level.OFF)
-    Logger.getRootLogger().setLevel(Level.OFF)
+    Logger.getRootLogger.setLevel(Level.OFF)
 
     Logger.getLogger("org").setLevel(Level.ERROR)
     Logger.getLogger("akka").setLevel(Level.ERROR)
@@ -65,7 +65,6 @@ object Main extends App {
     }
 
     println(s"predicateStar: $variablePredicateStar")
-
 
     val prefixes = qa.getPrefixes
     val (select,distinct) = qa.getProject
@@ -117,6 +116,8 @@ object Main extends App {
     val executorID = args(3)
 
     val executor : SparkExecutor = new SparkExecutor(executorID, mappingsFile)
+    //val executor : PrestoExecutor = new PrestoExecutor(executorID, mappingsFile)
+    var finalResults = executor.getType()
 
     var starDataTypesMap : Map[String, mutable.Set[String]] = Map()
 
@@ -156,36 +157,42 @@ object Main extends App {
             }
         }
 
-        var ds : DataFrame = null
-        var numberOfFiltersOfThisStar = 0
-        var queryResults: (DataFrame,Integer) = null
+        //var queryResults = (Class.forName(executorType).newInstance(),0) // CHANGED TO UNIT AFTER PRESTO
         // TODO: the else block looks like not being reached, check its validity
         if (joinedToFlag.contains(star) || joinedFromFlag.contains(star)) {
             //println("TRUE: " + star)
             //println("-> datasources: " + datasources)
-            queryResults = executor.query(datasources, options, true, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
-            ds = queryResults._1
+            val (ds,numberOfFiltersOfThisStar) = executor.query(datasources, options, true, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
+            //ds = queryResults._1
+
+            star_df += (star -> ds) // DataFrame representing a star
+
+            //numberOfFiltersOfThisStar = queryResults._2
+            starNbrFilters += star -> numberOfFiltersOfThisStar
+
             println("...with DataFrame schema: " + ds)
-            ds.printSchema()
+            //ds.printSchema() // SEE WHAT TO DO HERE TO SHOW BACK THE SCHEMA - MOVE IN SPARKEXECUTOR
         } else if (!joinedToFlag.contains(star) && !joinedFromFlag.contains(star)) {
             //println("FALSE: " + star)
             //println("-> datasources: " + datasources)
-            queryResults = executor.query(datasources, options, false, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
-            ds = queryResults._1
+            val (ds,numberOfFiltersOfThisStar) = executor.query(datasources, options, false, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
+
+            //ds.printSchema() // SEE WHAT TO DO HERE TO SHOW BACK THE SCHEMA - MOVE IN SPARKEXECUTOR
+
+            star_df += (star -> ds) // DataFrame representing a star
+
+            //numberOfFiltersOfThisStar = queryResults._2
+            starNbrFilters += star -> numberOfFiltersOfThisStar
+
+            //ds = queryResults._1
             println("...with DataFrame schema: " + ds)
-            ds.printSchema()
         }
-
-        star_df += (star -> ds) // DataFrame representing a star
-
-        numberOfFiltersOfThisStar = queryResults._2
-        starNbrFilters += star -> numberOfFiltersOfThisStar
     }
 
     println("\n/*******************************************************************/")
     println("/*                         QUERY EXECUTION                         */")
     println("/*******************************************************************/")
-    println(s"- Here are the (Star, DataFrame) pairs: \n $star_df")
+    println(s"- Here are the (Star, ParSet) pairs: \n $star_df")
     println(s"- Here are join pairs: $joins")
     println(s"- Number of predicates per star: $starNbrFilters ")
 
@@ -193,7 +200,7 @@ object Main extends App {
     println(s"- Stars weighted (performance + nbr of filters): $starWeights \n")
 
     val sortedScoredJoins = pl.reorder(joins, starDataTypesMap, starNbrFilters, starWeights, configFile)
-    println("- Sorted scored joins: " + sortedScoredJoins)
+    println(s"- Sorted scored joins: $sortedScoredJoins")
     val startingJoin = sortedScoredJoins.head
 
     // Convert starting join to: (leftStar, (rightStar, joinVar)) so we can remove it from $joins
@@ -207,18 +214,20 @@ object Main extends App {
     //joins.remove(firstJoin._1,firstJoin._2)
 
     // Final global join
-    var jDF: DataFrame = null
+
+    //var finalResults = Class.forName("org.apache.spark.sql.DataFrame").newInstance() // CHANGED THIS AFTER PRESTO
+
     println("args.length: " + args.length)
     if(args.length == 5) {
         val mode = args(4) // reorder or not
         println("mode: " + mode)
 
         if (mode == "r")
-            jDF = executor.joinReordered(joins, prefixes, star_df, firstJoin, starWeights)
+            finalResults = executor.joinReordered(joins, prefixes, star_df, firstJoin, starWeights)
         else
-            jDF = executor.join(joins,prefixes,star_df)
+            finalResults = executor.join(joins,prefixes,star_df)
     } else
-        jDF  = executor.join(joins,prefixes,star_df)
+        finalResults  = executor.join(joins,prefixes,star_df)
 
 
     // Project out columns from the final global join results
@@ -235,8 +244,7 @@ object Main extends App {
 
     if(groupBys != null) {
         println(s"groupBys: $groupBys")
-
-        jDF = executor.groupBy(jDF,groupBys)
+        finalResults = executor.groupBy(finalResults,groupBys)
 
         // Add aggregation columns to the final project ones
         for(gb <- groupBys._2) {
@@ -267,28 +275,28 @@ object Main extends App {
             val variable = o._1
             val direction = o._2
 
-            jDF = executor.orderBy(jDF,direction,variable)
+            finalResults = executor.orderBy(finalResults,direction,variable)
 
         }
     }
 
     println("|__ Has distinct? " + distinct)
-    jDF = executor.project(jDF,columnNames,distinct)
+    finalResults = executor.project(finalResults,columnNames,distinct)
 
     if (limit > 0)
-        jDF =   executor.limit(jDF,limit)
+        finalResults = executor.limit(finalResults,limit)
 
     println("- Final results DF schema: ")
-    executor.schemaOf(jDF)
+    //executor.schemaOf(finalResults) // REMOVED AFTER PRESTO - KEEP ONLY ON SPARK
 
     val stopwatch : StopWatch = new StopWatch
     stopwatch.start
 
-    val cnt = executor.count(jDF)
-    println(s"Number of results ($cnt): ")
+    //val cnt = executor.count(finalResults) // REMOVED AFTER PRESTO - KEEP ONLY ON SPARK
+    //println(s"Number of results ($cnt): ")
 
-    //jDF.show()
-    jDF.take(10).foreach(println)
+    finalResults.show()
+    //finalResults.take(10).foreach(println) // REMOVED AFTER PRESTO - KEEP ONLY ON SPARK
 
     stopwatch.stop
 

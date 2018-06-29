@@ -15,6 +15,10 @@ import scala.collection.mutable.{HashMap, ListBuffer, Set}
 
 class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecutor[DataFrame] {
 
+    def getType() = {
+        val dataframe : DataFrame = null
+        dataframe
+    }
 
     def query (sources : Set[(HashMap[String, String], String, String)],
                optionsMap: HashMap[String, Map[String, String]],
@@ -300,8 +304,8 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
             val op2 = e._2._1
             val jVal = e._2._2
 
-            var njVal = get_NS_predicate(jVal)
-            var ns = prefixes(njVal._1)
+            val njVal = get_NS_predicate(jVal)
+            val ns = prefixes(njVal._1)
 
             println(s"-> Joining ($op1 $join $op2 + ) using $jVal...")
 
@@ -424,7 +428,6 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
             println(s"sortedWeighedJoins: $sortedWeighedJoins")
 
             for(s <- sortedWeighedJoins) {
-
                 val op1 = s._1._1
                 val op2 = (s._1)._2._1
                 val jVal = (s._1)._2._2
@@ -436,7 +439,6 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
                 val df2 = star_df(op2)
 
                 println(s"---- $op1 -- $op2 -- $joinSide -- $jVal")
-
 
                 if (joinSide.equals("op2")) {
                     println("...we can join (this direction >>) ")
@@ -464,11 +466,11 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
         jDF
     }
 
-    def project(jDF: DataFrame, columnNames: Seq[String], distinct: Boolean): DataFrame = {
+    def project(jDF: Any, columnNames: Seq[String], distinct: Boolean): DataFrame = {
         if(!distinct)
-            jDF.select(columnNames.head, columnNames.tail: _*)
+            jDF.asInstanceOf[DataFrame].select(columnNames.head, columnNames.tail: _*)
         else
-            jDF.select(columnNames.head, columnNames.tail: _*).distinct()
+            jDF.asInstanceOf[DataFrame].select(columnNames.head, columnNames.tail: _*).distinct()
     }
 
     def schemaOf(jDF: DataFrame) = {
@@ -479,17 +481,17 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
         jDF.count()
     }
 
-    def orderBy(jDF: DataFrame, direction: String, variable: String): DataFrame = {
+    def orderBy(jDF: Any, direction: String, variable: String): DataFrame = {
         println("ORDERING...")
 
         if (direction == "-1") {
-            jDF.orderBy(asc(variable))
+            jDF.asInstanceOf[DataFrame].orderBy(asc(variable))
         } else { // TODO: assuming the other case is automatically -1 IFNOT change to "else if (direction == "-2") {"
-            jDF.orderBy(desc(variable))
+            jDF.asInstanceOf[DataFrame].orderBy(desc(variable))
         }
     }
 
-    def groupBy(jDF: DataFrame, groupBys: (ListBuffer[String], Set[(String,String)])): DataFrame = {
+    def groupBy(jDF: Any, groupBys: (ListBuffer[String], Set[(String,String)])): DataFrame = {
 
         val groupByVars = groupBys._1
         val aggregationFunctions = groupBys._2
@@ -505,7 +507,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
             aggSet += ((af._1,af._2))
         }
         val aa = aggSet.toList
-        val newJDF : DataFrame = jDF.groupBy(cols: _*).agg(aa.head, aa.tail : _*)
+        val newJDF : DataFrame = jDF.asInstanceOf[DataFrame].groupBy(cols: _*).agg(aa.head, aa.tail : _*)
 
 
         // df.groupBy("department").agg(max("age"), sum("expense"))
@@ -515,6 +517,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
         newJDF
     }
 
-    def limit(jDF: DataFrame, limitValue: Int) : DataFrame = jDF.limit(limitValue)
+    def limit(jDF: Any, limitValue: Int) : DataFrame = jDF.asInstanceOf[DataFrame].limit(limitValue)
+
 
 }
