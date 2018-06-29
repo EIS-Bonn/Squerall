@@ -11,7 +11,8 @@ Original BSBM queries touch only 1~3 tables at once at most. That does not serve
 Full list of queries is available in this repo along this README.
 
 ## Docker
-We provide a [Dockerfile](https://github.com/EIS-Bonn/sparkall/blob/master/Dockerfile) to reproduce the conducted experiments.
+We provide a [Dockerfile](https://github.com/EIS-Bonn/sparkall/blob/master/Dockerfile) to reproduce the conducted experiments. It downloads Spark and installs three databases: Cassandra, MongoDB and MySQL. It downloads the BSBM data generator and generates a small dataset. It then runs a tailored (for BSBM) Spark-based data loader, which loads BSBM data to the aformentioned databases and files. Finally it gets the queries from this repository and runs over them Sparkall.
+
 - Build the image as usual. Change directory to where the Dockerfile is and run: `docker build -t sparkall .`. 
 - Run the image as usual. Run: `docker run -it sparkall`*. You will get a welcome screen explaining to you what you see and how to proceed.
 

@@ -2,7 +2,9 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1247913.svg)](https://zenodo.org/record/1247913)
 
 # Sparkall
-An implementation of the so-called Semantic Data Lake, using Apache Spark. Semantic Data Lake is a Data Lake accessed Semantic Web technologies: ontologies and query language (SPARQL).
+An implementation of the so-called Semantic Data Lake, using Apache Spark. Semantic Data Lake is a Data Lake accessed using Semantic Web technologies: ontologies and query language (SPARQL).
+
+Currently supported data sources: **CSV, Parquet, MongoDB, Cassandra, Elasticsearch, Couchbase, JDBC (MySQL, SQL Server, etc.)**.
 
 ## Setup and Execution
 - *Prerequisite:* As Sparkall is built using Scala, the SBT build tool (similar to Maven) is needed. Both Scala and SBT need to be installed beforehand. Refer to the official documentations for installation instructions: [Scala](https://www.scala-lang.org/download) and [SBT](https://www.scala-sbt.org/1.0/docs/Setup.html). Once that is installed, run:
