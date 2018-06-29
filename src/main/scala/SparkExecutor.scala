@@ -519,5 +519,5 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
 
     def limit(jDF: Any, limitValue: Int) : DataFrame = jDF.asInstanceOf[DataFrame].limit(limitValue)
 
-
+    def show(jDF: Any) = jDF.asInstanceOf[DataFrame].show
 }

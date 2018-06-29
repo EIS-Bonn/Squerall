@@ -49,4 +49,7 @@ trait QueryExecutor[T] { // T is a ParSet (Parallel dataSet)
 
     /* Return the first 'limitValue' values of the ParSet */
     def limit(joinPS: Any, limitValue: Int) : T
+
+    /* Show some results */
+    def show(PS: Any)
 }
