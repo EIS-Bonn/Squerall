@@ -4,7 +4,7 @@ import scala.collection.mutable.ListBuffer
 
 class DataQueryFrame {
 
-    private var _selects : ListBuffer[(String, String)] = ListBuffer()
+    private var _selects : ListBuffer[(String, String, String)] = ListBuffer()
     private var _filters : ListBuffer[String] = ListBuffer()
     private var _joins : ListBuffer[(String, String, String, String)] = ListBuffer()
     private var _project : (Seq[String], Boolean) = (null,false)
@@ -13,15 +13,15 @@ class DataQueryFrame {
     private var _aggregate : List[(String, String)] = List()
     private var _limit : Int = 0
 
-    def addSelect(cols_table: (String, String)): ListBuffer[(String, String)] = {
+    def addSelect(cols_table: (String, String, String)): Unit = {
         _selects += cols_table
     }
 
-    def addFilter(condition: String): ListBuffer[String] = {
+    def addFilter(condition: String) : Unit = {
         _filters += condition
     }
 
-    def addJoin(join: (String, String, String, String)): ListBuffer[(String, String, String, String)] = {
+    def addJoin(join: (String, String, String, String)): Unit = {
         _joins += join
     }
 
@@ -44,4 +44,22 @@ class DataQueryFrame {
     def addLimit(limitValue: Int): Unit = {
         _limit = limitValue
     }
+
+    /******* GETTERS *******/
+    def getSelects: ListBuffer[(String, String, String)] = _selects
+
+    def getFilters : ListBuffer[String] =  _filters
+
+    def getJoins: ListBuffer[(String, String, String, String)] = _joins
+
+    def getProject : (Seq[String], Boolean) = _project
+
+    def getOrderBy: (String, Int) = _orderBy
+
+    def getGroupBy: ListBuffer[String] = _groupBy
+
+    def getAggregate: List[(String, String)] = _aggregate
+
+    def getLimit: Int = _limit
+
 }

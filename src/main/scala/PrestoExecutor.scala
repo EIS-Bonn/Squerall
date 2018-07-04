@@ -39,9 +39,8 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
         // prestoURI = "jdbc:presto://localhost:8080"
         val connection = DriverManager.getConnection(prestoURI, "presto_user", null) // null: properties
 
-
         //var finalDF : String = null
-        var finalDQF : DataQueryFrame = null
+        val finalDQF = new DataQueryFrame()
         var datasource_count = 0
 
         for (s <- sources) {
@@ -77,8 +76,8 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
 
             var table = ""
             sourceType match {
-                case "csv" => table = s"hive.csv.entity" // get entity
-                case "parquet" => table = s"hive.hive.entity" // get entity
+                case "csv" => table = s"hive.csv.$star" // get entity
+                case "parquet" => table = s"hive.hive.${omitQuestionMark(star)}" // get entity
                 case "cassandra" => table = s"""cassandra.${options("keyspace")}.${options("table")}"""
                 case "elasticsearch" => table = ""
                 case "mongodb" => table = s"""mongodb.${options("database")}.${options("collection")}"""
@@ -88,7 +87,7 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
             }
 
             //val selected_table = s"SELECT $columns FROM $table."
-            finalDQF.addSelect((columns,table))
+            finalDQF.addSelect((columns.replace("`",""),table,omitQuestionMark(star))) // Presto atm doesn't support `
 
             // Transformations SKIP FOR NOW
             /*if (leftJoinTransformations != null && leftJoinTransformations._2 != null) {
@@ -149,9 +148,7 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
                 //finalDF.show()
             }
         }
-
         println(s"Number of filters of this star is: $nbrOfFiltersOfThisStar")
-
 
         (finalDQF, nbrOfFiltersOfThisStar)
     }
@@ -218,7 +215,7 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
         val seenDF : ListBuffer[(String,String)] = ListBuffer()
         var firstTime = true
         val join = " x "
-        val jDQF : DataQueryFrame = null
+        val jDQF = new DataQueryFrame()
 
         val it = joins.entries.iterator
         while (it.hasNext) {
@@ -248,7 +245,7 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
                 firstTime = false
 
                 // Join level 1
-                jDQF.addJoin((table1,table2,omitQuestionMark(table1) + "_" + omitNamespace(jVal) + "_" + ns,omitQuestionMark(table2) + "_ID"))
+                jDQF.addJoin((omitQuestionMark(table1),omitQuestionMark(table2),omitQuestionMark(table1) + "_" + omitNamespace(jVal) + "_" + ns,omitQuestionMark(table2) + "_ID"))
                 //jDQF = df1.join(df2, df1.col(omitQuestionMark(table1) + "_" + omitNamespace(jVal) + "_" + ns).equalTo(df2(omitQuestionMark(table2) + "_ID")))
                 println("...done")
             } else {
@@ -303,6 +300,7 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
 
             //val df1 = star_df(table1)
             //val df2 = star_df(table2)
+            //jDQF.addFilter(star_df(table1).getFilters)
 
             if (dfs_only.contains(table1) && !dfs_only.contains(table2)) {
                 val leftJVar = omitQuestionMark(table1) + "_" + omitNamespace(jVal) + "_" + ns
@@ -325,6 +323,16 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
             }
 
             pendingJoins = pendingJoins.tail
+        }
+
+        for(sdf <- star_df) {
+            val selects = sdf._2.asInstanceOf[DataQueryFrame].getSelects.head
+            // head of (0) because one star has one select, it's the whole join star that contains multiple selects
+            jDQF.addSelect(selects)
+
+            val filters = sdf._2.asInstanceOf[DataQueryFrame].getFilters
+            if(filters.nonEmpty) jDQF.asInstanceOf[DataQueryFrame].addFilter(s"${filters.mkString(" AND ")}")
+            // head of (0) because one star has one filter, it's the whole join star that contains multiple filter sets
         }
 
         jDQF
@@ -394,6 +402,38 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
         jDQF.asInstanceOf[DataQueryFrame]
     }
 
-    def show(jDF: Any) = null
+    def show(jDQF: Any) = {
+        val selects: mutable.Seq[(String, String, String)] = jDQF.asInstanceOf[DataQueryFrame].getSelects
+        val joins: mutable.Seq[(String, String, String, String)] = jDQF.asInstanceOf[DataQueryFrame].getJoins
+        val filters: mutable.Seq[String] = jDQF.asInstanceOf[DataQueryFrame].getFilters
+        val project: (Seq[String], Boolean) = jDQF.asInstanceOf[DataQueryFrame].getProject
+        val groupBy: mutable.Seq[String] = jDQF.asInstanceOf[DataQueryFrame].getGroupBy
+        val orderBy: (String, Int) = jDQF.asInstanceOf[DataQueryFrame].getOrderBy
+        val aggreggate = jDQF.asInstanceOf[DataQueryFrame].getAggregate
+        val limit: Int = jDQF.asInstanceOf[DataQueryFrame].getLimit
+
+        var query = s"SELECT ${project._1.mkString(",")} ${aggreggate.mkString(",")} FROM ("
+        var j = 0
+        for(s <- selects) {
+            if (j > 0) query += "\nJOIN"
+            query += s"\n(SELECT ${s._1} FROM ${s._2}) AS ${s._3}"
+            j += 1
+        }
+
+        for(j <- joins)
+            query += s"\nON ${j._1}.${j._3}=${j._2}.${j._4}"
+        query += s"\n)\nWHERE ${filters.mkString(",")}"
+        if(groupBy.nonEmpty) query += s"\nGROUP BY ${groupBy.mkString(",")}"
+        if(orderBy != null) {
+            query += s"\nORDER BY "
+            val asc_desc = orderBy._2
+            val col = orderBy._1
+            val ob = if (asc_desc == 1) s"$col ASC" else s"$col DESC"
+            query += ob
+        }
+        query += s"\nlimit $limit"
+
+        println(s"\n****Query****\n$query")
+    }
 
 }

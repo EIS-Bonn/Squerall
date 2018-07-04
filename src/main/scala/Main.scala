@@ -13,7 +13,7 @@ object Main extends App {
     val configFile = args(2)
     val executorID = args(3)
 
-    if(10 > 3) {
+    if(1 > 3) {
         val executor : SparkExecutor = new SparkExecutor(executorID, mappingsFile)
         //val finalResults = executor.getType()
 
