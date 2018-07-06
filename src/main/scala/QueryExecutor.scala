@@ -52,4 +52,7 @@ trait QueryExecutor[T] { // T is a ParSet (Parallel dataSet)
 
     /* Show some results */
     def show(PS: Any)
+
+    /* Compute the results */
+    def run(jDF: Any)
 }

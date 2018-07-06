@@ -18,6 +18,8 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
         dataframe
     }
 
+    private var query = ""
+
     def query(sources : Set[(HashMap[String, String], String, String)],
                optionsMap: HashMap[String, Map[String, String]],
                toJoinWith: Boolean,
@@ -35,9 +37,6 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
         //val spark = SparkSession.builder.master(sparkURI).appName("Sparkall").getOrCreate;
         //spark.sparkContext.setLogLevel("ERROR")
         //TODO: **PRESTO?** get from the function if there is a relevant data source that requires setting config to SparkSession
-
-        // prestoURI = "jdbc:presto://localhost:8080"
-        val connection = DriverManager.getConnection(prestoURI, "presto_user", null) // null: properties
 
         //var finalDF : String = null
         val finalDQF = new DataQueryFrame()
@@ -77,11 +76,12 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
             var table = ""
             sourceType match {
                 case "csv" => table = s"hive.csv.$star" // get entity
-                case "parquet" => table = s"hive.hive.${omitQuestionMark(star)}" // get entity
+                case "parquet" => table = s"hive.default.${omitQuestionMark(star)}" // get entity
                 case "cassandra" => table = s"""cassandra.${options("keyspace")}.${options("table")}"""
                 case "elasticsearch" => table = ""
                 case "mongodb" => table = s"""mongodb.${options("database")}.${options("collection")}"""
-                case "jdbc" => s"""mysql.${options("database")}.${options("url").split("/")(3).split("?")(0)}""" // to get only DB from the URL
+                case "jdbc" => table = s"""mysql.${options("url").split("/")(3).split("\\?")(0)}.${options("dbtable")}""" // get only DB from the URL
+                // jdbc:mysql://localhost:3306/db?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCod
                 //TODO: currently JDBC is only MySQL, fix this
                 case _ =>
             }
@@ -233,7 +233,7 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
 
             println("njVal: " + ns)
 
-            it.remove
+            it.remove()
 
             //val df1 = star_df(table1)
             //val df2 = star_df(table2)
@@ -256,7 +256,7 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
 
                     val leftJVar = omitQuestionMark(table1) + "_" + omitNamespace(jVal) + "_" + ns
                     val rightJVar = omitQuestionMark(table2) + "_ID"
-                    jDQF.addJoin(("",table2,leftJVar,rightJVar))
+                    jDQF.addJoin((omitQuestionMark(table1),omitQuestionMark(table2),leftJVar,rightJVar))
                     //jDQF = jDQF.join(df2, jDQF.col(leftJVar).equalTo(df2.col(rightJVar)))
 
                     seenDF.add((table2,"ID"))
@@ -268,7 +268,7 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
 
                     val leftJVar = omitQuestionMark(table1) + "_" + omitNamespace(jVal) + "_" + ns
                     val rightJVar = omitQuestionMark(table2) + "_ID"
-                    jDQF.addJoin((table1,"",leftJVar,rightJVar))
+                    jDQF.addJoin((omitQuestionMark(table1),omitQuestionMark(table2),leftJVar,rightJVar))
                     //jDQF = df1.join(jDQF, df1.col(leftJVar).equalTo(jDQF.col(rightJVar)))
 
                     seenDF.add((table1,jVal))
@@ -412,16 +412,59 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
         val aggreggate = jDQF.asInstanceOf[DataQueryFrame].getAggregate
         val limit: Int = jDQF.asInstanceOf[DataQueryFrame].getLimit
 
-        var query = s"SELECT ${project._1.mkString(",")} ${aggreggate.mkString(",")} FROM ("
-        var j = 0
+        // Prepare the sub-selects
+        var subSelects : Map[String,(String,String)] = Map()
+
         for(s <- selects) {
-            if (j > 0) query += "\nJOIN"
-            query += s"\n(SELECT ${s._1} FROM ${s._2}) AS ${s._3}"
-            j += 1
+            val select = s._1
+            val from = s._2
+            val tableAlias = s._3
+            subSelects += (tableAlias -> (select,from))
         }
 
-        for(j <- joins)
-            query += s"\nON ${j._1}.${j._3}=${j._2}.${j._4}"
+        val distinct = if(project._2) " distinct " else " "
+        var query = s"SELECT$distinct${project._1.mkString(",")} ${aggreggate.mkString(",")} FROM ("
+
+        val joinedSelect : Set[String] = Set ()
+        // Construct the SELECT & JOIN .. ON
+        for(j <- joins) {
+            val leftTable = j._1
+            val rightTable = j._2
+
+            println("leftTable: " + leftTable + " rightTable " + rightTable)
+            if(!joinedSelect.contains(leftTable) && !joinedSelect.contains(rightTable)) {
+                joinedSelect += leftTable
+                joinedSelect += rightTable
+
+                val lselect = subSelects(leftTable)._1
+                val lfrom = subSelects(leftTable)._2
+
+                val rselect = subSelects(rightTable)._1
+                val rfrom = subSelects(rightTable)._2
+
+                query += s"\n(SELECT $lselect FROM $lfrom) AS $leftTable"
+                query += "\nJOIN"
+                query += s"\n(SELECT $rselect FROM $rfrom) AS $rightTable"
+            } else if(joinedSelect.contains(leftTable) && !joinedSelect.contains(rightTable)) {
+                joinedSelect += rightTable
+
+                val rselect = subSelects(rightTable)._1
+                val rfrom = subSelects(rightTable)._2
+
+                query += "\nJOIN"
+                query += s"\n(SELECT $rselect FROM $rfrom) AS $rightTable"
+            } else if(!joinedSelect.contains(leftTable) && joinedSelect.contains(rightTable)) {
+                joinedSelect += leftTable
+
+                val lselect = subSelects(leftTable)._1
+                val lfrom = subSelects(leftTable)._2
+
+                query += "\nJOIN"
+                query += s"\n(SELECT $lselect FROM $lfrom) AS $leftTable"
+            }
+            query += s"\nON $leftTable.${j._3}=$rightTable.${j._4}"
+        }
+
         query += s"\n)\nWHERE ${filters.mkString(",")}"
         if(groupBy.nonEmpty) query += s"\nGROUP BY ${groupBy.mkString(",")}"
         if(orderBy != null) {
@@ -431,9 +474,33 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
             val ob = if (asc_desc == 1) s"$col ASC" else s"$col DESC"
             query += ob
         }
-        query += s"\nlimit $limit"
+        if(limit > 0) query += s"\nlimit $limit"
+        // limit is 0 => no limit
 
-        println(s"\n****Query****\n$query")
+        println(s"Query:\n$query")
+        this.query = query
+    }
+
+    def run(jDF: Any) = {
+        // TODO: jDF isn't used here, figure it out
+        this.show(jDF)
+
+        // prestoURI = "jdbc:presto://localhost:8080"
+        val connection = DriverManager.getConnection(prestoURI, "presto_user", null) // null: properties
+
+        val st = connection.createStatement
+        val resultSet = st.executeQuery(query)
+
+        val metadata = resultSet.getMetaData
+        val columnCount = metadata.getColumnCount
+        while (resultSet.next){
+            var row = "|"
+            for (i <- 1 to columnCount) {
+                row += resultSet.getString(i) + "|"
+            }
+            println(row)
+        }
+
     }
 
 }

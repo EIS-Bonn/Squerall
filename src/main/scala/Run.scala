@@ -12,7 +12,7 @@ import scala.collection.mutable
   */
 class Run[A] (executor: QueryExecutor[A]) {
 
-    private var finalResults: A = _
+    private var finalDataSet: A = _
 
     def application(queryFile : String, mappingsFile: String, configFile: String, executorID: String) {
 
@@ -207,11 +207,11 @@ class Run[A] (executor: QueryExecutor[A]) {
 
         // Final global join
 
-        //var finalResults = Class.forName("org.apache.spark.sql.DataFrame").newInstance() // CHANGED THIS AFTER PRESTO
+        //var finalDataSet = Class.forName("org.apache.spark.sql.DataFrame").newInstance() // CHANGED THIS AFTER PRESTO
 
 
-        finalResults = executor.join(joins, prefixes, star_df)
-        // finalResults = executor.joinReordered(joins, prefixes, star_df, firstJoin, starWeights)
+        finalDataSet = executor.join(joins, prefixes, star_df)
+        // finalDataSet = executor.joinReordered(joins, prefixes, star_df, firstJoin, starWeights)
 
         // Project out columns from the final global join results
         var columnNames = Seq[String]()
@@ -227,7 +227,7 @@ class Run[A] (executor: QueryExecutor[A]) {
 
         if (groupBys != null) {
             println(s"groupBys: $groupBys")
-            finalResults = executor.groupBy(finalResults, groupBys)
+            finalDataSet = executor.groupBy(finalDataSet, groupBys)
 
             // Add aggregation columns to the final project ones
             for (gb <- groupBys._2) {
@@ -258,28 +258,28 @@ class Run[A] (executor: QueryExecutor[A]) {
                 val variable = o._1
                 val direction = o._2
 
-                finalResults = executor.orderBy(finalResults, direction, variable)
+                finalDataSet = executor.orderBy(finalDataSet, direction, variable)
 
             }
         }
 
         println("|__ Has distinct? " + distinct)
-        finalResults = executor.project(finalResults, columnNames, distinct)
+        finalDataSet = executor.project(finalDataSet, columnNames, distinct)
 
         if (limit > 0)
-            finalResults = executor.limit(finalResults, limit)
+            finalDataSet = executor.limit(finalDataSet, limit)
 
-        println("- Final results DF schema: ")
-        //executor.schemaOf(finalResults) // REMOVED AFTER PRESTO - KEEP ONLY ON SPARK
+        println("- Final results schema: ")
+        //executor.schemaOf(finalDataSet) // TODO: REMOVED AFTER PRESTO - KEEP ONLY ON SPARK
 
         val stopwatch: StopWatch = new StopWatch
         stopwatch.start
 
-        //val cnt = executor.count(finalResults) // REMOVED AFTER PRESTO - KEEP ONLY ON SPARK
+        //val cnt = executor.count(finalDataSet) // REMOVED AFTER PRESTO - KEEP ONLY ON SPARK
         //println(s"Number of results ($cnt): ")
 
-        executor.show(finalResults)
-        //finalResults.take(10).foreach(println) // REMOVED AFTER PRESTO - KEEP ONLY ON SPARK
+        executor.run(finalDataSet)
+        //finalDataSet.take(10).foreach(println) // REMOVED AFTER PRESTO - KEEP ONLY ON SPARK
 
         stopwatch.stop
 

@@ -57,4 +57,31 @@ libraryDependencies += "com.h2database" % "h2" % "1.4.197"
 // https://mvnrepository.com/artifact/com.facebook.presto/presto-jdbc
 libraryDependencies += "com.facebook.presto" % "presto-jdbc" % "0.204"
 
+// https://mvnrepository.com/artifact/org.apache.hive/hive-jdbc
+libraryDependencies += "org.apache.hive" % "hive-jdbc" % "3.0.0"
+
+// FOR HIVE EMBEDDED
+// https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-core
+libraryDependencies += "org.apache.hadoop" % "hadoop-core" % "1.2.1"
+
+// https://mvnrepository.com/artifact/org.apache.hive/hive-metastore
+libraryDependencies += "org.apache.hive" % "hive-metastore" % "3.0.0"
+
+// https://mvnrepository.com/artifact/org.apache.hive/hive-exec
+libraryDependencies += "org.apache.hive" % "hive-exec" % "3.0.0"
+
+// https://mvnrepository.com/artifact/org.antlr/antlr-runtime
+libraryDependencies += "org.antlr" % "antlr-runtime" % "3.0.1"
+
+// https://mvnrepository.com/artifact/org.apache.derby/derby
+libraryDependencies += "org.apache.derby" % "derby" % "10.13.1.1" % Test
+
+// https://mvnrepository.com/artifact/javax.jdo/jdo2-api
+libraryDependencies += "javax.jdo" % "jdo2-api" % "2.1"
+
+// https://mvnrepository.com/artifact/org.datanucleus/datanucleus-core
+libraryDependencies += "org.datanucleus" % "datanucleus-core" % "3.2.10"
+
+// https://mvnrepository.com/artifact/org.datanucleus/datanucleus-rdbms
+libraryDependencies += "org.datanucleus" % "datanucleus-rdbms" % "3.2.9"
 

@@ -12,8 +12,9 @@ object Main extends App {
     val mappingsFile = args(1)
     val configFile = args(2)
     val executorID = args(3)
+    val queryEngine = args(5)
 
-    if(1 > 3) {
+    if(queryEngine == "s") {
         val executor : SparkExecutor = new SparkExecutor(executorID, mappingsFile)
         //val finalResults = executor.getType()
 

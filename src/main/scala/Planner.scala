@@ -90,7 +90,7 @@ class Planner(stars: HashMap[String, Set[(String, String)]] with MultiMap[String
 
         //var configFile = Config.get("datasets.weights")
 
-        println("************REORDERING JOINS**************")
+        println("...REORDERING JOINS, if needed...")
 
         var joinsToReorder : ListBuffer[(String, String)] = ListBuffer()
 
