@@ -21,14 +21,28 @@ class Mapper (mappingsFile: String) {
 
     //val logger = Logger("name")
 
-    def findDataSources(stars: mutable.HashMap[String, mutable.Set[(String, String)]] with mutable.MultiMap[String, (String, String)], configFile: String) : mutable.Set[(String,Set[(mutable.HashMap[String, String], String, String)],HashMap[String, Map[String, String]])] = {
+    def findDataSources(
+                           stars: mutable.HashMap[
+                                String,
+                                mutable.Set[(String, String)]
+                            ] with mutable.MultiMap[
+                                String,
+                                (String, String)
+                            ],
+                            configFile: String
+                        ) :
+                        // returns
+                        mutable.Set[(String,
+                                        Set[(mutable.HashMap[String, String], String, String)],
+                                        HashMap[String, (Map[String, String],String)]
+                                    )] = {
 
         //logger.info(queryString)
-        var starSources :
+        val starSources :
             mutable.Set[(
                 String, // Star core
                 mutable.Set[(mutable.HashMap[String, String], String, String)], // A set of data sources relevant to the Star (pred_attr, src, srcType)
-                mutable.HashMap[String, Map[String, String]] // A set of options of each relevant data source
+                mutable.HashMap[String, (Map[String, String],String)] // A set of options of each relevant data source
             )] = mutable.Set()
 
         var count = 0
@@ -44,7 +58,7 @@ class Mapper (mappingsFile: String) {
             count = count + 1
 
             // Options of relevant sources of one star
-            val optionsPerStar : mutable.HashMap[String, Map[String,String]] = new HashMap()
+            val optionsentityPerStar : mutable.HashMap[String, (Map[String,String],String)] = new HashMap()
 
             // Iterate through the relevant data sources to get options
             // One star can have many relevant sources (containing its predicates)
@@ -58,11 +72,12 @@ class Mapper (mappingsFile: String) {
                 val queryString = scala.io.Source.fromFile(configFile)
                 val configJSON = try queryString.mkString finally queryString.close()
 
-                case class ConfigObject(source: String, options: Map[String,String])
+                case class ConfigObject(source: String, options: Map[String,String], entity: String)
 
                 implicit val userReads: Reads[ConfigObject] = (
                     (__ \ 'source).read[String] and
-                    (__ \ 'options).read[Map[String,String]]
+                    (__ \ 'options).read[Map[String,String]] and
+                    (__ \ 'entity).read[String]
                 )(ConfigObject)
 
                 val sources = (Json.parse(configJSON) \ "sources").as[Seq[ConfigObject]]
@@ -71,13 +86,14 @@ class Mapper (mappingsFile: String) {
                     if (s.source == src) {
                         val source = s.source
                         val options = s.options
+                        val entity = s.entity
 
-                        optionsPerStar.put(source, options)
+                        optionsentityPerStar.put(source, (options,entity))
                     }
                 }
             }
 
-            starSources.add(subject,ds,optionsPerStar)
+            starSources.add((subject,ds,optionsentityPerStar))
         }
 
         // return: subject (star core), list of (data source, options)

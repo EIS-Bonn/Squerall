@@ -12,6 +12,7 @@ object Main extends App {
     val mappingsFile = args(1)
     val configFile = args(2)
     val executorID = args(3)
+    val reorderJoin = args(4)
     val queryEngine = args(5)
 
     if(queryEngine == "s") {
@@ -20,7 +21,7 @@ object Main extends App {
 
         val run = new Run[DataFrame](executor)
         run.application(queryFile,mappingsFile,configFile,executorID)
-    } else {
+    } else if(queryEngine == "p") {
         val executor : PrestoExecutor = new PrestoExecutor(executorID, mappingsFile)
         val run = new Run[DataQueryFrame](executor)
         run.application(queryFile,mappingsFile,configFile,executorID)

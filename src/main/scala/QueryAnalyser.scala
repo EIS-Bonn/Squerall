@@ -178,13 +178,11 @@ class QueryAnalyser(query: String) {
                 transmap_right += (vars(1) -> functions)
         }
 
-
         (transmap_left, transmap_right)
     }
 
     def hasLimit: Boolean = QueryFactory.create(query).hasLimit
 
     def getLimit() = QueryFactory.create(query).getLimit.toInt
-
 
 }

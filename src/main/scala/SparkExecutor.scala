@@ -21,7 +21,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
     }
 
     def query (sources : Set[(HashMap[String, String], String, String)],
-               optionsMap: HashMap[String, Map[String, String]],
+               optionsMap_entity: HashMap[String, (Map[String, String],String)],
                toJoinWith: Boolean,
                star: String,
                prefixes: Map[String, String],
@@ -51,7 +51,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
             println("attr_predicate: " + attr_predicate)
             val sourcePath = s._2
             val sourceType = getTypeFromURI(s._3)
-            val options = optionsMap(sourcePath)
+            val options = optionsMap_entity(sourcePath)._1 // entity is not needed here in SparkExecutor
 
             // TODO: move to another class better
             var columns = getSelectColumnsFromSet(attr_predicate, omitQuestionMark(star), prefixes, select, star_predicate_var, neededPredicates)
@@ -171,9 +171,9 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
         (finalDF, nbrOfFiltersOfThisStar)
     }
 
-    def transform(df: DataFrame, column: String, transformationsArray : Array[String]): DataFrame = {
+    def transform(df: Any, column: String, transformationsArray : Array[String]): DataFrame = {
 
-        var ndf : DataFrame = df
+        var ndf : DataFrame = df.asInstanceOf[DataFrame]
         for (t <- transformationsArray) {
             println("Transformation next: " + t)
             t match {
@@ -307,7 +307,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
             val njVal = get_NS_predicate(jVal)
             val ns = prefixes(njVal._1)
 
-            println(s"-> Joining ($op1 $join $op2 + ) using $jVal...")
+            println(s"-> Joining ($op1 $join $op2) using $jVal...")
 
             val df1 = star_df(op1)
             val df2 = star_df(op2)

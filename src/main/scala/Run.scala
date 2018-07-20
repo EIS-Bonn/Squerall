@@ -16,6 +16,7 @@ class Run[A] (executor: QueryExecutor[A]) {
 
     def application(queryFile : String, mappingsFile: String, configFile: String, executorID: String) {
 
+
         Logger.getLogger("ac.biu.nlp.nlp.engineml").setLevel(Level.OFF)
         Logger.getLogger("org.BIU.utils.logging.ExperimentLogger").setLevel(Level.OFF)
         Logger.getRootLogger.setLevel(Level.OFF)
@@ -39,14 +40,14 @@ class Run[A] (executor: QueryExecutor[A]) {
         var trans = ""
         if (query.contains("TRANSFORM")) {
             trans = query.substring(query.indexOf("TRANSFORM") + 9, query.lastIndexOf(")")) // E.g. ?k?a.toInt && ?a?l.r.toInt.scl(_+61)
-            query = query.replace("TRANSFORM" + trans + ")", "") // TRANSFORM is not defined in Jena
+            query = query.replace("TRANSFORM" + trans + ")", "") // TRANSFORM is not defined in Jena, so remove
             transformExist = true
         }
 
         // 2. Extract star-shaped BGPs
-        var qa = new QueryAnalyser(query)
+        val qa = new QueryAnalyser(query)
 
-        var stars = qa.getStars
+        val stars = qa.getStars
 
         // Create a map between the variable and its star and predicate URL [variable -> (star,predicate)]
         // Need e.g. to create the column to 'SQL ORDER BY' from 'SPARQL ORDER BY'
@@ -102,7 +103,6 @@ class Run[A] (executor: QueryExecutor[A]) {
         println("---> MAPPING CONSULTATION")
         //var mappingsFile = Config.get("mappings.file")
 
-
         val mappers = new Mapper(mappingsFile)
         val results = mappers.findDataSources(stars._1, configFile)
 
@@ -123,7 +123,7 @@ class Run[A] (executor: QueryExecutor[A]) {
 
             starDataTypesMap += (star -> dataTypes)
 
-            println("* Getting DF relevant to the start: " + star)
+            println("* Getting DF relevant to the star: " + star)
 
             // Transformations
             var leftJoinTransformations: (String, Array[String]) = null
@@ -145,7 +145,7 @@ class Run[A] (executor: QueryExecutor[A]) {
                 //println("transmap_right.keySet: " + transmap_right.keySet)
                 if (transmap_right.keySet.contains(str)) {
                     rightJoinTransformations = transmap_right(str)
-                    println("Transform (right) ID using " + rightJoinTransformations.mkString("_"))
+                    println("Transform (right) ID using " + rightJoinTransformations.mkString("..."))
                 }
             }
 
@@ -259,7 +259,6 @@ class Run[A] (executor: QueryExecutor[A]) {
                 val direction = o._2
 
                 finalDataSet = executor.orderBy(finalDataSet, direction, variable)
-
             }
         }
 

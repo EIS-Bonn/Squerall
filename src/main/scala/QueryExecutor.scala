@@ -16,7 +16,7 @@ trait QueryExecutor[T] { // T is a ParSet (Parallel dataSet)
 
     /* Generates a ParSet with the number of filters (on predicates) in the star */
     def query(sources : Set[(HashMap[String, String], String, String)],
-              optionsMap: HashMap[String, Map[String, String]],
+              optionsMap: HashMap[String, (Map[String, String],String)],
               toJoinWith: Boolean,
               star: String,
               prefixes: Map[String, String],
@@ -30,7 +30,7 @@ trait QueryExecutor[T] { // T is a ParSet (Parallel dataSet)
              ) : (T, Integer)
 
     /* Transforms a ParSet to another ParSet based on the SPARQL TRANSFORM clause */
-    def transform(ps: T, column: String, transformationsArray : Array[String]): T
+    def transform(ps: Any, column: String, transformationsArray : Array[String]): Any
 
     /* Print the schema of the ParSet */
     def join(joins: ArrayListMultimap[String, (String, String)], prefixes: Map[String, String], star_df: Map[String, T]): T
