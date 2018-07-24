@@ -1,37 +1,45 @@
-# Sparkall
-An implementation of the so-called Semantic Data Lake, using Apache Spark. Semantic Data Lake is a Data Lake accessed Semantic Web technologies: ontologies and query language (SPARQL).
+[![Gitter](https://img.shields.io/gitter/room/DAVFoundation/DAV-Contributors.svg?style=flat-square)](https://gitter.im/squerall)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1247913.svg)](https://zenodo.org/record/1247913) [![Join the chat at https://gitter.im/Squerall/Lobby](https://badges.gitter.im/Squerall/Lobby.svg)](https://gitter.im/Squerall/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+# Squeryall (previously Sparkall)
+An implementation of the so-called Semantic Data Lake, using Apache Spark and Presto. Semantic Data Lake is a Data Lake accessed using Semantic Web technologies: ontologies and query language (SPARQL).
+
+Currently supported data sources: **CSV, Parquet, MongoDB, Cassandra, Elasticsearch, Couchbase, JDBC (MySQL, SQL Server, etc.)**.
 
 ## Setup and Execution
-- *Prerequisite:* As Sparkall is built using Scala, the SBT build tool (similar to Maven) is needed. Both Scala and SBT need to be installed beforehand. Refer to the official documentations for installation instructions: [Scala](https://www.scala-lang.org/download) and [SBT](https://www.scala-sbt.org/1.0/docs/Setup.html). Once that is installed, run:
+- *Prerequisite:* As Squerall is built using Scala, the SBT build tool (similar to Maven) is needed. Both Scala and SBT need to be installed beforehand. Refer to the official documentations for installation instructions: [Scala](https://www.scala-lang.org/download) and [SBT](https://www.scala-sbt.org/1.0/docs/Setup.html). Once that is installed, run:
 ```
-git clone https://github.com/EIS-Bonn/sparkall.git
-cd sparkall
+git clone https://github.com/EIS-Bonn/squerall.git
+cd squerall
 sudo sbt assembly
 cd target/scala-xyz # xyz is the version of Scala installed
 ```
-...you find a *sparkall_01.jar* file.
+...you find a *squerall_01.jar* file.
 
-- Now you can run Sparkall using `spark-submit` giving in args three files ---built using [Sparkall-GUI](https://github.com/EIS-Bonn/spakall-gui) (see below).
+- Squerall (previously Sparkall) uses Spark as query engine. Therefore Spark has to be installed beforehand. Download Spark from the [official website](https://spark.apache.org/downloads.html). In order for Sparkall to run in a cluster, you need to cnfigure a standalone cluster using the [official documentation page](https://spark.apache.org/docs/2.2.0/spark-standalone.html). Spark may come included with Sparkall in the future, but for now, it has to be separetly installed.
+
+- In Spark, navigate to `bin` folder and run `spark-submit` script giving in arguments three files ---built using [Squerall-GUI](https://github.com/EIS-Bonn/squerall-gui) (see below).
 The command line looks like:
-`/bin/spark-submit --class [Main classpath] --master [master URI] --executor-memory [memory reserved to the app] sparkall_01.jar [query file] [mappings file] [config file] [master URI]`
+`/bin/spark-submit --class [Main classpath] --master [master URI] --executor-memory [memory reserved to the app] squerall_01.jar [query file] [mappings file] [config file] [master URI] [engine: s/p]`
 
   * query file: a file containing a correct SPARQL query, only.
   * mappings file: a file contains RML mappings linking data to ontology terms (classes and properties), in JSON format.
   * config file: a file containing information about how to access data sources (eg. host, user, password), in JSON format.
 
 ### Example:
-`/bin/spark-submit --class org.sparkall.Main --master spark://172.14.160.146:3077 --executor-memory 250G sparkall_01.jar query.sparql mappings.ttl config spark://172.14.160.146:3077`
+`/bin/spark-submit --class org.sparkall.Main --master spark://172.14.160.146:3077 --executor-memory 250G sparkall_01.jar query.sparql mappings.ttl config spark://172.14.160.146:3077 p`
 
 ## Sparkall-GUI
-Sparkall has 3 interfaces to (1) provide access configuration to data in the Data Lake, (2) map data to ontology terms and (3) query the mapped data. The allow to create the needed input files: config, mappings and query. Refer to Sparkall-GUI repository here: [Sparkall-GUI](https://github.com/EIS-Bonn/sparkall-gui) for more information.
+Squerall has 3 interfaces to (1) provide access configuration to data in the Data Lake, (2) map data to ontology terms and (3) query the mapped data. The allow to create the needed input files: config, mappings and query. Refer to Sparkall-GUI repository here: [Sparkall-GUI](https://github.com/EIS-Bonn/sparkall-gui) for more information.
 
 ## Publication
-A preprint describing Sparkall can be found at ["Teach me to fish" Querying Semantic Data Lakes](https://www.researchgate.net/publication/322526357_%27Teach_me_to_fish%27_Querying_Semantic_Data_Lakes). The preprint details all the building blocks and show some experiments conducted to demonstrate Sparkall's mertits.
+A preprint describing Squerall can be found at ["Teach me to fish" Querying Semantic Data Lakes](https://www.researchgate.net/publication/322526357_%27Teach_me_to_fish%27_Querying_Semantic_Data_Lakes). The preprint details all the building blocks and show some experiments conducted to demonstrate Sparkall's mertits.
 
 ### Evaluation
-We provide in this repository the code-source, queries and docker image for anyone who wants to try Sparkall on their own. Refer to the dedicated page: https://github.com/EIS-Bonn/sparkall/tree/master/evaluation
+We provide in this repository the code-source, queries and docker image for anyone who wants to try Squerall on their own. Refer to the [dedicated page](https://github.com/EIS-Bonn/sparkall/tree/master/evaluation).
 
-For any setup difficulties or other enquireis, please contact me on: mami@cs.uni-bonn.de
+## Contact
+For any setup difficulties or other enquireis, please contact me on: mami@cs.uni-bonn.de, or ask directly on [Gitter chat](https://gitter.im/sparkall).
 
 License
 -------
