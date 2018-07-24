@@ -21,14 +21,28 @@ class Mapper (mappingsFile: String) {
 
     //val logger = Logger("name")
 
-    def findDataSources(stars: mutable.HashMap[String, mutable.Set[(String, String)]] with mutable.MultiMap[String, (String, String)], configFile: String) : mutable.Set[(String,Set[(mutable.HashMap[String, String], String, String)],HashMap[String, Map[String, String]])] = {
+    def findDataSources(
+                           stars: mutable.HashMap[
+                                String,
+                                mutable.Set[(String, String)]
+                            ] with mutable.MultiMap[
+                                String,
+                                (String, String)
+                            ],
+                            configFile: String
+                        ) :
+                        // returns
+                        mutable.Set[(String,
+                                        Set[(mutable.HashMap[String, String], String, String)],
+                                        HashMap[String, (Map[String, String],String)]
+                                    )] = {
 
         //logger.info(queryString)
-        var starSources :
+        val starSources :
             mutable.Set[(
                 String, // Star core
                 mutable.Set[(mutable.HashMap[String, String], String, String)], // A set of data sources relevant to the Star (pred_attr, src, srcType)
-                mutable.HashMap[String, Map[String, String]] // A set of options of each relevant data source
+                mutable.HashMap[String, (Map[String, String],String)] // A set of options of each relevant data source
             )] = mutable.Set()
 
         var count = 0
@@ -44,7 +58,7 @@ class Mapper (mappingsFile: String) {
             count = count + 1
 
             // Options of relevant sources of one star
-            var optionsPerStar : mutable.HashMap[String, Map[String,String]] = new HashMap()
+            val optionsentityPerStar : mutable.HashMap[String, (Map[String,String],String)] = new HashMap()
 
             // Iterate through the relevant data sources to get options
             // One star can have many relevant sources (containing its predicates)
@@ -54,15 +68,16 @@ class Mapper (mappingsFile: String) {
                 //val srcType = d._3
 
                 //var configFile = Config.get("datasets.descr")
-
+                println("configFile: " + configFile)
                 val queryString = scala.io.Source.fromFile(configFile)
                 val configJSON = try queryString.mkString finally queryString.close()
 
-                case class ConfigObject(source: String, options: Map[String,String])
+                case class ConfigObject(source: String, options: Map[String,String], entity: String)
 
                 implicit val userReads: Reads[ConfigObject] = (
                     (__ \ 'source).read[String] and
-                    (__ \ 'options).read[Map[String,String]]
+                    (__ \ 'options).read[Map[String,String]] and
+                    (__ \ 'entity).read[String]
                 )(ConfigObject)
 
                 val sources = (Json.parse(configJSON) \ "sources").as[Seq[ConfigObject]]
@@ -71,13 +86,14 @@ class Mapper (mappingsFile: String) {
                     if (s.source == src) {
                         val source = s.source
                         val options = s.options
+                        val entity = s.entity
 
-                        optionsPerStar.put(source, options)
+                        optionsentityPerStar.put(source, (options,entity))
                     }
                 }
             }
 
-            starSources.add(subject,ds,optionsPerStar)
+            starSources.add((subject,ds,optionsentityPerStar))
         }
 
         // return: subject (star core), list of (data source, options)
@@ -113,7 +129,7 @@ class Mapper (mappingsFile: String) {
         }
 
         //println("- Predicates for the query " + listOfPredicatesForQuery)
-        var queryString = "PREFIX rml: <http://semweb.mmlab.be/ns/rml#>" +
+        val queryString = "PREFIX rml: <http://semweb.mmlab.be/ns/rml#>" +
                             "PREFIX rr: <http://www.w3.org/ns/r2rml#>" +
                             "PREFIX foaf: <http://xmlns.com/foaf/spec/>" +
                             "PREFIX nosql: <http://purl.org/db/nosql#>" +
@@ -169,12 +185,12 @@ class Mapper (mappingsFile: String) {
 
                 //println("GOING TO EXECUTE: " + getAttributeOfPredicate)
 
-                var query1 = QueryFactory.create(getAttributeOfPredicate)
-                var qe1 = QueryExecutionFactory.create(query1, model)
-                var results1 = qe1.execSelect()
+                val query1 = QueryFactory.create(getAttributeOfPredicate)
+                val qe1 = QueryExecutionFactory.create(query1, model)
+                val results1 = qe1.execSelect()
                 while (results1.hasNext) {
-                    var soln1 = results1.nextSolution()
-                    var attr = soln1.get("r").toString
+                    val soln1 = results1.nextSolution()
+                    val attr = soln1.get("r").toString
                     //println("- Predicate " + p + " corresponds to attribute " + attr + " in " + src)
                     pred_attr.put(p,attr)
 

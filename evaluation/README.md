@@ -1,3 +1,5 @@
+[![Gitter](https://img.shields.io/gitter/room/DAVFoundation/DAV-Contributors.svg?style=flat-square)](https://gitter.im/sparkall)
+
 # Evaluation
 To test out the feasibility and performence of Sparkall, i.e., querying heterogeneous data residing in a Data Lake, we have generated data using Berlin Bernchmark (BSBM). We have taken 5 tables: Product, Producer, Offer, Review, and Person , and saved them in Cassandra, MySQL, MongoDB, Parquet and CSV, respectively.
 
@@ -9,7 +11,8 @@ Original BSBM queries touch only 1~3 tables at once at most. That does not serve
 Full list of queries is available in this repo along this README.
 
 ## Docker
-We provide a [Dockerfile](https://github.com/EIS-Bonn/sparkall/blob/master/Dockerfile) to reproduce the conducted experiments.
+We provide a [Dockerfile](https://github.com/EIS-Bonn/sparkall/blob/master/Dockerfile) to reproduce the conducted experiments. It downloads Spark and installs three databases: Cassandra, MongoDB and MySQL. It downloads the BSBM data generator and generates a small dataset. It then runs a tailored (for BSBM) Spark-based data loader, which loads BSBM data to the aformentioned databases and files. Finally it gets the queries from this repository and runs over them Sparkall.
+
 - Build the image as usual. Change directory to where the Dockerfile is and run: `docker build -t sparkall .`. 
 - Run the image as usual. Run: `docker run -it sparkall`*. You will get a welcome screen explaining to you what you see and how to proceed.
 
@@ -22,4 +25,4 @@ mysql -u root -p # MYSQL, type 'root' as password
 However, you could use this system to load other data and run other queries. Just remember to provide `config` and `mappings` files, go back to repository README for the explanation.
 
 *if you get `cannot create /proc/sys/vm/drop_caches: Read-only file system` error running `load-data.sh` script, start the run command with the `--previleged` option (see [1](https://unix.stackexchange.com/questions/209244/which-linux-capability-do-i-need-in-order-to-write-to-proc-sys-vm-drop-caches/209412#209412)).
-If you get `cannot open shared object file: Permission denied` next, restart Docker daemon with `-s="devicemapper"` option (see [2](https://stackoverflow.com/questions/22473830/docker-and-mysql-libz-so-1-cannot-open-shared-object-file-permission-denied) [3](https://github.com/moby/moby/issues/7512)).
+If you get `cannot open shared object file: Permission denied` error running `run-sparkall.sh`, restart Docker daemon with `-s="devicemapper"` option (see [2](https://stackoverflow.com/questions/22473830/docker-and-mysql-libz-so-1-cannot-open-shared-object-file-permission-denied) [3](https://github.com/moby/moby/issues/7512)).
