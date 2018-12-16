@@ -1,9 +1,9 @@
-package org.sparkall
+package org.squerall
 
 import java.util
 
 import com.google.common.collect.ArrayListMultimap
-import org.sparkall.Helpers._
+import org.squerall.Helpers._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Json, Reads, __}
 

@@ -1,4 +1,4 @@
-package org.sparkall
+package org.squerall
 
 import java.util
 
@@ -7,7 +7,7 @@ import com.mongodb.spark.config.ReadConfig
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
-import org.sparkall.Helpers._
+import org.squerall.Helpers._
 
 import scala.collection.immutable.ListMap
 import scala.collection.mutable
@@ -34,7 +34,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
                joinPairs: Map[(String,String), String]
         ): (DataFrame, Integer) = {
 
-        val spark = SparkSession.builder.master(sparkURI).appName("Sparkall").getOrCreate;
+        val spark = SparkSession.builder.master(sparkURI).appName("Squerall").getOrCreate;
         //TODO: get from the function if there is a relevant data source that requires setting config to SparkSession
 
         spark.sparkContext.setLogLevel("ERROR")
@@ -165,7 +165,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
         println(s"Number of filters of this star is: $nbrOfFiltersOfThisStar")
 
         /*******THIS IS JUST FOR TEST - REMOVE LATER*******/
-        println("Number of Spark executors (JUST FOR TEST): " + spark.sparkContext.getExecutorStorageStatus.length)
+        println("Number of Spark executors (JUST FOR TEST): " + spark.sparkContext.statusTracker.getExecutorInfos.length)
         println("Master URI (JUST FOR TEST): " + spark.sparkContext.master)
 
         (finalDF, nbrOfFiltersOfThisStar)
@@ -462,7 +462,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
             }
             println(s"-> Fully joined: $seenDF \n")
         }
-        
+
         jDF
     }
 

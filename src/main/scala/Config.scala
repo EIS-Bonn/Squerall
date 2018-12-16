@@ -1,4 +1,4 @@
-package org.sparkall
+package org.squerall
 
 import com.typesafe.config.ConfigFactory
 

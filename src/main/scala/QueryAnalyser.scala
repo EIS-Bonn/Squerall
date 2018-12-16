@@ -1,4 +1,4 @@
-package org.sparkall
+package org.squerall
 
 import java.util
 

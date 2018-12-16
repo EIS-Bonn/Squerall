@@ -1,4 +1,4 @@
-package org.sparkall
+package org.squerall
 
 import java.sql.DriverManager
 import java.util
@@ -6,7 +6,7 @@ import java.util
 import com.google.common.collect.ArrayListMultimap
 import model.DataQueryFrame
 import org.apache.spark.sql.DataFrame
-import org.sparkall.Helpers._
+import org.squerall.Helpers._
 
 import scala.collection.mutable
 import scala.collection.mutable.{HashMap, ListBuffer, Set}
@@ -34,7 +34,7 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
               joinPairs: Map[(String,String), String]
         ): (DataQueryFrame, Integer) = {
 
-        //val spark = SparkSession.builder.master(sparkURI).appName("Sparkall").getOrCreate;
+        //val spark = SparkSession.builder.master(sparkURI).appName("Squerall").getOrCreate;
         //spark.sparkContext.setLogLevel("ERROR")
         //TODO: **PRESTO?** get from the function if there is a relevant data source that requires setting config to SparkSession
 

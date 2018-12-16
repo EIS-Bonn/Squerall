@@ -1,4 +1,4 @@
-package org.sparkall
+package org.Squerall
 
 import model.DataQueryFrame
 import org.apache.spark.sql.DataFrame

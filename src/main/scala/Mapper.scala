@@ -1,7 +1,7 @@
 /**
   * Created by mmami on 30.01.17.
   */
-package org.sparkall
+package org.squerall
 
 import org.apache.jena.query.{QueryExecutionFactory, QueryFactory}
 import org.apache.jena.rdf.model.ModelFactory
@@ -205,4 +205,3 @@ class Mapper (mappingsFile: String) {
     }
 
 }
-

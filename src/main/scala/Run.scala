@@ -1,8 +1,8 @@
-package org.sparkall
+package org.squerall
 
 import org.apache.commons.lang.time.StopWatch
 import org.apache.log4j.{Level, Logger}
-import org.sparkall.Helpers._
+import org.squerall.Helpers._
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable

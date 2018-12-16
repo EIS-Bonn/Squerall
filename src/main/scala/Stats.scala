@@ -13,7 +13,7 @@ object Stats extends App {
 
 
         Class.forName("org.h2.Driver")
-        val con = DriverManager.getConnection("jdbc:h2:/media/mmami/Extra/Datasets/sparkall", "metadata", "")
+        val con = DriverManager.getConnection("jdbc:h2:/media/mmami/Extra/Datasets/squerall", "metadata", "")
         val stmt = con.createStatement
         stmt.executeUpdate("CREATE TABLE IF NOT EXISTS TABLE_STATS (DATASOURCE VARCHAR(50), TABLE_NAME VARCHAR(50), CARDINALITY INT)")
         //stmt.executeUpdate("INSERT INTO TABLE_STATS VALUES ('cassandra', 'product', 500000)")
