@@ -10,10 +10,28 @@ Original BSBM queries touch only 1~3 tables at once at most. That does not serve
 
 Full list of queries is available in this repo along this README.
 
+SPARQL queries are expressed using the Ontology terms the data was previously mapped to. SPARQL query should conform to the currently supported SPARQL fragment:
+
+SPARQL fragment supported is:
+```SPARQL
+Query       := Prefix* SELECT Distinguish WHERE{ Clauses } Modifiers?
+Prefix      := PREFIX "string:" IRI
+Distinguish := DISTINCT? (“*”|(Var|Aggregate)+)
+Aggregate   := (AggOpe(Var) ASVar)
+AggOpe      := SUM|MIN|MAX|AVG|COUNT
+Clauses     := TP* Filter?
+Filter      := FILTER (Var FiltOpe Litteral)
+             | FILTER regex(Var, "%string%")
+FiltOpe     :==|!=|<|<=|>|>=
+TP          := VarIRIVar .|Varrdf:type IRI.
+Var         := "?string"
+Modifiers   := (LIMITk)? (ORDER BY(ASC|DESC)? Var)? (GROUP BYVar+)?
+```
+
 ## Docker
 We provide a [Dockerfile](https://github.com/EIS-Bonn/sparkall/blob/master/Dockerfile) to reproduce the conducted experiments. It downloads Spark and installs three databases: Cassandra, MongoDB and MySQL. It downloads the BSBM data generator and generates a small dataset. It then runs a tailored (for BSBM) Spark-based data loader, which loads BSBM data to the aformentioned databases and files. Finally it gets the queries from this repository and runs over them Sparkall.
 
-- Build the image as usual. Change directory to where the Dockerfile is and run: `docker build -t sparkall .`. 
+- Build the image as usual. Change directory to where the Dockerfile is and run: `docker build -t sparkall .`.
 - Run the image as usual. Run: `docker run -it sparkall`*. You will get a welcome screen explaining to you what you see and how to proceed.
 
 You will be logged in to a functioning Ubuntu system with root user. The system has Cassandra, MongoDB and MySQL preloaded with the experiments data. For example you can see your data inside those databases, just log to their respective CLIs:
