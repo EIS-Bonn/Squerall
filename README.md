@@ -4,7 +4,7 @@
 # Squerall (previously Sparkall)
 An implementation of the so-called Semantic Data Lake, using Apache Spark and Presto. Semantic Data Lake is a Data Lake accessed using Semantic Web technologies: ontologies and query language (SPARQL).
 
-Currently supported data sources: **CSV, Parquet, MongoDB, Cassandra, Elasticsearch, Couchbase, JDBC (MySQL, SQL Server, etc.)**.
+Currently supported data sources: **Evaluated: CSV, Parquet, MongoDB, Cassandra, Experimental: Elasticsearch, Couchbase, JDBC (MySQL, SQL Server, etc.)**.
 
 ## Setup and Execution
 *- Prerequisite:* You need Maven to build Squerall from the source. Refer to the official documentations for installation instructions: [Maven](https://maven.apache.org/install.html) and [SBT](https://www.scala-sbt.org/1.0/docs/Setup.html). Once that is installed, run:
@@ -26,7 +26,7 @@ The command line looks like:
 `/bin/spark-submit --class [Main classpath] --master [master URI] --executor-memory [memory reserved to the app] [path to squerall-1.0-SNAPSHOT.jar] [query file] [mappings file] [config file] [master URI] n s`
 
 - #### Example:
-`/bin/spark-submit --class org.sparkall.Main --master spark://127.140.106.146:3077 --executor-memory 250G /etc/squerall-1.0-SNAPSHOT.jar query.sparql mappings.ttl config spark://172.14.160.146:3077 n p`
+`/bin/spark-submit --class org.squerall.Main --master spark://127.140.106.146:3077 --executor-memory 250G /etc/squerall-1.0-SNAPSHOT.jar query.sparql mappings.ttl config spark://172.14.160.146:3077 n p`
 
   * query file: a file containing a correct SPARQL query, only.
   * mappings file: a file contains RML mappings linking data to ontology terms (classes and properties), in JSON format.
@@ -38,27 +38,27 @@ The command line looks like:
 ### Presto
 - Install Presto from [Presot official website](https://prestodb.io/docs/current/installation/deployment.html).
 - Once Presto is installed, navigate to `bin` folder and run `squerall-1.0-SNAPSHOT.jar` like you run any Java application:
-`java -cp [path to squerall-1.0-SNAPSHOT.jar] org.sparkall.Main [query file] [mappings file] [config file] [Presto server url (host:port)] n p`
+`java -cp [path to squerall-1.0-SNAPSHOT.jar] org.squerall.Main [query file] [mappings file] [config file] [Presto server url (host:port)] n p`
 
   * query, mappings and config files are identical to Spark command above.
 
 - #### Example:
-`java -cp /etc/squerall_01.jar org.sparkall.Main query.sparql mappings.ttl config jdbc:presto://localhost:8089 n p`
+`java -cp /etc/squerall_01.jar org.squerall.Main query.sparql mappings.ttl config jdbc:presto://localhost:8089 n p`
 
   **- Note:** If any error raised due to Presto libs not found, append download presto-jdbc-xyz.jar "`:presto-jdbc-xyz.jar`" to `squerall-1.0-SNAPSHOT.jar`.
 
 - #### Presto and Hive metastore
 Presto is meant to access existing database management systems; therefore, it doesn't have its own metadata store. For file-based data sources, like CSV and Parquet, Presto uses Hive metastore. As a result, prior to running queries in Presto, CSV and Parque files have to be registered in Hive metastore. Parquet files can be registered using [Presto Hive connector (see 'Examples')](https://prestodb.io/docs/current/connector/hive.html); CSV files need to be registered inside Hive as an [*external* table (see 'Create an external table')](https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.5/bk_data-access/content/moving_data_from_hdfs_to_hive_external_table_method.html).
 
-## Sparkall-GUI
-Squerall has 3 interfaces to (1) provide access configuration to data in the Data Lake, (2) map data to ontology terms and (3) query the mapped data. The allow to create the needed input files: config, mappings and query. Refer to Sparkall-GUI repository here: [Sparkall-GUI](https://github.com/EIS-Bonn/sparkall-gui) for more information.
+## Squerall-GUI
+Squerall has 3 interfaces to (1) provide access configuration to data in the Data Lake, (2) map data to ontology terms and (3) query the mapped data. The allow to create the needed input files: config, mappings and query. Refer to Squerall-GUI repository here: [Squerall-GUI](https://github.com/EIS-Bonn/squerall-gui) for more information.
 
 ## Publication
 A preprint describing Squerall can be found at [Squerall: Virtual Ontology-Based Access to
-Heterogeneous and Large Data Sources](http://www.semantic-web-journal.net/system/files/swj1957.pdf). The preprint details all the building blocks and show some experiments conducted to demonstrate Sparkall's mertits.
+Heterogeneous and Large Data Sources](http://www.semantic-web-journal.net/system/files/swj1957.pdf). The preprint details all the building blocks and show some experiments conducted to demonstrate Squerall's mertits.
 
 ### Evaluation
-We provide in this repository the code-source, queries and docker image for anyone who wants to try Squerall on their own. Refer to the [dedicated page](https://github.com/EIS-Bonn/sparkall/tree/master/evaluation).
+We provide in this repository the code-source, queries and docker image for anyone who wants to try Squerall on their own. Refer to the [dedicated page](https://github.com/EIS-Bonn/Squerall/tree/master/evaluation).
 
 **Note:** At the moment only Spark-based Squerall is covered in the docker version, Presto part will come soon.
 
