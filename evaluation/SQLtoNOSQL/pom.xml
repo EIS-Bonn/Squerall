@@ -75,6 +75,7 @@
                 <configuration>
                   <args>
                     <arg>-dependencyfile</arg>
+                    <arg>${project.build.directory}/.scala_dependencies</arg>
                   </args>
                 </configuration>
               </execution>
