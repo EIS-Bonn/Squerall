@@ -1,0 +1,94 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.sqltonosql</groupId>
+    <artifactId>sqltonosql_2.11</artifactId>
+    <packaging>jar</packaging>
+    <description>SQLtoNOSQL</description>
+    <version>0.1.0</version>
+    <name>SQLtoNOSQL</name>
+    <organization>
+        <name>org.sqltonosql</name>
+    </organization>
+
+    <properties>
+      <maven.compiler.source>1.8</maven.compiler.source>
+      <maven.compiler.target>1.8</maven.compiler.target>
+      <encoding>UTF-8</encoding>
+      <scala.version>2.11</scala.version>
+      <scala.compat.version>2.11</scala.compat.version>
+      <spec2.version>4.2.0</spec2.version>
+      <exec.mainClass>org.sqltonosql.Main</exec.mainClass>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.11.8</version>
+        </dependency>
+        <!--use Spark Jackson-->
+        <!--dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.9.6</version>
+        </dependency-->
+        <dependency>
+            <groupId>io.gatling</groupId>
+            <artifactId>jsonpath_2.11</artifactId>
+            <version>0.6.10</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.11</artifactId>
+            <version>2.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_2.11</artifactId>
+            <version>2.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.datastax.spark</groupId>
+            <artifactId>spark-cassandra-connector_2.11</artifactId>
+            <version>2.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb.spark</groupId>
+            <artifactId>mongo-spark-connector_2.11</artifactId>
+            <version>2.4.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+      <sourceDirectory>src/main/scala</sourceDirectory>
+      <plugins>
+        <plugin>
+          <groupId>net.alchim31.maven</groupId>
+          <artifactId>scala-maven-plugin</artifactId>
+          <version>3.3.2</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>compile</goal>
+                </goals>
+                <configuration>
+                  <args>
+                    <arg>-dependencyfile</arg>
+                  </args>
+                </configuration>
+              </execution>
+            </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>1.1</version>
+          <configuration>
+            <mainClass>org.sqltonosql.Main</mainClass>
+          </configuration>
+        </plugin>
+      </plugins>
+    </build>
+</project>

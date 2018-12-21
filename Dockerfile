@@ -5,18 +5,13 @@ MAINTAINER Mohamed Nadjib Mami <mami@cs.uni-bonn.de>
 RUN set -x && \
     # Install Java 8
     apt-get update --fix-missing && \
-    apt-get install -y --no-install-recommends curl vim openjdk-8-jdk-headless apt-transport-https && \
-    # install SBT
-    echo "deb https://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list && \
-    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B84B2DF73499E82A75642AC823 && \
-    apt-get update && \
-    apt-get install -y sbt && \
+    apt-get install -y --no-install-recommends curl vim openjdk-8-jdk-headless apt-transport-https maven git && \
     # cleanup
     apt-get clean
 
 # Update environment
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
-ENV HADOOP_VERSION 2.8.3
+ENV HADOOP_VERSION 2.9.2
 ENV HADOOP_URL http://mirror.synyx.de/apache/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz
 
 RUN set -x && \
@@ -55,12 +50,13 @@ RUN set -x && \
     echo 'mysql-server mysql-server/root_password_again password root' | debconf-set-selections && \
     apt-get update && \
     apt-get install -y --no-install-recommends vim && \
-    apt-get -y install mysql-server 
+    apt-get -y install mysql-server
     # to solve "Can't open and lock privilege tables: Table storage engine for 'user' doesn't have this option"
     # sed -i -e "s/^bind-address\s*=\s*127.0.0.1/bind-address = 0.0.0.0/" /etc/mysql/my.cnf && \
     # /etc/init.d/mysql start
 
-ENV SPARK_VERSION 2.1.2
+ENV SPARK_VERSION 2.4.0
+ENV JENA_VERSION 3.9.0
 
 RUN set -x  && \
     # Install Spark
@@ -83,17 +79,17 @@ RUN set -x && \
     rm 01* 02* 05* 06* 07* && \
     # Get pre-configured Sparkall config file
     wget https://raw.githubusercontent.com/EIS-Bonn/sparkall/master/evaluation/config && \
-    # Due to a (yet) explaineable behavior from sbt assembly plugin, jena-arq is not being picked up during the assembly of Sparkall
+    # Due to a (yet) explaineable behavior from spark-submit assembly plugin, jena-arq is not being picked up during the assembly of Sparkall
     # So we will provide it during spark submit
-    wget http://central.maven.org/maven2/org/apache/jena/jena-arq/3.1.1/jena-arq-3.1.1.jar && \
-    mv jena-arq-3.1.1.jar /root
-	
+    wget http://central.maven.org/maven2/org/apache/jena/jena-arq/${JENA_VERSION}/jena-arq-${JENA_VERSION}.jar && \
+    mv jena-arq-${JENA_VERSION}.jar /root
+
 RUN set -x && \
     # Install Sparkall
     cd /usr/local && \
-    git clone https://github.com/EIS-Bonn/sparkall.git && \
-    cd sparkall && \
-    sbt assembly # to generate JAR to submit to spark-submit
+    git clone https://github.com/EIS-Bonn/Squerall.git && \
+    cd Squerall && \
+    mvn package
 
 RUN pwd # just to force rebuild
 

@@ -4,7 +4,9 @@
 # Squerall (previously Sparkall)
 An implementation of the so-called Semantic Data Lake, using Apache Spark and Presto. Semantic Data Lake is a Data Lake accessed using Semantic Web technologies: ontologies and query language (SPARQL).
 
-Currently supported data sources: **Evaluated: CSV, Parquet, MongoDB, Cassandra, Experimental: Elasticsearch, Couchbase, JDBC (MySQL, SQL Server, etc.)**.
+Currently supported data sources:
+- Evaluated: CSV, Parquet, MongoDB, Cassandra, JDBC (MySQL, SQL Server, etc.).
+- Experimental: Elasticsearch, Couchbase.
 
 ## Setup and Execution
 *- Prerequisite:* You need Maven to build Squerall from the source. Refer to the official documentations for installation instructions: [Maven](https://maven.apache.org/install.html) and [SBT](https://www.scala-sbt.org/1.0/docs/Setup.html). Once that is installed, run:
