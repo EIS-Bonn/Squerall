@@ -6,8 +6,8 @@
 
 #Settings
 export SPARK=/usr/local/spark-2.4.0-bin-hadoop2.7/bin
-export SPARK_HOME=/usr/local/Squerall
-export SQUERALL_EXEC=$SPARK_HOME/target
+export SQUERALL_HOME=/usr/local/Squerall
+export SQUERALL_EXEC=$SQUERALL_HOME/target
 
 #t Parameters
 SPARK_MASTER=$1; # Spark master
