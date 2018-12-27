@@ -526,6 +526,5 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
 
     def run(jDF: Any) = {
         this.show(jDF)
-        this.count(jDF)
     }
 }
