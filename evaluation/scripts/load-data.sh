@@ -26,3 +26,5 @@ chown -R mysql:mysql /var/lib/mysql /var/run/mysqld
 
 cd  /root/bsbmtools-0.2/data
 mysql -u root --password=root mysql < 03Producer.sql
+
+bash /root/welcome.sh
