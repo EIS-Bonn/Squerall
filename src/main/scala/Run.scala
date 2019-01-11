@@ -274,7 +274,7 @@ class Run[A] (executor: QueryExecutor[A]) {
         val stopwatch: StopWatch = new StopWatch
         stopwatch.start
 
-        //val cnt = executor.count(finalDataSet) // REMOVED AFTER PRESTO - KEEP ONLY ON SPARK
+        //val cnt = executor.count(finalDataSet) // REMOVED AFTER PRESTO - KEEP ONLY ON SPARK?
         //println(s"Number of results ($cnt): ")
 
         executor.run(finalDataSet)
@@ -284,6 +284,6 @@ class Run[A] (executor: QueryExecutor[A]) {
 
         val timeTaken = stopwatch.getTime
 
-        println(s"timeTaken: $timeTaken")
+        println(s"Time taken by Spark: $timeTaken")
     }
 }

@@ -116,6 +116,14 @@
       <version>${spec2.version}</version>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>com.facebook.presto</groupId>
+      <artifactId>presto-spi</artifactId>
+      <version>0.215</version>
+      <scope>provided</scope>
+    </dependency>
+
   </dependencies>
 
   <build>

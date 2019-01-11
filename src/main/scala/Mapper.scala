@@ -68,7 +68,7 @@ class Mapper (mappingsFile: String) {
                 //val srcType = d._3
 
                 //var configFile = Config.get("datasets.descr")
-                println("configFile: " + configFile)
+                //println("configFile: " + configFile)
                 val queryString = scala.io.Source.fromFile(configFile)
                 val configJSON = try queryString.mkString finally queryString.close()
 
