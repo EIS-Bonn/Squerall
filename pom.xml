@@ -24,72 +24,86 @@
     </dependency>
 
     <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>${junit.version}</version>
-        <scope>test</scope>
-      </dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
 
-      <dependency>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-library</artifactId>
-          <version>2.11.8</version>
-      </dependency>
-      <dependency>
-          <groupId>com.google.guava</groupId>
-          <artifactId>guava</artifactId>
-          <version>22.0</version>
-      </dependency>
-      <dependency>
-          <groupId>org.apache.spark</groupId>
-          <artifactId>spark-core_${scala.version}</artifactId>
-          <version>2.4.0</version>
-      </dependency>
-      <dependency>
-          <groupId>org.apache.spark</groupId>
-          <artifactId>spark-sql_${scala.version}</artifactId>
-          <version>2.4.0</version>
-      </dependency>
-      <dependency>
-          <groupId>com.datastax.spark</groupId>
-          <artifactId>spark-cassandra-connector_${scala.version}</artifactId>
-          <version>2.4.0</version>
-      </dependency>
-      <dependency>
-          <groupId>org.mongodb.spark</groupId>
-          <artifactId>mongo-spark-connector_2.11</artifactId>
-          <version>2.4.0</version>
-      </dependency>
-      <dependency>
-          <groupId>mysql</groupId>
-          <artifactId>mysql-connector-java</artifactId>
-          <version>6.0.6</version>
-      </dependency>
-      <dependency>
-          <groupId>com.h2database</groupId>
-          <artifactId>h2</artifactId>
-          <version>1.4.197</version>
-      </dependency>
-      <dependency>
-          <groupId>com.typesafe.play</groupId>
-          <artifactId>play_${scala.version}</artifactId>
-          <version>2.6.2</version>
-      </dependency>
-      <dependency>
-          <groupId>io.gatling</groupId>
-          <artifactId>jsonpath_${scala.version}</artifactId>
-          <version>0.6.10</version>
-      </dependency>
-      <dependency>
-          <groupId>org.apache.jena</groupId>
-          <artifactId>jena-core</artifactId>
-          <version>3.9.0</version>
-      </dependency>
-      <dependency>
-          <groupId>org.apache.jena</groupId>
-          <artifactId>jena-arq</artifactId>
-          <version>3.9.0</version>
-      </dependency>
+    <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-library</artifactId>
+        <version>2.11.8</version>
+    </dependency>
+    <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>22.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.spark</groupId>
+        <artifactId>spark-core_${scala.version}</artifactId>
+        <version>2.4.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.spark</groupId>
+        <artifactId>spark-sql_${scala.version}</artifactId>
+        <version>2.4.0</version>
+    </dependency>
+    <dependency>
+        <groupId>com.datastax.spark</groupId>
+        <artifactId>spark-cassandra-connector_${scala.version}</artifactId>
+        <version>2.4.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.mongodb.spark</groupId>
+        <artifactId>mongo-spark-connector_2.11</artifactId>
+        <version>2.4.0</version>
+    </dependency>
+    <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>6.0.6</version>
+    </dependency>
+    <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <version>1.4.197</version>
+    </dependency>
+    <dependency>
+        <groupId>com.typesafe.play</groupId>
+        <artifactId>play_${scala.version}</artifactId>
+        <version>2.6.2</version>
+    </dependency>
+    <dependency>
+        <groupId>io.gatling</groupId>
+        <artifactId>jsonpath_${scala.version}</artifactId>
+        <version>0.6.10</version>
+    </dependency>
+
+
+    <dependency>
+        <groupId>org.apache.jena</groupId>
+        <artifactId>jena-core</artifactId>
+        <version>3.9.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.jena</groupId>
+        <artifactId>jena-arq</artifactId>
+        <version>3.9.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.prestosql</groupId>
+      <artifactId>presto-spi</artifactId>
+      <version>304</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>io.prestosql</groupId>
+        <artifactId>presto-jdbc</artifactId>
+        <version>304</version>
+    </dependency>
 
     <!-- Test -->
     <dependency>
@@ -116,14 +130,6 @@
       <version>${spec2.version}</version>
       <scope>test</scope>
     </dependency>
-
-    <dependency>
-      <groupId>com.facebook.presto</groupId>
-      <artifactId>presto-spi</artifactId>
-      <version>0.215</version>
-      <scope>provided</scope>
-    </dependency>
-
   </dependencies>
 
   <build>

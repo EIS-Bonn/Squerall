@@ -7,7 +7,7 @@
 			"delimiter": ",",
 			"mode": "DROPMALFORMED"
 		},
-		"source": "/root/person.csv",
+		"source": "/data/person.csv",
 		"entity": "Person"
 	}
 	,	{
@@ -15,7 +15,7 @@
 		"options": {
 			"spark_sql_parquet_filterPushdown": "true"
 		},
-		"source": "/root/review.parquet",
+		"source": "/data/review.parquet",
 		"entity": "Review"
 	}
 	,	{
