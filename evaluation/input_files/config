@@ -1,0 +1,77 @@
+{
+	"sources": [
+	{
+		"type": "csv",
+		"options": {
+			"header": "true",
+			"delimiter": ",",
+			"mode": "DROPMALFORMED"
+		},
+		"source": "/root/data/person.csv",
+		"entity": "Person"
+	}
+	,	{
+		"type": "parquet",
+		"options": {
+			"spark_sql_parquet_filterPushdown": "true"
+		},
+		"source": "/root/data/review.parquet",
+		"entity": "Review"
+	}
+	,	{
+		"type": "mongodb",
+		"options": {
+			"url": "127.0.0.1",
+			"database": "bsbm",
+			"collection": "offers",
+			"options": ""
+		},
+		"source": "//Offer",
+		"entity": "Offer"
+	}
+	,	{
+		"type": "cassandra",
+		"options": {
+			"keyspace": "db",
+			"table": "product"
+		},
+		"source": "//Product",
+		"entity": "Product"
+	}
+	,	{
+		"type": "jdbc",
+		"options": {
+			"url": "jdbc:mysql://localhost:3306/benchmark?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC",
+
+			"driver": "com.mysql.cj.jdbc.Driver",
+			"dbtable": "producer",
+			"user": "root",
+			"password": "root"
+		},
+		"source": "//Producer",
+		"entity": "Producer"
+	}
+	],
+    "weights": [
+        {
+            "datasource": "cassandra",
+            "weight": 3
+        },
+        {
+            "datasource": "mongodb",
+            "weight": 5
+        },
+        {
+            "datasource": "parquet",
+            "weight": 2
+        },
+        {
+            "datasource": "csv",
+            "weight": 1
+        },
+        {
+            "datasource": "jdbc",
+            "weight": 4
+        }
+    ]
+}
