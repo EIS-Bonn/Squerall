@@ -49,9 +49,9 @@ RUN wget http://central.maven.org/maven2/mysql/mysql-connector-java/8.0.13/mysql
 COPY evaluation/Hive_files/hive-site.xml $HIVE_HOME/conf/
 
 # Install Presto (Server and CLI)
-ENV PRESTO_VERSION 0.215
-ENV PRESTO_URL     https://repo1.maven.org/maven2/com/facebook/presto/presto-server/${PRESTO_VERSION}/presto-server-${PRESTO_VERSION}.tar.gz
-ENV PRESTO_CLI_URL https://repo1.maven.org/maven2/com/facebook/presto/presto-cli/${PRESTO_VERSION}/presto-cli-${PRESTO_VERSION}-executable.jar
+ENV PRESTO_VERSION 304
+ENV PRESTO_URL     http://central.maven.org/maven2/io/prestosql/presto-server/${PRESTO_VERSION}/presto-server-${PRESTO_VERSION}.tar.gz
+ENV PRESTO_CLI_URL http://central.maven.org/maven2/io/prestosql/presto-cli/${PRESTO_VERSION}/presto-cli-${PRESTO_VERSION}-executable.jar
 
 RUN set -x && \
     curl -fSL -o - "$PRESTO_URL" | tar xz -C /usr/local && \
@@ -123,20 +123,24 @@ RUN set -x && \
     rm 01* 02* 05* 06* 07*
 
 # Due to a (yet) explaineable behavior from spark-submit assembly plugin,
-# jena-arq is not being picked up during the assembly of Squerall
-# So we will provide it during spark submit
+# jena-arq and presto-jdbc are not being picked up during the assembly of Squerall
+# So we will provide them temporarily during spark submit
 ENV JENA_VERSION 3.9.0
 
 RUN set -x && \
     wget http://central.maven.org/maven2/org/apache/jena/jena-arq/${JENA_VERSION}/jena-arq-${JENA_VERSION}.jar && \
     mv jena-arq-${JENA_VERSION}.jar /root
 
+RUN set -x && \
+    wget http://central.maven.org/maven2/io/prestosql/presto-jdbc/${PRESTO_VERSION}/presto-jdbc-${PRESTO_VERSION}.jar && \
+    mv presto-jdbc-${PRESTO_VERSION}.jar /root
+
 COPY evaluation/SQLtoNOSQL /root/SQLtoNOSQL
 COPY evaluation/input_files/* /root/input/
 COPY evaluation/input_files/queries/* /root/input/queries/
 
 # just to force rebuild
-RUN ls
+RUN pwd
 
 RUN set -x && \
     # Install Squerall

@@ -45,9 +45,10 @@ The command line looks like:
   * query, mappings and config files are identical to Spark command above.
 
 - #### Example:
-`java -cp /etc/squerall-0.1.0.jar org.squerall.Main query.sparql mappings.ttl config jdbc:presto://localhost:8089 n p`
+`java -cp /etc/squerall-0.1.0.jar org.squerall.Main query.sparql mappings.ttl config jdbc:presto://localhost:8080 n p`
 
-  **- Note:** If any error raised due to Presto libs not found, append download presto-jdbc-xyz.jar "`:presto-jdbc-xyz.jar`" to `squerall-0.1.0.jar`.
+  **- Note:** If any error raised due to Presto libs not found, download and append `presto-jdbc-{xyz}.jar` (e.g., from [here](http://central.maven.org/maven2/io/prestosql/presto-jdbc/304/presto-jdbc-304.jar
+) for version 'presto-jdbc-304') "`:presto-jdbc-xyz.jar`" to `squerall-0.1.0.jar` in the command.
 
 - #### Presto and Hive metastore
 Presto is meant to access existing database management systems; therefore, it doesn't have its own metadata store. For file-based data sources, like CSV and Parquet, Presto uses Hive metastore. As a result, prior to running queries in Presto, CSV and Parque files have to be registered in Hive metastore. Parquet files can be registered using [Presto Hive connector (see 'Examples')](https://prestodb.io/docs/current/connector/hive.html); CSV files need to be registered inside Hive as an [*external* table (see 'Create an external table')](https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.5/bk_data-access/content/moving_data_from_hdfs_to_hive_external_table_method.html).
