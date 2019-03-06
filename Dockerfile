@@ -140,7 +140,7 @@ COPY evaluation/input_files/* /root/input/
 COPY evaluation/input_files/queries/* /root/input/queries/
 
 # just to force rebuild
-RUN pwd
+RUN ls
 
 RUN set -x && \
     # Install Squerall
