@@ -56,14 +56,15 @@ Presto is meant to access existing database management systems; therefore, it do
 ## Squerall-GUI
 Squerall has 3 interfaces to (1) provide access configuration to data in the Data Lake, (2) map data to ontology terms and (3) query the mapped data. These interfaces generate the needed input files used for query execution: config, mappings and query, respectively. Refer to Squerall-GUI repository here: [Squerall-GUI](https://github.com/EIS-Bonn/squerall-gui) for more information.
 
+## Evaluation
+We provide in this repository the code-source, queries and docker image for anyone who wants to try Squerall on their own. Refer to the [dedicated page](https://github.com/EIS-Bonn/Squerall/tree/master/evaluation).
+
+## Extensibiliy
+Squerall is extensible by design, developers can themselves add support to more data sources, or even add a new query engine alongside Spark and Presto. Refer to the [Wiki](https://github.com/EIS-Bonn/Squerall/wiki/Extending-Squerall) for the details.
+
 ## Publication
 A preprint describing Squerall can be found at [Squerall: Virtual Ontology-Based Access to
 Heterogeneous and Large Data Sources](http://www.semantic-web-journal.net/system/files/swj1957.pdf). The preprint details all the building blocks and reports on experiments conducted to demonstrate Squerall's capabilities.
-
-### Evaluation
-We provide in this repository the code-source, queries and docker image for anyone who wants to try Squerall on their own. Refer to the [dedicated page](https://github.com/EIS-Bonn/Squerall/tree/master/evaluation).
-
-**Note:** At the moment only Spark-based Squerall is covered in the docker version, Presto part is being worked on...
 
 ## Contact
 For any setup difficulties or other inquiries, please contact me on: mami@cs.uni-bonn.de, or ask directly on [Gitter chat](https://gitter.im/squerall).
