@@ -60,7 +60,7 @@ Squerall has 3 interfaces to (1) provide access configuration to data in the Dat
 ## Evaluation
 We provide in this repository the code-source, queries and docker image for anyone who wants to try Squerall on their own. Refer to the [dedicated page](https://github.com/EIS-Bonn/Squerall/tree/master/evaluation).
 
-## Extensibiliy
+## Extensibility
 Squerall is extensible by design, developers can themselves add support to more data sources, or even add a new query engine alongside Spark and Presto. Refer to the [Wiki](https://github.com/EIS-Bonn/Squerall/wiki/Extending-Squerall) for the details.
 
 ## Publication
