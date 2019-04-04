@@ -60,11 +60,9 @@ object Helpers {
     }
 
     def getTypeFromURI(typeURI: String) : String = {
-        var dataType = typeURI.split("#") // from nosql ns
+        val dataType = typeURI.split("#") // from nosql ns
 
-        var rtrn = dataType(dataType.length-1)
-
-        rtrn
+        dataType(dataType.length-1)
     }
 
     def getSelectColumnsFromSet(pred_attr: mutable.HashMap[String,String],
@@ -79,7 +77,6 @@ object Helpers {
         var i = 0
 
         for (v <- pred_attr) {
-            //println("pred_attr: " + pred_attr)
             val attr = v._2
             val ns_predicate = Helpers.get_NS_predicate(v._1)
 
@@ -91,11 +88,9 @@ object Helpers {
 
             println("-> Variable: " + objVar + " exists in WHERE, is it in SELECT? " + select.contains(objVar.replace("?","")))
 
-            //if (select.contains(objVar.replace("?",""))) {
             if (neededPredicates.contains(v._1)) {
                 val c = attr + " AS `" + star + "_" + predicate + "_" + prefixes(NS) + "`"
-                //println("SELECT CLAUSE: " + c)
-                //columns = if(i == 0) columns + v else columns + "," + columns
+
                 if (i == 0) columns += c else columns += "," + c
                 i += 1
             }
@@ -107,7 +102,7 @@ object Helpers {
     def getID(sourcePath: String, mappingsFile: String): String = {
         //var mappingsFile = Config.get("mappings.file")
 
-        var getID = "PREFIX rml: <http://semweb.mmlab.be/ns/rml#>" +
+        val getID = "PREFIX rml: <http://semweb.mmlab.be/ns/rml#>" +
             "PREFIX rr: <http://www.w3.org/ns/r2rml#>" +
             "PREFIX foaf: <http://xmlns.com/foaf/spec/>" +
             "SELECT ?t WHERE {" +
@@ -117,36 +112,49 @@ object Helpers {
                 "?sm rr:template ?t " +
             "}"
 
-        //println("GOING TO EXECUTE: " + getID)
+        val in = FileManager.get().open(mappingsFile)
 
-        var in = FileManager.get().open(mappingsFile)
-
-        var model = ModelFactory.createDefaultModel()
+        val model = ModelFactory.createDefaultModel()
         model.read(in, null, "TURTLE")
 
         var id = ""
 
-        var query1 = QueryFactory.create(getID)
-        var qe1 = QueryExecutionFactory.create(query1, model)
-        var results1 = qe1.execSelect()
+        val query1 = QueryFactory.create(getID)
+        val qe1 = QueryExecutionFactory.create(query1, model)
+        val results1 = qe1.execSelect()
         while (results1.hasNext) {
-            var soln1 = results1.nextSolution()
-            var template = soln1.get("t").toString
+            val soln1 = results1.nextSolution()
+            val template = soln1.get("t").toString
 
-            var templateBits = template.split("/")
+            val templateBits = template.split("/")
             id = templateBits(templateBits.length-1).replace("{","").replace("}","")
         }
 
         id
     }
 
-    def makeMongoURI(uri: String, database: String, collection: String, options: String) = {
+    def makeMongoURI(uri: String, database: String, collection: String, options: String): String = {
         if(options == null)
-            s"mongodb://${uri}/${database}.${collection}"
+            s"mongodb://$uri/$database.$collection"
         else
-            s"mongodb://${uri}/${database}.${collection}?${options}"
+            s"mongodb://$uri/$database.$collection?$options"
         //mongodb://db1.example.net,db2.example.net:27002,db3.example.net:27003/?db_name&replicaSet=YourReplicaSetName
         //mongodb://172.18.160.16,172.18.160.17,172.18.160.18/db.offer?replicaSet=mongo-rs
+    }
+
+    def getFunctionFromURI(URI: String): String = {
+        val functionName = URI match {
+            case "http://users.ugent.be/~bjdmeest/function/grel.ttl#scale" => "scl"
+            case "http://users.ugent.be/~bjdmeest/function/grel.ttl#substitute" => "substit"
+            case "http://users.ugent.be/~bjdmeest/function/grel.ttl#skip" => "skp"
+            case "http://users.ugent.be/~bjdmeest/function/grel.ttl#replace" => "replc"
+            case "http://users.ugent.be/~bjdmeest/function/grel.ttl#prefix" => "prefix"
+            case "http://users.ugent.be/~bjdmeest/function/grel.ttl#postfix" => "postfix"
+            case "http://users.ugent.be/~bjdmeest/function/grel.ttl#toInt" => "toInt"
+            case _ => ""
+        }
+
+        functionName
     }
 
     // Special MongoDB helpers

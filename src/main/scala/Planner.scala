@@ -11,25 +11,25 @@ import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.collection.immutable.ListMap
 import scala.collection.mutable
-import scala.collection.mutable.{HashMap, ListBuffer, MultiMap, Set}
+import scala.collection.mutable.ListBuffer
 
 /**
   * Created by mmami on 06.07.17.
   */
-class Planner(stars: HashMap[String, Set[(String, String)]] with MultiMap[String, (String, String)]) {
+class Planner(stars: mutable.HashMap[String, mutable.Set[(String, String)]] with mutable.MultiMap[String, (String, String)]) {
 
-    def getNeededPredicates(star_predicate_var: mutable.HashMap[(String, String), String], joins: ArrayListMultimap[String, (String, String)], select_vars: util.List[String]) : (Set[String],Set[(String,String)]) = {
+    def getNeededPredicates(star_predicate_var: mutable.HashMap[(String, String), String], joins: ArrayListMultimap[String, (String, String)], select_vars: util.List[String]) : (mutable.Set[String],mutable.Set[(String,String)]) = {
 
         println("star_predicate_var: "+ star_predicate_var)
-        val predicates : Set[String] = Set.empty
-        val predicatesForSelect : Set[(String,String)] = Set.empty
+        val predicates : mutable.Set[String] = mutable.Set.empty
+        val predicatesForSelect : mutable.Set[(String,String)] = mutable.Set.empty
 
         val join_left_vars = joins.keySet()
         val join_right_vars = joins.values().asScala.map(x => x._1).toSet // asScala, converts Java Collection to Scala Collection
 
         val join_left_right_vars = join_right_vars.union(join_left_vars.asScala)
 
-        println("--> Left & right join operands: " + join_left_right_vars)
+        println("--> All (left & right) join operands: " + join_left_right_vars)
 
         //println("select_vars: " + select_vars)
         //println("star_predicate_varr: " + star_predicate_var.mkString(", "))
@@ -54,26 +54,26 @@ class Planner(stars: HashMap[String, Set[(String, String)]] with MultiMap[String
         (predicates,predicatesForSelect)
     }
 
-    def generateJoinPlan: (ArrayListMultimap[String, (String,String)], Set[String], Set[String], Map[(String, String), String]) = {
+    def generateJoinPlan: (ArrayListMultimap[String, (String,String)], mutable.Set[String], mutable.Set[String], Map[(String, String), String]) = {
 
-        var keys = stars.keySet.toSeq
+        val keys = stars.keySet.toSeq
         println("Stars: " + keys.toString())
-        var joins : ArrayListMultimap[String, (String,String)] = ArrayListMultimap.create[String,(String,String)]()
+        val joins: ArrayListMultimap[String, (String, String)] = ArrayListMultimap.create[String, (String, String)]()
         var joinPairs : Map[(String,String), String] = Map.empty
 
-        val joinedToFlag : Set[String] = Set()
-        val joinedFromFlag : Set[String] = Set()
+        val joinedToFlag : mutable.Set[String] = mutable.Set()
+        val joinedFromFlag : mutable.Set[String] = mutable.Set()
 
         for(i <- keys.indices) {
-            var currentSubject = keys(i)
+            val currentSubject = keys(i)
             //println("Star subject: " + currentSubject)
-            var valueSet = stars(currentSubject)
+            val valueSet = stars(currentSubject)
             //println("values: " + valueSet.toString())
             for(p_o <- valueSet) {
-                var o = p_o._2
+                val o = p_o._2
                 //print("o=" + o)
                 if (keys.contains(o)) { // A previous star of o
-                    var p = p_o._1
+                    val p = p_o._1
                     //println(currentSubject + "---(" + o + ", " + p + ")")
                     joins.put(currentSubject, (o, p))
                     joinPairs += (omitQuestionMark(currentSubject), omitQuestionMark(o)) -> p
@@ -86,7 +86,7 @@ class Planner(stars: HashMap[String, Set[(String, String)]] with MultiMap[String
         (joins, joinedToFlag, joinedFromFlag, joinPairs)
     }
 
-    def reorder(joins: ArrayListMultimap[String, (String, String)], starDataTypesMap: Map[String, mutable.Set[String]], starNbrFilters: Map[String, Integer], starWeights: Map[String, Double], configFile: String) = {
+    def reorder(joins: ArrayListMultimap[String, (String, String)], starDataTypesMap: Map[String, mutable.Set[String]], starNbrFilters: Map[String, Integer], starWeights: Map[String, Double], configFile: String): ListMap[(String, String), Double] = {
 
         //var configFile = Config.get("datasets.weights")
 
@@ -105,7 +105,7 @@ class Planner(stars: HashMap[String, Set[(String, String)]] with MultiMap[String
         sortedScoredJoins
     }
 
-    def getScoredJoins(joins : ArrayListMultimap[String, (String, String)], scores: Map[String, Double]) = {
+    def getScoredJoins(joins : ArrayListMultimap[String, (String, String)], scores: Map[String, Double]): Map[(String, String), Double] = {
         var scoredJoins : Map[(String, String), Double] = Map()
 
         for (j <- joins.entries)
@@ -114,8 +114,7 @@ class Planner(stars: HashMap[String, Set[(String, String)]] with MultiMap[String
         scoredJoins
     }
 
-    def sortStarsByWeight(starDataTypesMap: Map[String, mutable.Set[String]], filters: Map[String, Integer], configFile: String) = {
-        //var configFile = Config.get("datasets.weights")
+    def sortStarsByWeight(starDataTypesMap: Map[String, mutable.Set[String]], filters: Map[String, Integer], configFile: String): Map[String, Double] = {
 
         val queryString = scala.io.Source.fromFile(configFile)
         val configJSON = try queryString.mkString finally queryString.close()
@@ -141,7 +140,7 @@ class Planner(stars: HashMap[String, Set[(String, String)]] with MultiMap[String
         scores
     }
 
-    def starScores(starDataTypesMap: Map[String, mutable.Set[String]], weightsByDatasource: Map[String, Double], filters: Map[String, Integer]) = {
+    def starScores(starDataTypesMap: Map[String, mutable.Set[String]], weightsByDatasource: Map[String, Double], filters: Map[String, Integer]): Map[String, Double] = {
         var scores : Map[String, Double] = Map()
 
         var datasourceTypeWeight = 0.0 // Coucou!

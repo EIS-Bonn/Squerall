@@ -20,7 +20,7 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
 
     private var query = ""
 
-    def query(sources : Set[(HashMap[String, String], String, String)],
+    def query(sources : Set[(HashMap[String, String], String, String, HashMap[String, (String, Boolean)])],
               optionsMap_entity: HashMap[String, (Map[String, String],String)],
               toJoinWith: Boolean,
               star: String,

@@ -15,14 +15,14 @@ import scala.collection.mutable.{HashMap, ListBuffer, Set}
 trait QueryExecutor[T] { // T is a ParSet (Parallel dataSet)
 
     /* Generates a ParSet with the number of filters (on predicates) in the star */
-    def query(sources : Set[(HashMap[String, String], String, String)],
-              optionsMap: HashMap[String, (Map[String, String],String)],
+    def query(sources : mutable.Set[(mutable.HashMap[String, String], String, String, mutable.HashMap[String, (String, Boolean)])],
+              optionsMap: mutable.HashMap[String, (Map[String, String],String)],
               toJoinWith: Boolean,
               star: String,
               prefixes: Map[String, String],
               select: util.List[String],
               star_predicate_var: mutable.HashMap[(String, String), String],
-              neededPredicates: Set[String],
+              neededPredicates: mutable.Set[String],
               filters: ArrayListMultimap[String, (String, String)],
               leftJoinTransformations: (String, Array[String]),
               rightJoinTransformations: Array[String],
@@ -45,7 +45,7 @@ trait QueryExecutor[T] { // T is a ParSet (Parallel dataSet)
     def orderBy(joinPS: Any, direction: String, variable: String): T
 
     /* Group attributes based on aggregates function(s) */
-    def groupBy(joinPS: Any, groupBys: (ListBuffer[String], Set[(String,String)])): T
+    def groupBy(joinPS: Any, groupBys: (ListBuffer[String], mutable.Set[(String,String)])): T
 
     /* Return the first 'limitValue' values of the ParSet */
     def limit(joinPS: Any, limitValue: Int) : T

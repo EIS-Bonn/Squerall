@@ -6,28 +6,28 @@ import com.google.common.collect.ArrayListMultimap
 import com.mongodb.spark.config.ReadConfig
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
-import org.apache.spark.sql.{Column, DataFrame, SparkSession}
+import org.apache.spark.sql.{AnalysisException, Column, DataFrame, SparkSession}
 import org.squerall.Helpers._
 
 import scala.collection.immutable.ListMap
 import scala.collection.mutable
-import scala.collection.mutable.{HashMap, ListBuffer, Set}
+import scala.collection.mutable.ListBuffer
 
 class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecutor[DataFrame] {
 
-    def getType() = {
+    def getType: DataFrame = {
         val dataframe : DataFrame = null
         dataframe
     }
 
-    def query (sources : Set[(HashMap[String, String], String, String)],
-               optionsMap_entity: HashMap[String, (Map[String, String],String)],
+    def query (sources : mutable.Set[(mutable.HashMap[String, String], String, String, mutable.HashMap[String, (String, Boolean)])],
+               optionsMap_entity: mutable.HashMap[String, (Map[String, String],String)],
                toJoinWith: Boolean,
                star: String,
                prefixes: Map[String, String],
                select: util.List[String],
                star_predicate_var: mutable.HashMap[(String, String), String],
-               neededPredicates: Set[String],
+               neededPredicates: mutable.Set[String],
                filters: ArrayListMultimap[String, (String, String)],
                leftJoinTransformations: (String, Array[String]),
                rightJoinTransformations: Array[String],
@@ -94,12 +94,20 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
             }
 
             df.createOrReplaceTempView("table")
-            val newDF = spark.sql("SELECT " + columns + " FROM table")
 
-            if(datasource_count == 1) {
-                finalDF = newDF
-            } else {
-                finalDF = finalDF.union(newDF)
+            try {
+                val newDF = spark.sql("SELECT " + columns + " FROM table")
+
+                if(datasource_count == 1) {
+                    finalDF = newDF
+                } else {
+                    finalDF = finalDF.union(newDF)
+                }
+            } catch {
+                case ae: AnalysisException => println("ERROR: Generated internal query wrong caused by wrong mappings. " +
+                  "For example, check `rr:reference` references a correct attribute, or if you have transformations, " +
+                  "check `rml:logicalSource` is the same between the TripleMap and the FunctionMap.")
+                   System.exit(1)
             }
 
             // Transformations
@@ -248,7 +256,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
 
             println("njVal: " + ns)
 
-            it.remove
+            it.remove()
 
             val df1 = star_df(op1)
             val df2 = star_df(op2)
@@ -370,7 +378,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
         for (jj <- joins.entries()) {
             joinsMap += (jj.getKey, jj.getValue._1) -> jj.getValue._2
         }
-        val seenDF1 : Set[(String,String)] =  Set()
+        val seenDF1 : mutable.Set[(String,String)] =  mutable.Set()
         for (s <- seenDF) {
             seenDF1 += s
         }
@@ -429,11 +437,11 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
 
             for(s <- sortedWeighedJoins) {
                 val op1 = s._1._1
-                val op2 = (s._1)._2._1
-                val jVal = (s._1)._2._2
+                val op2 = s._1._2._1
+                val jVal = s._1._2._2
                 val njVal = get_NS_predicate(jVal)
                 val ns = prefixes(njVal._1)
-                val joinSide = (s._1)._3
+                val joinSide = s._1._3
 
                 val df1 = star_df(op1)
                 val df2 = star_df(op2)
@@ -473,7 +481,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
             jDF.asInstanceOf[DataFrame].select(columnNames.head, columnNames.tail: _*).distinct()
     }
 
-    def schemaOf(jDF: DataFrame) = {
+    def schemaOf(jDF: DataFrame): Unit = {
         jDF.printSchema()
     }
 
@@ -491,7 +499,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
         }
     }
 
-    def groupBy(jDF: Any, groupBys: (ListBuffer[String], Set[(String,String)])): DataFrame = {
+    def groupBy(jDF: Any, groupBys: (ListBuffer[String], mutable.Set[(String,String)])): DataFrame = {
 
         val groupByVars = groupBys._1
         val aggregationFunctions = groupBys._2
@@ -502,7 +510,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
         }
         println("aggregationFunctions: " + aggregationFunctions)
 
-        var aggSet : Set[(String,String)] = Set()
+        var aggSet : mutable.Set[(String,String)] = mutable.Set()
         for (af <- aggregationFunctions){
             aggSet += ((af._1,af._2))
         }
@@ -519,12 +527,12 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
 
     def limit(jDF: Any, limitValue: Int) : DataFrame = jDF.asInstanceOf[DataFrame].limit(limitValue)
 
-    def show(jDF: Any) = {
+    def show(jDF: Any): Unit = {
         jDF.asInstanceOf[DataFrame].show
         println(s"Number of results: ${jDF.asInstanceOf[DataFrame].count()}")
     }
 
-    def run(jDF: Any) = {
+    def run(jDF: Any): Unit = {
         this.show(jDF)
     }
 }

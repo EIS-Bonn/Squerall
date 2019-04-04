@@ -19,7 +19,7 @@ class QueryAnalyser(query: String) {
 
     def getPrefixes : Map[String, String] = {
         val q = QueryFactory.create(query)
-        val prolog = q.getPrologue().getPrefixMapping.getNsPrefixMap
+        val prolog = q.getPrologue.getPrefixMapping.getNsPrefixMap
 
         val prefix: Map[String, String] = invertMap(prolog)
 
@@ -56,9 +56,9 @@ class QueryAnalyser(query: String) {
         filters
     }
 
-    def getOrderBy = {
+    def getOrderBy: mutable.Set[(String, String)] = {
         val q = QueryFactory.create(query)
-        var orderBys : Set[(String,String)] = Set()
+        var orderBys : mutable.Set[(String,String)] = mutable.Set()
 
         if(q.hasOrderBy) {
             val orderBy = q.getOrderBy.iterator()
@@ -74,10 +74,10 @@ class QueryAnalyser(query: String) {
         orderBys
     }
 
-    def getGroupBy(variablePredicateStar: Map[String, (String, String)], prefixes: Map[String, String]) = {
+    def getGroupBy(variablePredicateStar: Map[String, (String, String)], prefixes: Map[String, String]): (ListBuffer[String], mutable.Set[(String, String)]) = {
         val q = QueryFactory.create(query)
         val groupByCols : ListBuffer[String] = ListBuffer()
-        var aggregationFunctions : Set[(String,String)] = Set()
+        var aggregationFunctions : mutable.Set[(String,String)] = mutable.Set()
 
         if (q.hasGroupBy) {
             val groupByVars = q.getGroupBy.getVars.toList
@@ -122,18 +122,18 @@ class QueryAnalyser(query: String) {
         println("\n- The BGP of the input query:  " + originalBGP)
         println("\n- Number of triple-stars detected: " + tps.length)
 
-        val stars = new HashMap[String, Set[Tuple2[String,String]]] with MultiMap[String, Tuple2[String,String]]
+        val stars = new mutable.HashMap[String, mutable.Set[(String, String)]] with mutable.MultiMap[String, (String, String)]
         // Multi-map to add/append elements to the value
 
         // Save [star]_[predicate]
-        val star_pred_var : HashMap[(String,String), String] = HashMap()
+        val star_pred_var : mutable.HashMap[(String,String), String] = mutable.HashMap()
 
         for (i <- tps.indices) { //i <- 0 until tps.length
             val triple = tps(i).trim
 
             println(s"triple: $triple")
 
-            if(!triple.contains(';')) { // only one predicate attached to the subject
+            if (!triple.contains(';')) { // only one predicate attached to the subject
                 val tripleBits = triple.split(" ")
                 stars.addBinding(tripleBits(0), (tripleBits(1), tripleBits(2)))
                 // addBinding` because standard methods like `+` will overwrite the complete key-value pair instead of adding the value to the existing key
@@ -147,7 +147,7 @@ class QueryAnalyser(query: String) {
                 stars.addBinding(sbj, (firsTripleBits(1), firsTripleBits(2))) // add that first triple
                 star_pred_var.put((sbj, firsTripleBits(1)), firsTripleBits(2))
 
-                for(i <- 1 until triples.length) {
+                for (i <- 1 until triples.length) {
                     val t = triples(i).trim.split(" ")
                     stars.addBinding(sbj, (t(0), t(1)))
 
@@ -160,7 +160,7 @@ class QueryAnalyser(query: String) {
         // TODO: Support OPTIONAL later
     }
 
-    def getTransformations (trans: String) = {
+    def getTransformations (trans: String): (Map[String, (String, Array[String])], Map[String, Array[String]]) = {
         // Transformations
         val transformations = trans.trim().substring(1).split("&&") // [?k?a.l.+60, ?a?l.r.toInt]
         var transmap_left : Map[String,(String, Array[String])] = Map.empty
@@ -183,6 +183,6 @@ class QueryAnalyser(query: String) {
 
     def hasLimit: Boolean = QueryFactory.create(query).hasLimit
 
-    def getLimit() = QueryFactory.create(query).getLimit.toInt
+    def getLimit: Int = QueryFactory.create(query).getLimit.toInt
 
 }

@@ -15,13 +15,13 @@ object Main extends App {
     val reorderJoin = args(4)
     val queryEngine = args(5)
 
-    if(queryEngine == "s") {
+    if (queryEngine == "s") { // Spark as query engine
         val executor : SparkExecutor = new SparkExecutor(executorID, mappingsFile)
-        //val finalResults = executor.getType()
 
         val run = new Run[DataFrame](executor)
         run.application(queryFile,mappingsFile,configFile,executorID)
-    } else if(queryEngine == "p") {
+
+    } else if(queryEngine == "p") { // Presto as query engine
         val executor : PrestoExecutor = new PrestoExecutor(executorID, mappingsFile)
         val run = new Run[DataQueryFrame](executor)
         run.application(queryFile,mappingsFile,configFile,executorID)
