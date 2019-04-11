@@ -292,7 +292,7 @@ class Run[A] (executor: QueryExecutor[A]) {
         if (limit > 0)
             finalDataSet = executor.limit(finalDataSet, limit)
 
-        println("- Final results schema: ")
+        //println("- Final results schema: ")
         //executor.schemaOf(finalDataSet) // TODO: REMOVED AFTER PRESTO - KEEP ONLY ON SPARK
 
         val stopwatch: StopWatch = new StopWatch
@@ -304,6 +304,6 @@ class Run[A] (executor: QueryExecutor[A]) {
 
         val timeTaken = stopwatch.getTime
 
-        println(s"Time taken by Spark: $timeTaken")
+        println(s"Time taken solely by the actual query execution: $timeTaken")
     }
 }

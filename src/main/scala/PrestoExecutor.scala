@@ -541,7 +541,7 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
             val columnCount = metadata.getColumnCount
 
             // Printing schema
-            print("\nResults (showing fist 20):\n")
+            print("\nResults (showing first 20):\n")
             for (i <- 1 to columnCount) {
                 val name = metadata.getColumnName(i)
                 print(s"$name |")
