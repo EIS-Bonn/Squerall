@@ -2,10 +2,10 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.squerall</groupId>
   <artifactId>squerall</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <name>Squerall</name>
   <description>Squerall - Semantic Data Lake</description>
-  <inceptionYear>2018</inceptionYear>
+  <inceptionYear>2019</inceptionYear>
 
   <properties>
     <maven.compiler.source>1.8</maven.compiler.source>
