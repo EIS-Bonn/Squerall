@@ -17,7 +17,7 @@ cd squerall
 mvn package
 cd target
 ```
-...by default, you find a *squerall-0.1.0.jar* file.
+...by default, you find a *squerall-0.2.0.jar* file.
 
 Squerall (previously Sparkall) uses Spark and Presto as query engine. User specifies which underlying query engine to use. Therefore Spark and/or Presto has to be installed beforehand. Both Spark and Presto are known to among the easiest frameworks to configure and get started with. You can choose to run Spark/Presto and thus Squerall in a single node, or deploy them in a cluster.
 
@@ -26,30 +26,30 @@ Squerall (previously Sparkall) uses Spark and Presto as query engine. User speci
 
 - Once Spark is installed, navigate to `bin` folder and run `spark-submit` script giving in arguments three files ---built using [Squerall-GUI](https://github.com/EIS-Bonn/squerall-gui) (see below).
 The command line looks like:
-`/bin/spark-submit --class [Main classpath] --master [master URI] --executor-memory [memory reserved to the app] [path to squerall-0.1.0.jar] [query file] [mappings file] [config file] [master URI] n s`
+`/bin/spark-submit --class [Main classpath] --master [master URI] --executor-memory [memory reserved to the app] [path to squerall-0.2.0.jar] [query file] [mappings file] [config file] [master URI] n s`
 
 - #### Example:
-`/bin/spark-submit --class org.squerall.Main --master spark://127.140.106.146:3077 --executor-memory 250G /etc/squerall-0.1.0.jar query.sparql mappings.ttl config spark://172.14.160.146:3077 n p`
+`/bin/spark-submit --class org.squerall.Main --master spark://127.140.106.146:3077 --executor-memory 250G /etc/squerall-0.2.0.jar query.sparql mappings.ttl config spark://172.14.160.146:3077 n p`
 
   * query file: a file containing a correct SPARQL query, only.
   * mappings file: a file contains RML mappings linking data to ontology terms (classes and properties), in JSON format.
   * config file: a file containing information about how to access data sources (eg. host, user, password), in JSON format.
 
 
-  ** - Known issue:** if the error `java.lang.NullPointerException at org.apache.jena.query.ARQ.isTrue(ARQ.java:650)` is returned from `mvn package`, it means that `jena arq` dependncy isn't correctly packaged. We are searching for a solution, but as a temporary workaround, download Jena ARQ jar file and add it to `spark-submit` commend by modifying the previous command as follows: `/bin/spark-submit --class ... --jars jena-arq-3.9.0.jar /etc/squerall-0.1.0.jar query.sparql ...` (same command but with `--jars jena-arq-3.9.0.jar` before `/etc/squerall-0.1.0.jar`).
+  ** - Known issue:** if the error `java.lang.NullPointerException at org.apache.jena.query.ARQ.isTrue(ARQ.java:650)` is returned from `mvn package`, it means that `jena arq` dependncy isn't correctly packaged. We are searching for a solution, but as a temporary workaround, download Jena ARQ jar file and add it to `spark-submit` commend by modifying the previous command as follows: `/bin/spark-submit --class ... --jars jena-arq-3.9.0.jar /etc/squerall-0.2.0.jar query.sparql ...` (same command but with `--jars jena-arq-3.9.0.jar` before `/etc/squerall-0.2.0.jar`).
 
 ### Presto
 - Install Presto from [Presot official website](https://prestodb.io/docs/current/installation/deployment.html).
-- Once Presto is installed, navigate to `bin` folder and run `squerall-0.1.0.jar` like you run any Java application:
-`java -cp [path to squerall-0.1.0.jar] org.squerall.Main [query file] [mappings file] [config file] [Presto server url (host:port)] n p`
+- Once Presto is installed, navigate to `bin` folder and run `squerall-0.2.0.jar` like you run any Java application:
+`java -cp [path to squerall-0.2.0.jar] org.squerall.Main [query file] [mappings file] [config file] [Presto server url (host:port)] n p`
 
   * query, mappings and config files are identical to Spark command above.
 
 - #### Example:
-`java -cp /etc/squerall-0.1.0.jar org.squerall.Main query.sparql mappings.ttl config jdbc:presto://localhost:8080 n p`
+`java -cp /etc/squerall-0.2.0.jar org.squerall.Main query.sparql mappings.ttl config jdbc:presto://localhost:8080 n p`
 
   **- Note:** If any error raised due to Presto libs not found, download and append `presto-jdbc-{xyz}.jar` (e.g., from [here](http://central.maven.org/maven2/io/prestosql/presto-jdbc/304/presto-jdbc-304.jar
-) for version 'presto-jdbc-304') "`:presto-jdbc-xyz.jar`" to `squerall-0.1.0.jar` in the command.
+) for version 'presto-jdbc-304') "`:presto-jdbc-xyz.jar`" to `squerall-0.2.0.jar` in the command.
 
 - #### Presto and Hive metastore
 Presto is meant to access existing database management systems; therefore, it doesn't have its own metadata store. For file-based data sources, like CSV and Parquet, Presto uses Hive metastore. As a result, prior to running queries in Presto, CSV and Parque files have to be registered in Hive metastore. Parquet files can be registered using [Presto Hive connector (see 'Examples')](https://prestodb.io/docs/current/connector/hive.html); CSV files need to be registered inside Hive as an [*external* table (see 'Create an external table')](https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.5/bk_data-access/content/moving_data_from_hdfs_to_hive_external_table_method.html).

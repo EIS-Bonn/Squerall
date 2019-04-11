@@ -35,9 +35,9 @@ if [[ -d ${QUERIE_S} ]]; then
 
         # Run
         if [[ "$ENGINE_FLAG" = "s" ]]; then
-            (/usr/bin/time -f "time: %e (sec)" "$SPARK"/spark-submit --class org.squerall.Main --executor-memory "$EXECUTOR_MEMORY" --master "$EXECUTOR_ADDRESS" --jars /root/jena-arq-3.9.0.jar "$SQUERALL_EXEC"/squerall-0.1.0.jar "$i" "$MAPPINGS_FILE" "$CONFIG_FILE" "$EXECUTOR_ADDRESS" "$REORDER_FLAG" "$ENGINE_FLAG") >> "$RESULT_FILE" 2>&1
+            (/usr/bin/time -f "time: %e (sec)" "$SPARK"/spark-submit --class org.squerall.Main --executor-memory "$EXECUTOR_MEMORY" --master "$EXECUTOR_ADDRESS" --jars /root/jena-arq-3.9.0.jar "$SQUERALL_EXEC"/squerall-0.2.0.jar "$i" "$MAPPINGS_FILE" "$CONFIG_FILE" "$EXECUTOR_ADDRESS" "$REORDER_FLAG" "$ENGINE_FLAG") >> "$RESULT_FILE" 2>&1
         elif [[ "$ENGINE_FLAG" = "p" ]]; then
-            (/usr/bin/time -f "time: %e (sec)" java -cp "$SQUERALL_EXEC"/squerall-0.1.0.jar:/root/jena-arq-3.9.0.jar:/root/presto-jdbc-304.jar org.squerall.Main "$i" "$MAPPINGS_FILE" "$CONFIG_FILE" "$EXECUTOR_ADDRESS" n "$ENGINE_FLAG")
+            (/usr/bin/time -f "time: %e (sec)" java -cp "$SQUERALL_EXEC"/squerall-0.2.0.jar:/root/jena-arq-3.9.0.jar:/root/presto-jdbc-304.jar org.squerall.Main "$i" "$MAPPINGS_FILE" "$CONFIG_FILE" "$EXECUTOR_ADDRESS" n "$ENGINE_FLAG")
         fi
           #statements
         # ../spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class org.squerall.Main --executor-memory 200G --master spark://host:port squerall.jar query3.sparql mappings.ttl config spark://host:port r
@@ -48,9 +48,9 @@ elif [[ -f ${QUERIE_S} ]]; then
     echo "Clearing cache " | tee --append "$RESULT_FILE" > /dev/null
 
     if [[ "$ENGINE_FLAG" = "s" ]]; then
-        (/usr/bin/time -f "time: %e (sec)" "$SPARK"/spark-submit --class org.squerall.Main --executor-memory "$EXECUTOR_MEMORY" --master "$EXECUTOR_ADDRESS" --jars /root/jena-arq-3.9.0.jar "$SQUERALL_EXEC"/squerall-0.1.0.jar "$QUERIE_S" "$MAPPINGS_FILE" "$CONFIG_FILE" "$EXECUTOR_ADDRESS" "$REORDER_FLAG" "$ENGINE_FLAG") > "$RESULT_FILE" 2>&1
+        (/usr/bin/time -f "time: %e (sec)" "$SPARK"/spark-submit --class org.squerall.Main --executor-memory "$EXECUTOR_MEMORY" --master "$EXECUTOR_ADDRESS" --jars /root/jena-arq-3.9.0.jar "$SQUERALL_EXEC"/squerall-0.2.0.jar "$QUERIE_S" "$MAPPINGS_FILE" "$CONFIG_FILE" "$EXECUTOR_ADDRESS" "$REORDER_FLAG" "$ENGINE_FLAG") > "$RESULT_FILE" 2>&1
     elif [[ "$ENGINE_FLAG" = "p" ]]; then
-      (/usr/bin/time -f "time: %e (sec)" java -cp ${SQUERALL_EXEC}/squerall-0.1.0.jar:/root/jena-arq-3.9.0.jar:/root/presto-jdbc-304.jar org.squerall.Main "$QUERIE_S" "$MAPPINGS_FILE" "$CONFIG_FILE" "$EXECUTOR_ADDRESS" n "$ENGINE_FLAG")
+      (/usr/bin/time -f "time: %e (sec)" java -cp ${SQUERALL_EXEC}/squerall-0.2.0.jar:/root/jena-arq-3.9.0.jar:/root/presto-jdbc-304.jar org.squerall.Main "$QUERIE_S" "$MAPPINGS_FILE" "$CONFIG_FILE" "$EXECUTOR_ADDRESS" n "$ENGINE_FLAG")
     fi
 else
     echo "$QUERIE_S is not a valid query file or queries directory"
