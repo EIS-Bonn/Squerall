@@ -129,11 +129,10 @@
 		rr:predicate bsbm:rating4;
 		rr:objectMap [rml:reference "rating4"]
 	].
-  
-  
+
 <#FunctionMap>
  fnml:functionValue [
-   rml:logicalSource "//Producer" ;
+   rml:logicalSource "/root/data/review.parquet" ;
 
    rr:predicateObjectMap [
      rr:predicate fno:executes ;
