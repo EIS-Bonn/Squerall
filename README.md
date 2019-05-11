@@ -35,9 +35,6 @@ The command line looks like:
   * mappings file: a file contains RML mappings linking data to ontology terms (classes and properties), in JSON format.
   * config file: a file containing information about how to access data sources (eg. host, user, password), in JSON format.
 
-
-  ** - Known issue:** if the error `java.lang.NullPointerException at org.apache.jena.query.ARQ.isTrue(ARQ.java:650)` is returned from `mvn package`, it means that `jena arq` dependncy isn't correctly packaged. We are searching for a solution, but as a temporary workaround, download Jena ARQ jar file and add it to `spark-submit` commend by modifying the previous command as follows: `/bin/spark-submit --class ... --jars jena-arq-3.9.0.jar /etc/squerall-0.2.0.jar query.sparql ...` (same command but with `--jars jena-arq-3.9.0.jar` before `/etc/squerall-0.2.0.jar`).
-
 ### Presto
 - Install Presto from [Presot official website](https://prestodb.io/docs/current/installation/deployment.html).
 - Once Presto is installed, navigate to `bin` folder and run `squerall-0.2.0.jar` like you run any Java application:
