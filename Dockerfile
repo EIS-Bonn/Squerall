@@ -104,7 +104,7 @@ RUN set -x && \
 # Install Spark
 ENV SPARK_VERSION 2.4.0
 RUN set -x  && \
-    curl -fSL -o - http://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop2.7.tgz | tar xz -C /usr/local && \
+    curl -fSL -o - https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop2.7.tgz | tar xz -C /usr/local && \
     mv /usr/local/spark-${SPARK_VERSION}-bin-hadoop2.7 /usr/local/spark
 
 # Generate BSBM data
