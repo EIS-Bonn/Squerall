@@ -1,12 +1,11 @@
 package org.squerall
 
+import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang.time.StopWatch
-import org.apache.log4j.{Level, Logger}
 import org.squerall.Helpers._
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-
 /**
   * Created by mmami on 26.01.17.
   */
@@ -16,23 +15,15 @@ class Run[A] (executor: QueryExecutor[A]) {
 
     def application(queryFile : String, mappingsFile: String, configFile: String, executorID: String) {
 
-
-        Logger.getLogger("ac.biu.nlp.nlp.engineml").setLevel(Level.OFF)
-        Logger.getLogger("org.BIU.utils.logging.ExperimentLogger").setLevel(Level.OFF)
-        Logger.getRootLogger.setLevel(Level.OFF)
-
-        Logger.getLogger("org").setLevel(Level.ERROR)
-        Logger.getLogger("akka").setLevel(Level.ERROR)
-
+        val logger = Logger("Squerall")
 
         // 1. Read SPARQL query
-        println("\n/*******************************************************************/")
-        println("/*                         QUERY ANALYSIS                          */")
-        println("/*******************************************************************/")
-
+        logger.info("Starting QUERY ANALYSIS")
 
         val queryString = scala.io.Source.fromFile(queryFile)
         var query = try queryString.mkString finally queryString.close()
+
+        println(s"Going to execute the query: \n$query")
 
         // Transformations
         var transformExist = false
@@ -64,7 +55,7 @@ class Run[A] (executor: QueryExecutor[A]) {
             }
         }
 
-        println(s"Predicate Star: $variablePredicateStar")
+        logger.info(s"Predicate Star: $variablePredicateStar")
 
         val prefixes = qa.getPrefixes
         val (select, distinct) = qa.getProject
@@ -75,16 +66,14 @@ class Run[A] (executor: QueryExecutor[A]) {
         var limit: Int = 0
         if (qa.hasLimit) limit = qa.getLimit
 
-        println("\n- Predicates per star:")
+        logger.info("Predicates per star:")
 
         // Build ((s,p) -> o) map to check later if predicates appearing in WHERE actually appear also in SELECT
         val star_predicate_var = stars._2 // TODO: assuming no (star,predicate) with two vars?
-        println("star_predicate_var: " + star_predicate_var)
+        logger.info("star_predicate_var: " + star_predicate_var)
 
         // 3. Generate plan of joins
-        println("\n/*******************************************************************/")
-        println("/*                  PLAN GENERATION & MAPPINGS                     */")
-        println("/*******************************************************************/")
+        logger.info("PLAN GENERATION & MAPPINGS")
         val pl = new Planner(stars._1)
         val pln = pl.generateJoinPlan
         val joins = pln._1
@@ -96,10 +85,10 @@ class Run[A] (executor: QueryExecutor[A]) {
         val neededPredicatesAll = neededPredicates._1 // all predicates used
         val neededPredicatesSelect = neededPredicates._2 // only projected out predicates
 
-        println("--> Needed predicates all: " + neededPredicatesAll)
+        logger.info("--> Needed predicates all: " + neededPredicatesAll)
 
         // 4. Check mapping file
-        println("---> MAPPING CONSULTATION")
+        logger.info("---> MAPPING CONSULTATION")
 
         val mappers = new Mapper(mappingsFile)
         val results = mappers.findDataSources(stars._1, configFile)
@@ -109,26 +98,26 @@ class Run[A] (executor: QueryExecutor[A]) {
 
         var starDataTypesMap: Map[String, mutable.Set[String]] = Map()
 
-        println("\n---> GOING NOW TO JOIN STUFF")
+        logger.info("---> GOING NOW TO JOIN STUFF")
 
-        println("joinPairs:" + joinPairs)
+        logger.info("joinPairs:" + joinPairs)
         for (s <- results) {
             val star = s._1
-            println("star: " + star)
-            val datasources = s._2
+            logger.info("star: " + star)
+            val dataSources = s._2
             val options = s._3
 
-            val dataTypes = datasources.map(d => d._3)
+            val dataTypes = dataSources.map(d => d._3)
 
             // 'Mappings' transformations
-            for (ds <- datasources) {
+            for (ds <- dataSources) {
                 val transformations = ds._4
 
                 if (transformations.nonEmpty)
                     transformExist = true
 
                 for (t <- transformations) {
-                    println("Visiting transformation related to predicate: " + t._1 + " =  " + t._2)
+                    logger.info("Visiting transformation related to predicate: " + t._1 + " =  " + t._2)
                     val fncParamBits = t._2._1.split(" ")
                     val fncName = fncParamBits(0)
                     var fncParam = ""
@@ -158,11 +147,12 @@ class Run[A] (executor: QueryExecutor[A]) {
                 }
             }
 
-            if (transformationsInLine != "") println(s"Transformations found (inline): $transformationsInLine")
+            if (transformationsInLine != "")
+                logger.info(s"Transformations found (inline): $transformationsInLine")
 
             starDataTypesMap += (star -> dataTypes)
 
-            println("* Getting DF relevant to the star: " + star)
+            logger.info("Getting DF relevant to the star: " + star)
 
             // Transformations
             var leftJoinTransformations: (String, Array[String]) = null
@@ -179,27 +169,27 @@ class Run[A] (executor: QueryExecutor[A]) {
                     // Get the predicate of the join
                     val joinLeftPredicate = joinPairs((str, rightOperand))
                     leftJoinTransformations = (joinLeftPredicate, ops)
-                    println("Transform (left) on predicate " + joinLeftPredicate + " using " + ops.mkString("_"))
+                    logger.info("Transform (left) on predicate " + joinLeftPredicate + " using " + ops.mkString("_"))
                 }
 
                 if (transmap_right.keySet.contains(str)) {
                     rightJoinTransformations = transmap_right(str)
-                    println("Transform (right) ID using " + rightJoinTransformations.mkString("..."))
+                    logger.info("Transform (right) ID using " + rightJoinTransformations.mkString("..."))
                 }
             }
 
             // TODO: the else block looks like not being reached, check it
             if (joinedToFlag.contains(star) || joinedFromFlag.contains(star)) {
-                val (ds, numberOfFiltersOfThisStar) = executor.query(datasources, options, toJoinWith = true, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
+                val (ds, numberOfFiltersOfThisStar) = executor.query(dataSources, options, toJoinWith = true, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
 
                 star_df += (star -> ds) // DataFrame representing a star
 
                 starNbrFilters += star -> numberOfFiltersOfThisStar
 
-                println("...with DataFrame schema: " + ds)
+                logger.info("...with DataFrame schema: " + ds)
                 //ds.printSchema() // SEE WHAT TO DO HERE TO SHOW BACK THE SCHEMA - MOVE IN SPARKEXECUTOR
             } else if (!joinedToFlag.contains(star) && !joinedFromFlag.contains(star)) {
-                val (ds, numberOfFiltersOfThisStar) = executor.query(datasources, options, toJoinWith = false, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
+                val (ds, numberOfFiltersOfThisStar) = executor.query(dataSources, options, toJoinWith = false, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
 
                 //ds.printSchema() // SEE WHAT TO DO HERE TO SHOW BACK THE SCHEMA - MOVE IN SPARKEXECUTOR
 
@@ -207,22 +197,21 @@ class Run[A] (executor: QueryExecutor[A]) {
 
                 starNbrFilters += star -> numberOfFiltersOfThisStar
 
-                println("...with DataFrame schema: " + ds)
+                logger.info("...with DataFrame schema: " + ds)
             }
         }
 
-        println("\n/*******************************************************************/")
-        println("/*                         QUERY EXECUTION                         */")
-        println("/*******************************************************************/")
-        println(s"- Here are the (Star, ParSet) pairs: \n $star_df")
-        println(s"- Here are join pairs: $joins")
-        println(s"- Number of predicates per star: $starNbrFilters ")
+        logger.info("QUERY EXECUTION starting...*/")
+        logger.info(s"- Here are the (Star, ParSet) pairs:")
+        logger.info(s"  $star_df")
+        logger.info(s"- Here are join pairs: $joins")
+        logger.info(s"- Number of predicates per star: $starNbrFilters ")
 
         val starWeights = pl.sortStarsByWeight(starDataTypesMap, starNbrFilters, configFile)
-        println(s"- Stars weighted (performance + nbr of filters): $starWeights \n")
+        logger.info(s"- Stars weighted (performance + nbr of filters): $starWeights \n")
 
         val sortedScoredJoins = pl.reorder(joins, starDataTypesMap, starNbrFilters, starWeights, configFile)
-        println(s"- Sorted scored joins: $sortedScoredJoins")
+        logger.info(s"- Sorted scored joins: $sortedScoredJoins")
         val startingJoin = sortedScoredJoins.head
 
         // Convert starting join to: (leftStar, (rightStar, joinVar)) so we can remove it from $joins
@@ -231,8 +220,7 @@ class Run[A] (executor: QueryExecutor[A]) {
             if (j.getKey == startingJoin._1._1 && j.getValue._1 == startingJoin._1._2)
                 firstJoin = startingJoin._1._1 -> (startingJoin._1._2, j.getValue._2)
         }
-        println(s"- Starting join: $firstJoin \n")
-
+        logger.info(s"- Starting join: $firstJoin \n")
 
         // Final global join
         finalDataSet = executor.join(joins, prefixes, star_df)
@@ -240,7 +228,7 @@ class Run[A] (executor: QueryExecutor[A]) {
 
         // Project out columns from the final global join results
         var columnNames = Seq[String]()
-        println(s"\n--> Needed predicates select: $neededPredicatesSelect")
+        logger.info(s"--> Needed predicates select: $neededPredicatesSelect")
         for (i <- neededPredicatesSelect) {
             val star = i._1
             val ns_predicate = i._2
@@ -251,20 +239,20 @@ class Run[A] (executor: QueryExecutor[A]) {
         }
 
         if (groupBys != null) {
-            println(s"groupBys: $groupBys")
+            logger.info(s"groupBys: $groupBys")
             finalDataSet = executor.groupBy(finalDataSet, groupBys)
 
             // Add aggregation columns to the final project ones
             for (gb <- groupBys._2) {
-                println("-> Add to Project list:" + gb._2)
+                logger.info("-> Add to Project list:" + gb._2)
                 columnNames = columnNames :+ gb._2 + "(" + gb._1 + ")"
             }
         }
 
-        println(s"SELECTED column names: $columnNames") // TODO: check the order of PROJECT and ORDER-BY
+        logger.info(s"SELECTED column names: $columnNames") // TODO: check the order of PROJECT and ORDER-BY
 
         if (orderBys != null) {
-            println(s"orderBys: $orderBys")
+            logger.info(s"orderBys: $orderBys")
 
             var orderByList: Set[(String, String)] = Set()
             for (o <- orderBys) {
@@ -276,7 +264,7 @@ class Run[A] (executor: QueryExecutor[A]) {
                 orderByList += ((column, orderDirection))
             }
 
-            println(s"ORDER BY list: $orderByList (-1 ASC, -2 DESC)") // TODO: (-1 ASC, -2 DESC) confirm with multiple order-by's
+            logger.info(s"ORDER BY list: $orderByList (-1 ASC, -2 DESC)") // TODO: (-1 ASC, -2 DESC) confirm with multiple order-by's
 
             for (o <- orderByList) {
                 val variable = o._1
@@ -286,14 +274,11 @@ class Run[A] (executor: QueryExecutor[A]) {
             }
         }
 
-        println("|__ Has distinct? " + distinct)
+        logger.info("|__ Has distinct? " + distinct)
         finalDataSet = executor.project(finalDataSet, columnNames, distinct)
 
         if (limit > 0)
             finalDataSet = executor.limit(finalDataSet, limit)
-
-        //println("- Final results schema: ")
-        //executor.schemaOf(finalDataSet) // TODO: REMOVED AFTER PRESTO - KEEP ONLY ON SPARK
 
         val stopwatch: StopWatch = new StopWatch
         stopwatch start()

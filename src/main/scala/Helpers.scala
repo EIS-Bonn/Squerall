@@ -2,6 +2,7 @@ package org.squerall
 
 import java.util
 
+import com.typesafe.scalalogging.Logger
 import org.apache.jena.query.{QueryExecutionFactory, QueryFactory}
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.util.FileManager
@@ -17,6 +18,9 @@ class Helpers() {
 }
 
 object Helpers {
+
+    val logger = Logger("Squerall")
+
     def invertMap(prolog: util.Map[String, String]): Map[String, String] = {
         var star_df : Map[String, String] = Map.empty
 
@@ -86,7 +90,7 @@ object Helpers {
 
             val objVar = star_predicate_var(("?" + star, "<" + NS + predicate + ">"))
 
-            println("-> Variable: " + objVar + " exists in WHERE, is it in SELECT? " + select.contains(objVar.replace("?","")))
+            logger.info("-> Variable: " + objVar + " exists in WHERE, is it in SELECT? " + select.contains(objVar.replace("?","")))
 
             if (neededPredicates.contains(v._1)) {
                 val c = attr + " AS `" + star + "_" + predicate + "_" + prefixes(NS) + "`"
@@ -156,27 +160,4 @@ object Helpers {
 
         functionName
     }
-
-    // Special MongoDB helpers
-    /*implicit class DocumentObservable[C](val observable: Observable[Document]) extends ImplicitObservable[Document] {
-        override val converter: (Document) => String = (doc) => doc.toJson
-    }
-
-    implicit class GenericObservable[C](val observable: Observable[C]) extends ImplicitObservable[C] {
-        override val converter: (C) => String = (doc) => doc.toString
-    }
-
-    trait ImplicitObservable[C] {
-        val observable: Observable[C]
-        val converter: (C) => String
-
-        def results(): Seq[C] = Await.result(observable.toFuture(), Duration(100, TimeUnit.SECONDS))
-        def headResult() = Await.result(observable.head(), Duration(100, TimeUnit.SECONDS))
-        def printResults(initial: String = ""): Unit = {
-            if (initial.length > 0) print(initial)
-            results().foreach(res => println(converter(res)))
-        }
-        def printHeadResult(initial: String = ""): Unit = println(s"${initial}${converter(headResult())}")
-    }*/
-
 }

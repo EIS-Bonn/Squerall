@@ -1,7 +1,7 @@
 [![Gitter](https://img.shields.io/gitter/room/DAVFoundation/DAV-Contributors.svg?style=flat-square)](https://gitter.im/squerall)
 [![DOI](https://zenodo.org/badge/99688061.svg)](https://zenodo.org/badge/latestdoi/99688061)
 
-# Squerall (previously Sparkall)
+# Squerall
 An implementation of the so-called Semantic Data Lake, using Apache Spark and Presto. Semantic Data Lake is a Data Lake accessed using Semantic Web technologies: ontologies and query language (SPARQL).
 
 Currently supported data sources:

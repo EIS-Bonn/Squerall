@@ -10,6 +10,7 @@ import scala.collection.mutable
 import scala.collection.mutable.{HashMap, ListBuffer, MultiMap, Set}
 import scala.collection.JavaConversions._
 import Helpers._
+import com.typesafe.scalalogging.Logger
 
 /**
   * Created by mmami on 05.07.17.
@@ -17,13 +18,15 @@ import Helpers._
 
 class QueryAnalyser(query: String) {
 
+    val logger = Logger("Squerall")
+
     def getPrefixes : Map[String, String] = {
         val q = QueryFactory.create(query)
         val prolog = q.getPrologue.getPrefixMapping.getNsPrefixMap
 
         val prefix: Map[String, String] = invertMap(prolog)
 
-        println("\n- Prefixes: " + prefix)
+        logger.info("Prefixes: " + prefix)
 
         prefix
     }
@@ -32,7 +35,7 @@ class QueryAnalyser(query: String) {
         val q = QueryFactory.create(query)
         val project = q.getResultVars
 
-        println(s"\n- Projected vars: $project")
+        logger.info(s"Projected vars: $project")
 
         (project,q.isDistinct)
     }
@@ -48,7 +51,7 @@ class QueryAnalyser(query: String) {
                 val leftOperand = bits(0)
                 val rightOperand = bits(2)
 
-                println(s"............-------........... $operation,($leftOperand,$rightOperand)")
+                logger.info(s"............-------........... $operation,($leftOperand,$rightOperand)")
                 filters.put(operation,(leftOperand,rightOperand))
             }
         })
@@ -91,7 +94,7 @@ class QueryAnalyser(query: String) {
             }
 
             val agg = q.getAggregators
-            println("agg: " + agg)
+            logger.info("agg: " + agg)
             for(ag <- agg) { // toPrefixString returns (aggregate_function aggregate_var) eg. (sum ?price)
                 val bits = ag.getAggregator.toPrefixString.split(" ")
 
@@ -119,8 +122,8 @@ class QueryAnalyser(query: String) {
         val bgp = originalBGP.replaceAll("\n", "").replaceAll("\\s+", " ").replace("{"," ").replace("}"," ") // See example below + replace breaklines + remove extra white spaces
         val tps = bgp.split("\\.(?![^\\<\\[]*[\\]\\>])")
 
-        println("\n- The BGP of the input query:  " + originalBGP)
-        println("\n- Number of triple-stars detected: " + tps.length)
+        logger.info("The BGP of the input query:  " + originalBGP)
+        logger.info("Number of triple-stars detected: " + tps.length)
 
         val stars = new mutable.HashMap[String, mutable.Set[(String, String)]] with mutable.MultiMap[String, (String, String)]
         // Multi-map to add/append elements to the value
@@ -131,7 +134,7 @@ class QueryAnalyser(query: String) {
         for (i <- tps.indices) { //i <- 0 until tps.length
             val triple = tps(i).trim
 
-            println(s"triple: $triple")
+            logger.info(s"triple: $triple")
 
             if (!triple.contains(';')) { // only one predicate attached to the subject
                 val tripleBits = triple.split(" ")
@@ -157,7 +160,7 @@ class QueryAnalyser(query: String) {
         }
 
         (stars, star_pred_var)
-        // TODO: Support OPTIONAL later
+        // TODO: Support OPTIONAL
     }
 
     def getTransformations (trans: String): (Map[String, (String, Array[String])], Map[String, Array[String]]) = {

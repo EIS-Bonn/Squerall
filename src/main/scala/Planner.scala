@@ -3,6 +3,7 @@ package org.squerall
 import java.util
 
 import com.google.common.collect.ArrayListMultimap
+import com.typesafe.scalalogging.Logger
 import org.squerall.Helpers._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Json, Reads, __}
@@ -18,9 +19,11 @@ import scala.collection.mutable.ListBuffer
   */
 class Planner(stars: mutable.HashMap[String, mutable.Set[(String, String)]] with mutable.MultiMap[String, (String, String)]) {
 
+    val logger = Logger("Squerall")
+
     def getNeededPredicates(star_predicate_var: mutable.HashMap[(String, String), String], joins: ArrayListMultimap[String, (String, String)], select_vars: util.List[String]) : (mutable.Set[String],mutable.Set[(String,String)]) = {
 
-        println("star_predicate_var: "+ star_predicate_var)
+        logger.info("star_predicate_var: "+ star_predicate_var)
         val predicates : mutable.Set[String] = mutable.Set.empty
         val predicatesForSelect : mutable.Set[(String,String)] = mutable.Set.empty
 
@@ -29,25 +32,18 @@ class Planner(stars: mutable.HashMap[String, mutable.Set[(String, String)]] with
 
         val join_left_right_vars = join_right_vars.union(join_left_vars.asScala)
 
-        println("--> All (left & right) join operands: " + join_left_right_vars)
-
-        //println("select_vars: " + select_vars)
-        //println("star_predicate_varr: " + star_predicate_var.mkString(", "))
+        logger.info("--> All (left & right) join operands: " + join_left_right_vars)
 
         for (t <- star_predicate_var) {
             val s_p = t._1
             val o = t._2
-            //val star = s_p._1
-
-            //println("select_vars (" + select_vars + ") contains " + o  + "? " + select_vars.contains(o))
-            //println("join_left_vars (" + join_left_vars + ") contains " + o  + "? " + join_left_vars.contains(o))
 
             val occurrences = star_predicate_var groupBy ( _._2 ) mapValues ( _.size ) // To capture variables (objects) used in more than one predicate
 
-            if(select_vars.contains(o.replace("?","")) || join_left_vars.contains(o) || join_right_vars.contains(o) || occurrences(o) > 1)
+            if (select_vars.contains(o.replace("?","")) || join_left_vars.contains(o) || join_right_vars.contains(o) || occurrences(o) > 1)
                 predicates.add(s_p._2)
 
-            if(select_vars.contains(o.replace("?","")))
+            if (select_vars.contains(o.replace("?","")))
                 predicatesForSelect.add(s_p)
         }
 
@@ -57,7 +53,7 @@ class Planner(stars: mutable.HashMap[String, mutable.Set[(String, String)]] with
     def generateJoinPlan: (ArrayListMultimap[String, (String,String)], mutable.Set[String], mutable.Set[String], Map[(String, String), String]) = {
 
         val keys = stars.keySet.toSeq
-        println("Stars: " + keys.toString())
+        logger.info("Stars: " + keys.toString())
         val joins: ArrayListMultimap[String, (String, String)] = ArrayListMultimap.create[String, (String, String)]()
         var joinPairs : Map[(String,String), String] = Map.empty
 
@@ -66,15 +62,11 @@ class Planner(stars: mutable.HashMap[String, mutable.Set[(String, String)]] with
 
         for(i <- keys.indices) {
             val currentSubject = keys(i)
-            //println("Star subject: " + currentSubject)
             val valueSet = stars(currentSubject)
-            //println("values: " + valueSet.toString())
             for(p_o <- valueSet) {
                 val o = p_o._2
-                //print("o=" + o)
                 if (keys.contains(o)) { // A previous star of o
                     val p = p_o._1
-                    //println(currentSubject + "---(" + o + ", " + p + ")")
                     joins.put(currentSubject, (o, p))
                     joinPairs += (omitQuestionMark(currentSubject), omitQuestionMark(o)) -> p
                     joinedToFlag.add(o)
@@ -90,7 +82,7 @@ class Planner(stars: mutable.HashMap[String, mutable.Set[(String, String)]] with
 
         //var configFile = Config.get("datasets.weights")
 
-        println("...REORDERING JOINS, if needed...")
+        logger.info("...REORDERING JOINS, if needed...")
 
         var joinsToReorder : ListBuffer[(String, String)] = ListBuffer()
 
@@ -133,7 +125,7 @@ class Planner(stars: mutable.HashMap[String, mutable.Set[(String, String)]] with
             scoresByDatasource += w.datasource -> w.weight
         }
 
-        println(s"- We use the following scores of the datasource types: $scoresByDatasource \n")
+        logger.info(s"- We use the following scores of the data source types: $scoresByDatasource")
 
         val scores = starScores(starDataTypesMap, scoresByDatasource, filters)
 

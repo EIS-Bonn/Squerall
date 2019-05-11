@@ -16,6 +16,7 @@
     <spec2.version>4.2.0</spec2.version>
     <jena.version>3.9.0</jena.version>
     <spark.version>2.4.0</spark.version>
+    <junit.version>4.12</junit.version>
   </properties>
 
   <dependencies>
@@ -126,6 +127,19 @@
       <version>${spec2.version}</version>
       <scope>test</scope>
     </dependency>
+
+      <!-- Logging -->
+      <dependency>
+          <groupId>com.typesafe.scala-logging</groupId>
+          <artifactId>scala-logging_2.11</artifactId>
+          <version>3.9.0</version>
+      </dependency>
+      <dependency>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+          <version>1.2.3</version>
+          <scope>test</scope>
+      </dependency>
   </dependencies>
 
   <build>

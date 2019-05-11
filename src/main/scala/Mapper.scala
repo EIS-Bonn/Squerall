@@ -3,17 +3,19 @@
   */
 package org.squerall
 
+import com.typesafe.scalalogging.Logger
 import org.apache.jena.query.{QueryExecutionFactory, QueryFactory}
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.util.FileManager
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 class Mapper (mappingsFile: String) {
+
+    val logger = Logger("Squerall")
 
     def findDataSources(
                            stars: mutable.HashMap[
@@ -45,7 +47,7 @@ class Mapper (mappingsFile: String) {
             val subject = s._1 // core of the star
             val predicates_objects = s._2
 
-            println(s"\n- Going to find datasources relevant to $subject...")
+            logger.info(s"- Going to find datasources relevant to $subject...")
             val ds = findDataSource(predicates_objects) // One or more relevant data sources
             count = count + 1
 
@@ -94,13 +96,13 @@ class Mapper (mappingsFile: String) {
 
         var temp = 0
 
-        println("...with the (Predicate,Object) pairs: " + predicates_objects)
+        logger.info("...with the (Predicate,Object) pairs: " + predicates_objects)
 
         for (v <- predicates_objects) {
             val predicate = v._1
 
             if (predicate == "rdf:type" || predicate == "a") {
-                println("...of class: " + v._2)
+                logger.info("...of class: " + v._2)
                 listOfPredicatesForQuery += "?mp rr:subjectMap ?sm . ?sm rr:class " + v._2 + " . "
 
             } else {
@@ -125,7 +127,7 @@ class Mapper (mappingsFile: String) {
           listOfPredicatesForQuery +
           "}"
 
-        println("...for this, the following query will be executed: " + queryString + " on " + mappingsFile)
+        logger.info("...for this, the following query will be executed: " + queryString + " on " + mappingsFile)
         val query = QueryFactory.create(queryString)
 
         val in = FileManager.get().open(mappingsFile)
@@ -144,7 +146,7 @@ class Mapper (mappingsFile: String) {
             val src = soln.get("src").toString
             val srcType = soln.get("type").toString
 
-            println(">>> Relevant source detected [" + src + "] of type [" + srcType + "]") //NOTE: considering only first one src
+            logger.info(">>> Relevant source detected [" + src + "] of type [" + srcType + "]") //NOTE: considering only first one src
 
             val predicate_attribute: mutable.HashMap[String, String] = mutable.HashMap()
             val predicate_transformations: mutable.HashMap[String, (String, Boolean)] = mutable.HashMap()
@@ -214,14 +216,12 @@ class Mapper (mappingsFile: String) {
                         }
                         trans = trans.distinct // to omit duplicates, in this case the function URI e.g. _:greaterThan
 
-                        println(s"Transformations for predicate $p (attr: $attr): $trans")
+                        logger.info(s"Transformations for predicate $p (attr: $attr): $trans")
                         predicate_transformations.put(p,(trans.mkString(" "), false))
 
                     } else {
                         attr = soln1.get("r").toString
-                        //println("No transformations for attribute: " + attr)
                     }
-                    //println("- Predicate " + p + " corresponds to attribute " + attr + " in " + src)
 
                     predicate_attribute.put(p,attr)
                 }
@@ -288,7 +288,7 @@ class Mapper (mappingsFile: String) {
                     }
                     trans = trans.distinct // to omit duplicates, in this case the function URI e.g. _:greaterThan
 
-                    println(s"Transformations for subject/ID ($attr): $trans")
+                    logger.info(s"Transformations for subject/ID ($attr): $trans")
                     predicate_transformations.put("ID",(trans.mkString(" "), true))
                 }
             }
