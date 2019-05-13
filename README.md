@@ -9,6 +9,8 @@ Currently supported data sources:
 - Experimental: Elasticsearch, Couchbase.
 You can extend Squerall to support more, see [below](#extensibility).
 
+To get an understanding of Squerall basics, which also helps understand the installation steps hereafter, please refer to this Wiki page: [Squerall Basics](https://github.com/EIS-Bonn/Squerall/wiki/Squerall-Basics).
+
 ## Setup and Execution
 *- Prerequisite:* You need Maven to build Squerall from the source. Refer to the official documentations for installation instructions: [Maven](https://maven.apache.org/install.html) and [SBT](https://www.scala-sbt.org/1.0/docs/Setup.html). Once that is installed, run:
 ```
