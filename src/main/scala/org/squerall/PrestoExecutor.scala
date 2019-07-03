@@ -5,9 +5,9 @@ import java.util
 
 import com.google.common.collect.ArrayListMultimap
 import com.typesafe.scalalogging.Logger
-import model.DataQueryFrame
 import org.apache.spark.sql.DataFrame
 import org.squerall.Helpers._
+import org.squerall.model.DataQueryFrame
 
 import scala.collection.mutable
 import scala.collection.mutable.{HashMap, ListBuffer, Set}

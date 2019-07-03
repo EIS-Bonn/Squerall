@@ -93,7 +93,7 @@ object Helpers {
             logger.info("-> Variable: " + objVar + " exists in WHERE, is it in SELECT? " + select.contains(objVar.replace("?","")))
 
             if (neededPredicates.contains(v._1)) {
-                val c = attr + " AS `" + star + "_" + predicate + "_" + prefixes(NS) + "`"
+                val c = " `" + attr + "` AS `" + star + "_" + predicate + "_" + prefixes(NS) + "`"
 
                 if (i == 0) columns += c else columns += "," + c
                 i += 1

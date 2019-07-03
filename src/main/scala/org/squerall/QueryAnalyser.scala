@@ -3,14 +3,14 @@ package org.squerall
 import java.util
 
 import com.google.common.collect.ArrayListMultimap
+import com.typesafe.scalalogging.Logger
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.sparql.syntax.{ElementFilter, ElementVisitorBase, ElementWalker}
+import org.squerall.Helpers._
 
-import scala.collection.mutable
-import scala.collection.mutable.{HashMap, ListBuffer, MultiMap, Set}
 import scala.collection.JavaConversions._
-import Helpers._
-import com.typesafe.scalalogging.Logger
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 /**
   * Created by mmami on 05.07.17.

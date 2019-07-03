@@ -1,4 +1,4 @@
-package model
+package org.squerall.model
 
 import scala.collection.mutable.ListBuffer
 

@@ -7,11 +7,11 @@ import com.typesafe.scalalogging.Logger
 import org.apache.jena.query.{QueryExecutionFactory, QueryFactory}
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.util.FileManager
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
 
 class Mapper (mappingsFile: String) {
 

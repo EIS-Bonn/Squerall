@@ -7,7 +7,7 @@ import com.mongodb.spark.config.ReadConfig
 import com.typesafe.scalalogging.Logger
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
-import org.apache.spark.sql.{AnalysisException, Column, DataFrame, SparkSession}
+import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import org.squerall.Helpers._
 
 import scala.collection.immutable.ListMap
@@ -37,7 +37,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
                joinPairs: Map[(String,String), String]
         ): (DataFrame, Integer) = {
 
-        val spark = SparkSession.builder.master(sparkURI).appName("Squerall").getOrCreate;
+        val spark = SparkSession.builder.master(sparkURI).appName("Squerall").getOrCreate
         //TODO: get from the function if there is a relevant data source that requires setting config to SparkSession
 
         var finalDF : DataFrame = null
@@ -90,12 +90,17 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
                     df = spark.read.format("com.mongodb.spark.sql").options(mongoOptions.asOptions).load
                 case "jdbc" =>
                     df = spark.read.format("jdbc").options(options).load()
+                case "rdf" =>
+                    import collection.JavaConversions._
+                    val rdf = new NTtoDF()
+                    df = rdf.options(options).read(sourcePath, sparkURI).toDF()
                 case _ =>
             }
 
             df.createOrReplaceTempView("table")
 
-            try {
+            //try {
+                println("***********************: " + columns)
                 val newDF = spark.sql("SELECT " + columns + " FROM table")
 
                 if(dataSource_count == 1) {
@@ -103,12 +108,12 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
                 } else {
                     finalDF = finalDF.union(newDF)
                 }
-            } catch {
+            /*} catch {
                 case ae: AnalysisException => val logger = println("ERROR: Generated internal query wrong caused by wrong mappings. " +
                   "For example, check `rr:reference` references a correct attribute, or if you have transformations, " +
                   "check `rml:logicalSource` is the same between the TripleMap and the FunctionMap.")
                    System.exit(1)
-            }
+            }*/
 
             // Transformations
             if (leftJoinTransformations != null && leftJoinTransformations._2 != null) {
