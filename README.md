@@ -64,7 +64,7 @@ Squerall is extensible by design, developers can themselves add support to more 
 
 ## Publication
 A preprint describing Squerall can be found at [Squerall: Virtual Ontology-Based Access to
-Heterogeneous and Large Data Sources](http://www.semantic-web-journal.net/system/files/swj1957.pdf). The preprint details all the building blocks and reports on experiments conducted to demonstrate Squerall's capabilities.
+Heterogeneous and Large Data Sources](https://dgraux.github.io/publications/Squerall_ISWC_2019.pdf). The preprint details all the building blocks and reports on experiments conducted to demonstrate Squerall's capabilities.
 
 ## Contact
 For any setup difficulties or other inquiries, please contact me on: mami@cs.uni-bonn.de, or ask directly on [Gitter chat](https://gitter.im/squerall).
