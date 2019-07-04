@@ -51,6 +51,14 @@
 		"source": "//Producer",
 		"entity": "Producer"
 	}
+	,   {
+        "type": "rdf",
+        "options": {
+            "class": "xmlns.com/foaf/0.1/Person"
+        },
+        "source": "/data/BSBM.nt",
+        "entity": "Person"
+    }
 	],
     "weights": [
         {
@@ -72,6 +80,10 @@
         {
             "datasource": "jdbc",
             "weight": 4
+        },
+        {
+            "datasource": "rdf",
+            "weight": 5
         }
     ]
 }
