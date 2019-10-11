@@ -63,8 +63,14 @@ We provide in this repository the code-source, queries and docker image for anyo
 Squerall is extensible by design, developers can themselves add support to more data sources, or even add a new query engine alongside Spark and Presto. Refer to the [Wiki](https://github.com/EIS-Bonn/Squerall/wiki/Extending-Squerall) for the details.
 
 ## Publication
+- [Squerall: Virtual Ontology-Based Access to Heterogeneous and Large Data Sources](https://www.researchgate.net/publication/334194326_Squerall_Virtual_Ontology-Based_Access_to_Heterogeneous_and_Large_Data_Sources)
+- [Uniform Access to Multiform Data Lakes using Semantic Technologies](https://www.researchgate.net/publication/336363044_Uniform_Access_to_Multiform_Data_Lakes_using_Semantic_Technologies)
+- [Querying Data Lakes using Spark and Presto](https://www.researchgate.net/publication/331530051_Querying_Data_Lakes_using_Spark_and_Presto)
+- [How to feed the Squerall with RDF and other data nuts?](https://www.researchgate.net/publication/335001108_How_to_feed_the_Squerall_with_RDF_and_other_data_nuts)
+
 A preprint describing Squerall can be found at [Squerall: Virtual Ontology-Based Access to
-Heterogeneous and Large Data Sources](https://dgraux.github.io/publications/Squerall_ISWC_2019.pdf). The preprint details all the building blocks and reports on experiments conducted to demonstrate Squerall's capabilities.
+Heterogeneous and Large Data Sources](https://dgraux.github.io/publications/Squerall_ISWC_2019.pdf). 
+
 
 ## Contact
 For any setup difficulties or other inquiries, please contact me on: mami@cs.uni-bonn.de, or ask directly on [Gitter chat](https://gitter.im/squerall).
