@@ -62,7 +62,7 @@ We provide in this repository the code-source, queries and docker image for anyo
 ## Extensibility
 Squerall is extensible by design, developers can themselves add support to more data sources, or even add a new query engine alongside Spark and Presto. Refer to the [Wiki](https://github.com/EIS-Bonn/Squerall/wiki/Extending-Squerall) for the details.
 
-## Publication
+## Publications
 - [Squerall: Virtual Ontology-Based Access to Heterogeneous and Large Data Sources](https://www.researchgate.net/publication/334194326_Squerall_Virtual_Ontology-Based_Access_to_Heterogeneous_and_Large_Data_Sources)
 - [Uniform Access to Multiform Data Lakes using Semantic Technologies](https://www.researchgate.net/publication/336363044_Uniform_Access_to_Multiform_Data_Lakes_using_Semantic_Technologies)
 - [Querying Data Lakes using Spark and Presto](https://www.researchgate.net/publication/331530051_Querying_Data_Lakes_using_Spark_and_Presto)
