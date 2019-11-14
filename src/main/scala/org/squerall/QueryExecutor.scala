@@ -26,7 +26,7 @@ trait QueryExecutor[T] { // T is a ParSet (Parallel dataSet)
               leftJoinTransformations: (String, Array[String]),
               rightJoinTransformations: Array[String],
               joinPairs: Map[(String,String), String]
-             ) : (T, Integer)
+             ) : (T, Integer, String)
 
     /* Transforms a ParSet to another ParSet based on the SPARQL TRANSFORM clause */
     def transform(ps: Any, column: String, transformationsArray : Array[String]): Any

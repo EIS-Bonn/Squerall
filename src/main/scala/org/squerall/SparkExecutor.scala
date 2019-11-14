@@ -12,7 +12,7 @@ import org.squerall.Helpers._
 
 import scala.collection.immutable.ListMap
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecutor[DataFrame] {
 
@@ -35,13 +35,14 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
                leftJoinTransformations: (String, Array[String]),
                rightJoinTransformations: Array[String],
                joinPairs: Map[(String,String), String]
-        ): (DataFrame, Integer) = {
+        ): (DataFrame, Integer, String) = {
 
         val spark = SparkSession.builder.master(sparkURI).appName("Squerall").getOrCreate
         //TODO: get from the function if there is a relevant data source that requires setting config to SparkSession
 
         var finalDF : DataFrame = null
         var dataSource_count = 0
+        var parSetId = "" // To use when subject (thus ID) is projected out in SELECT
 
         for (s <- sources) {
             logger.info("NEXT SOURCE...")
@@ -49,7 +50,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
 
             val attr_predicate = s._1
             logger.info("Star: " + star)
-            logger.info("attr_predicate: " + attr_predicate)
+            logger.info("Attribute_predicate: " + attr_predicate)
             val sourcePath = s._2
             val sourceType = getTypeFromURI(s._3)
             val options = optionsMap_entity(sourcePath)._1 // entity is not needed here in SparkExecutor
@@ -57,18 +58,24 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
             // TODO: move to another class better
             var columns = getSelectColumnsFromSet(attr_predicate, omitQuestionMark(star), prefixes, select, star_predicate_var, neededPredicates)
 
+            val str = omitQuestionMark(star)
+            if (select.contains(str)) {
+                parSetId = getID(sourcePath, mappingsFile)
+                columns = s"$parSetId AS `$str`, " + columns
+            }
+
             logger.info("Relevant source (" + dataSource_count + ") is: [" + sourcePath + "] of type: [" + sourceType + "]")
 
-            logger.info("...from which columns (" + columns + ") are going to be projected")
-            logger.info("...with the following configuration options: " + options)
+            logger.info(s"...from which columns ($columns) are going to be projected")
+            logger.info(s"...with the following configuration options: $options" )
 
             if (toJoinWith) { // That kind of table that is the 1st or 2nd operand of a join operation
                 val id = getID(sourcePath, mappingsFile)
-                logger.info("...is to be joined with using the ID: " + omitQuestionMark(star) + "_" + id + " (obtained from subjectMap)")
-                if(columns == "") {
-                    columns = id + " AS " + omitQuestionMark(star) + "_ID"
+                logger.info(s"...is to be joined with using the ID: ${str}_id (obtained from subjectMap)")
+                if (columns == "") {
+                    columns = id + " AS " + str + "_ID"
                 } else
-                    columns = columns + "," + id + " AS " + omitQuestionMark(star) + "_ID"
+                    columns = columns + "," + id + " AS " + str + "_ID"
             }
 
             logger.info("sourceType: " + sourceType)
@@ -100,7 +107,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
             df.createOrReplaceTempView("table")
 
             //try {
-                println("***********************: " + columns)
+                //println("***********************: " + columns)
                 val newDF = spark.sql("SELECT " + columns + " FROM table")
 
                 if(dataSource_count == 1) {
@@ -122,16 +129,15 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
                 val ns_pred = get_NS_predicate(column)
                 val ns = prefixes(ns_pred._1)
                 val pred = ns_pred._2
-                val col = omitQuestionMark(star) + "_" + pred + "_" + ns
+                val col = str + "_" + pred + "_" + ns
                 finalDF = transform(finalDF, col, leftJoinTransformations._2)
 
             }
             if (rightJoinTransformations != null && !rightJoinTransformations.isEmpty) {
                 println("rightJoinTransformations: " + rightJoinTransformations.mkString("_"))
-                val col = omitQuestionMark(star) + "_ID"
+                val col = str + "_ID"
                 finalDF = transform(finalDF, col, rightJoinTransformations)
             }
-
         }
 
         logger.info("- filters: " + filters + " ======= " + star)
@@ -177,11 +183,11 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
 
         logger.info(s"Number of filters of this star is: $nbrOfFiltersOfThisStar")
 
-        /*******THIS IS JUST FOR TEST - REMOVE LATER*******/
-        logger.info("Number of Spark executors (JUST FOR TEST): " + spark.sparkContext.statusTracker.getExecutorInfos.length)
-        logger.info("Master URI (JUST FOR TEST): " + spark.sparkContext.master)
+        /*******THIS IS JUST FOR TEST*******/
+        // logger.info("Number of Spark executors (JUST FOR TEST): " + spark.sparkContext.statusTracker.getExecutorInfos.length)
+        // logger.info("Master URI (JUST FOR TEST): " + spark.sparkContext.master)
 
-        (finalDF, nbrOfFiltersOfThisStar)
+        (finalDF, nbrOfFiltersOfThisStar, parSetId)
     }
 
     def transform(df: Any, column: String, transformationsArray : Array[String]): DataFrame = {
@@ -529,7 +535,17 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
     def limit(jDF: Any, limitValue: Int) : DataFrame = jDF.asInstanceOf[DataFrame].limit(limitValue)
 
     def show(jDF: Any): Unit = {
-        jDF.asInstanceOf[DataFrame].show
+        val columns = ArrayBuffer[String]()
+        //jDF.asInstanceOf[DataFrame].show
+        val df = jDF.asInstanceOf[DataFrame]
+        //df.printSchema()
+        val schema = df.schema
+        for (col <- schema)
+            columns += col.name
+
+        println(columns.mkString(","))
+        df.take(20).foreach(x => println(x))
+
         println(s"Number of results: ${jDF.asInstanceOf[DataFrame].count()}")
     }
 

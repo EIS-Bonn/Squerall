@@ -100,6 +100,8 @@ object Helpers {
             }
         }
 
+        // if (select.contains(star)) columns += ",_ID"
+
         columns
     }
 

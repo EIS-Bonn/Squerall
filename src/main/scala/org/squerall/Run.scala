@@ -2,6 +2,7 @@ package org.squerall
 
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang.time.StopWatch
+import org.apache.spark.sql.DataFrame
 import org.squerall.Helpers._
 
 import scala.collection.JavaConversions._
@@ -40,6 +41,7 @@ class Run[A] (executor: QueryExecutor[A]) {
         val qa = new QueryAnalyser(query)
 
         val stars = qa.getStars
+        val starsNbr = stars._1.size
 
         // Create a map between the variable and its star and predicate URL [variable -> (star,predicate)]
         // Need e.g. to create the column to 'SQL ORDER BY' from 'SPARQL ORDER BY'
@@ -97,10 +99,10 @@ class Run[A] (executor: QueryExecutor[A]) {
         var starNbrFilters: Map[String, Integer] = Map()
 
         var starDataTypesMap: Map[String, mutable.Set[String]] = Map()
+        var parsetIDs : Map[String, String] = Map() // Used when subject variables are projected out
 
-        logger.info("---> GOING NOW TO JOIN STUFF")
+        logger.info("---> GOING NOW TO COLLECT DATA")
 
-        logger.info("joinPairs:" + joinPairs)
         for (s <- results) {
             val star = s._1
             logger.info("star: " + star)
@@ -180,51 +182,63 @@ class Run[A] (executor: QueryExecutor[A]) {
 
             // TODO: the else block looks like not being reached, check it
             if (joinedToFlag.contains(star) || joinedFromFlag.contains(star)) {
-                val (ds, numberOfFiltersOfThisStar) = executor.query(dataSources, options, toJoinWith = true, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
+                val (ds, numberOfFiltersOfThisStar, parsetID) = executor.query(dataSources, options, toJoinWith = true, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
 
+                if (parsetID != "")
+                    parsetIDs += (star -> parsetID)
                 star_df += (star -> ds) // DataFrame representing a star
 
                 starNbrFilters += star -> numberOfFiltersOfThisStar
 
-                logger.info("...with DataFrame schema: " + ds)
+                logger.info("join...with ParSet schema: " + ds)
                 //ds.printSchema() // SEE WHAT TO DO HERE TO SHOW BACK THE SCHEMA - MOVE IN SPARKEXECUTOR
             } else if (!joinedToFlag.contains(star) && !joinedFromFlag.contains(star)) {
-                val (ds, numberOfFiltersOfThisStar) = executor.query(dataSources, options, toJoinWith = false, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
+
+                val (ds, numberOfFiltersOfThisStar, parsetID) = executor.query(dataSources, options, toJoinWith = false, star, prefixes, select, star_predicate_var, neededPredicatesAll, filters, leftJoinTransformations, rightJoinTransformations, joinPairs)
 
                 //ds.printSchema() // SEE WHAT TO DO HERE TO SHOW BACK THE SCHEMA - MOVE IN SPARKEXECUTOR
 
+                parsetIDs += (star -> parsetID)
                 star_df += (star -> ds) // DataFrame representing a star
 
                 starNbrFilters += star -> numberOfFiltersOfThisStar
 
-                logger.info("...with DataFrame schema: " + ds)
+                logger.info("single...with ParSet schema: " + ds)
             }
         }
 
         logger.info("QUERY EXECUTION starting...*/")
-        logger.info(s"- Here are the (Star, ParSet) pairs:")
-        logger.info(s"  $star_df")
-        logger.info(s"- Here are join pairs: $joins")
-        logger.info(s"- Number of predicates per star: $starNbrFilters ")
+        logger.info(s"DataFrames: $star_df")
 
-        val starWeights = pl.sortStarsByWeight(starDataTypesMap, starNbrFilters, configFile)
-        logger.info(s"- Stars weighted (performance + nbr of filters): $starWeights \n")
+        if (starsNbr > 1) {
+            logger.info(s"- Here are the (Star, ParSet) pairs:")
+            logger.info("Join Pairs: " + joinPairs)
 
-        val sortedScoredJoins = pl.reorder(joins, starDataTypesMap, starNbrFilters, starWeights, configFile)
-        logger.info(s"- Sorted scored joins: $sortedScoredJoins")
-        val startingJoin = sortedScoredJoins.head
+            if (starsNbr > 1) logger.info(s"- Here are join pairs: $joins") else logger.info("No join detected.")
+            logger.info(s"- Number of predicates per star: $starNbrFilters ")
 
-        // Convert starting join to: (leftStar, (rightStar, joinVar)) so we can remove it from $joins
-        var firstJoin: (String, (String, String)) = null
-        for (j <- joins.entries) {
-            if (j.getKey == startingJoin._1._1 && j.getValue._1 == startingJoin._1._2)
-                firstJoin = startingJoin._1._1 -> (startingJoin._1._2, j.getValue._2)
+            val starWeights = pl.sortStarsByWeight(starDataTypesMap, starNbrFilters, configFile)
+            logger.info(s"- Stars weighted (performance + nbr of filters): $starWeights \n")
+
+            val sortedScoredJoins = pl.reorder(joins, starDataTypesMap, starNbrFilters, starWeights, configFile)
+            logger.info(s"- Sorted scored joins: $sortedScoredJoins")
+            val startingJoin = sortedScoredJoins.head
+
+            // Convert starting join to: (leftStar, (rightStar, joinVar)) so we can remove it from $joins
+            var firstJoin: (String, (String, String)) = null
+            for (j <- joins.entries) {
+                if (j.getKey == startingJoin._1._1 && j.getValue._1 == startingJoin._1._2)
+                    firstJoin = startingJoin._1._1 -> (startingJoin._1._2, j.getValue._2)
+            }
+            logger.info(s"- Starting join: $firstJoin \n")
+
+            // Final global join
+            finalDataSet = executor.join(joins, prefixes, star_df)
+            // finalDataSet = executor.joinReordered(joins, prefixes, star_df, firstJoin, starWeights)
+        } else {
+            logger.info(s" Single star query")
+            finalDataSet = star_df.head._2
         }
-        logger.info(s"- Starting join: $firstJoin \n")
-
-        // Final global join
-        finalDataSet = executor.join(joins, prefixes, star_df)
-        // finalDataSet = executor.joinReordered(joins, prefixes, star_df, firstJoin, starWeights)
 
         // Project out columns from the final global join results
         var columnNames = Seq[String]()
@@ -238,6 +252,14 @@ class Run[A] (executor: QueryExecutor[A]) {
             columnNames = columnNames :+ selected_predicate
         }
 
+        // Add subjects
+        for (i <- parsetIDs) {
+            val star = i._1
+            val parsetID = i._2
+            println(star + "*************" + parsetID)
+            columnNames = columnNames :+  s"${omitQuestionMark(star)}"
+        }
+
         if (groupBys != null) {
             logger.info(s"groupBys: $groupBys")
             finalDataSet = executor.groupBy(finalDataSet, groupBys)
@@ -249,7 +271,7 @@ class Run[A] (executor: QueryExecutor[A]) {
             }
         }
 
-        logger.info(s"SELECTED column names: $columnNames") // TODO: check the order of PROJECT and ORDER-BY
+        logger.info(s"--> SELECTED column names: $columnNames") // TODO: check the order of PROJECT and ORDER-BY
 
         if (orderBys != null) {
             logger.info(s"orderBys: $orderBys")

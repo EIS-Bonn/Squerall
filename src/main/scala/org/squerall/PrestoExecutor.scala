@@ -35,7 +35,7 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
               leftJoinTransformations: (String, Array[String]),
               rightJoinTransformations: Array[String],
               joinPairs: Map[(String,String), String]
-        ): (DataQueryFrame, Integer) = {
+        ): (DataQueryFrame, Integer, String) = {
 
         //val spark = SparkSession.builder.master(sparkURI).appName("Squerall").getOrCreate;
         //spark.sparkContext.setLogLevel("ERROR")
@@ -149,7 +149,10 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
         }
         logger.info(s"Number of filters of this star is: $nbrOfFiltersOfThisStar")
 
-        (finalDQF, nbrOfFiltersOfThisStar)
+        (finalDQF, nbrOfFiltersOfThisStar, "")
+        //TODO: we are returning empty string here, because we added a string parameter to the query() function in Spark
+        // to return ParSet ID when the subject is part of the SELECT. Same thing should be implemented in PrestoExecutor
+        // In other words queries with the subject projected out work only on Spark-based Squerall
     }
 
     def transform(df: Any, column: String, transformationsArray : Array[String]): (String, Boolean) = {
