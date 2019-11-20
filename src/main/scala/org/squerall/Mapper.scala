@@ -7,6 +7,7 @@ import com.typesafe.scalalogging.Logger
 import org.apache.jena.query.{QueryExecutionFactory, QueryFactory}
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.util.FileManager
+import org.apache.spark.sql.AnalysisException
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -220,7 +221,13 @@ class Mapper (mappingsFile: String) {
                         predicate_transformations.put(p,(trans.mkString(" "), false))
 
                     } else {
-                        attr = soln1.get("r").toString
+                        try {
+                            attr = soln1.get("r").toString
+                        }  catch {
+                        case ae: NullPointerException => val logger = println("ERROR: Relevant source detected but cannot " +
+                          "be read due to mappings issues. For example, are you using `rr:parentTriplesMap` instead of `rml:reference`?")
+                            System.exit(1)
+                    }
                     }
 
                     predicate_attribute.put(p,attr)

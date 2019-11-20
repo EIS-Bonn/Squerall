@@ -58,7 +58,7 @@ class PrestoExecutor(prestoURI: String, mappingsFile: String) extends QueryExecu
             val entity = optionsMap_entity(sourcePath)._2
 
             // TODO: move to another class better
-            var columns = getSelectColumnsFromSet(attr_predicate, omitQuestionMark(star), prefixes, select, star_predicate_var, neededPredicates)
+            var columns = getSelectColumnsFromSet(attr_predicate, omitQuestionMark(star), prefixes, select, star_predicate_var, neededPredicates, filters)
 
             logger.info("Relevant source (" + datasource_count + ") is: [" + sourcePath + "] of type: [" + sourceType + "]")
 

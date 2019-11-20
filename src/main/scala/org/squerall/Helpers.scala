@@ -2,6 +2,7 @@ package org.squerall
 
 import java.util
 
+import com.google.common.collect.ArrayListMultimap
 import com.typesafe.scalalogging.Logger
 import org.apache.jena.query.{QueryExecutionFactory, QueryFactory}
 import org.apache.jena.rdf.model.ModelFactory
@@ -74,7 +75,8 @@ object Helpers {
                                 prefixes: Map[String, String],
                                 select: util.List[String],
                                 star_predicate_var: mutable.HashMap[(String, String), String],
-                                neededPredicates: mutable.Set[String]
+                                neededPredicates: mutable.Set[String],
+                                filters: ArrayListMultimap[String, (String, String)]
         ): String = {
 
         var columns = ""
@@ -98,9 +100,19 @@ object Helpers {
                 if (i == 0) columns += c else columns += "," + c
                 i += 1
             }
+
+            if (filters.keySet().contains(objVar)) {
+                val c = " `" + attr + "` AS `" + star + "_" + predicate + "_" + prefixes(NS) + "`"
+
+                if (!columns.contains(c)) { // if the column has already been added from the SELECT predicates
+                    if (i == 0) columns += c else columns += "," + c
+                    i += 1
+                }
+
+            }
         }
 
-        // if (select.contains(star)) columns += ",_ID"
+        println("columnscolumnscolumns: " + columns)
 
         columns
     }

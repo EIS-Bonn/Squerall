@@ -26,11 +26,10 @@ class Run[A] (executor: QueryExecutor[A]) {
 
         println(s"Going to execute the query: \n$query")
 
-        // Transformations
+        // 'SPARQL' Transformations
         var transformExist = false
         var transformationsInLine = ""
 
-        // 'SPARQL' Transformations
         if (query.contains("TRANSFORM")) {
             transformationsInLine = query.substring(query.indexOf("TRANSFORM") + 9, query.lastIndexOf(")")) // E.g. ?k?a.toInt && ?a?l.r.toInt.scl(_+61)
             query = query.replace("TRANSFORM" + transformationsInLine + ")", "") // TRANSFORM is not defined in Jena, so remove
@@ -83,17 +82,17 @@ class Run[A] (executor: QueryExecutor[A]) {
         val joinedFromFlag = pln._3
         val joinPairs = pln._4
 
-        val neededPredicates = pl.getNeededPredicates(star_predicate_var, joins, select)
-        val neededPredicatesAll = neededPredicates._1 // all predicates used
-        val neededPredicatesSelect = neededPredicates._2 // only projected out predicates
-
-        logger.info("--> Needed predicates all: " + neededPredicatesAll)
-
         // 4. Check mapping file
         logger.info("---> MAPPING CONSULTATION")
 
         val mappers = new Mapper(mappingsFile)
         val results = mappers.findDataSources(stars._1, configFile)
+
+        val neededPredicates = pl.getNeededPredicates(star_predicate_var, joins, select, groupBys, prefixes)
+        val neededPredicatesAll = neededPredicates._1 // all predicates used
+        val neededPredicatesSelect = neededPredicates._2 // only projected out predicates
+
+        logger.info("--> Needed predicates all: " + neededPredicatesAll)
 
         var star_df: Map[String, A] = Map.empty
         var starNbrFilters: Map[String, Integer] = Map()
@@ -186,6 +185,7 @@ class Run[A] (executor: QueryExecutor[A]) {
 
                 if (parsetID != "")
                     parsetIDs += (star -> parsetID)
+
                 star_df += (star -> ds) // DataFrame representing a star
 
                 starNbrFilters += star -> numberOfFiltersOfThisStar
@@ -234,6 +234,9 @@ class Run[A] (executor: QueryExecutor[A]) {
 
             // Final global join
             finalDataSet = executor.join(joins, prefixes, star_df)
+
+            //finalDataSet.asInstanceOf[DataFrame].printSchema()
+
             // finalDataSet = executor.joinReordered(joins, prefixes, star_df, firstJoin, starWeights)
         } else {
             logger.info(s" Single star query")
@@ -256,7 +259,7 @@ class Run[A] (executor: QueryExecutor[A]) {
         for (i <- parsetIDs) {
             val star = i._1
             val parsetID = i._2
-            println(star + "*************" + parsetID)
+
             columnNames = columnNames :+  s"${omitQuestionMark(star)}"
         }
 
