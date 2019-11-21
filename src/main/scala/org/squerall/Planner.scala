@@ -46,11 +46,13 @@ class Planner(stars: mutable.HashMap[String, mutable.Set[(String, String)]] with
             if (select_vars.contains(o.replace("?","")))
                 predicatesForSelect.add(s_p)
 
-            // Forming e.g. "failure_isFailureOf_fsmt"
-            val groupByPredicate = s_p._1.replace("?","") + "_" + omitNamespace(s_p._2) + "_" + prefixes(get_NS_predicate(s_p._2)._1)
+            if (groupBys != null ) {
+                // Forming e.g. "failure_isFailureOf_fsmt"
+                val groupByPredicate = s_p._1.replace("?","") + "_" + omitNamespace(s_p._2) + "_" + prefixes(get_NS_predicate(s_p._2)._1)
 
-            if (groupBys != null && groupBys._2.map(_._1).contains(groupByPredicate)) {// map to get only cols eg failure_isFailureOf from Set((failure_isFailureOf_fsmt,count))
-                predicates.add(s_p._2)
+                if (groupBys._2.map(_._1).contains(groupByPredicate)) { // map to get only cols eg failure_isFailureOf from Set((failure_isFailureOf_fsmt,count))
+                    predicates.add(s_p._2)
+                }
             }
         }
 
