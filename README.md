@@ -38,7 +38,7 @@ The command line looks like:
   * config file: a file containing information about how to access data sources (eg. host, user, password), in JSON format.
 
 ### Presto
-- Install Presto from [Presot official website](https://prestodb.io/docs/current/installation/deployment.html).
+- Install Presto from [Presto official website](https://prestodb.io/docs/current/installation/deployment.html).
 - Once Presto is installed, navigate to `bin` folder and run `squerall-0.2.0.jar` like you run any Java application:
 `java -cp [path to squerall-0.2.0.jar] org.squerall.Main [query file] [mappings file] [config file] [Presto server url (host:port)] n p`
 
