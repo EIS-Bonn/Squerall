@@ -51,7 +51,7 @@ class QueryAnalyser(query: String) {
                 val leftOperand = bits(0)
                 val rightOperand = bits(2)
 
-                logger.info(s"............-------........... $operation,($leftOperand,$rightOperand)")
+                logger.info(s"Filter: $operation,($leftOperand,$rightOperand)")
                 filters.put(operation,(leftOperand,rightOperand))
             }
         })
@@ -120,10 +120,10 @@ class QueryAnalyser(query: String) {
         val originalBGP = q.getQueryPattern.toString
 
         val bgp = originalBGP.replaceAll("\n", "").replaceAll("\\s+", " ").replace("{"," ").replace("}"," ") // See example below + replace breaklines + remove extra white spaces
-        val tps = bgp.split("\\.(?![^\\<\\[]*[\\]\\>])")
+        val triples = bgp.split("\\.(?![^\\<\\[]*[\\]\\>])")
 
         logger.info("The BGP of the input query:  " + originalBGP)
-        logger.info("Number of triple-stars detected: " + tps.length)
+        logger.info("Number of triple-stars detected: " + triples.length)
 
         val stars = new mutable.HashMap[String, mutable.Set[(String, String)]] with mutable.MultiMap[String, (String, String)]
         // Multi-map to add/append elements to the value
@@ -131,10 +131,10 @@ class QueryAnalyser(query: String) {
         // Save [star]_[predicate]
         val star_pred_var : mutable.HashMap[(String,String), String] = mutable.HashMap()
 
-        for (i <- tps.indices) { //i <- 0 until tps.length
-            val triple = tps(i).trim
+        for (i <- triples.indices) { //i <- 0 until triples.length
+            val triple = triples(i).trim
 
-            logger.info(s"triple: $triple")
+            logger.info(s"Triple: $triple")
 
             if (!triple.contains(';')) { // only one predicate attached to the subject
                 val tripleBits = triple.split(" ")

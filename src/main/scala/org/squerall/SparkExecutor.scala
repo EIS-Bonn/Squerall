@@ -7,12 +7,12 @@ import com.mongodb.spark.config.ReadConfig
 import com.typesafe.scalalogging.Logger
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
-import org.apache.spark.sql.{Column, DataFrame, SparkSession}
+import org.apache.spark.sql.{AnalysisException, Column, DataFrame, SparkSession}
 import org.squerall.Helpers._
 
 import scala.collection.immutable.ListMap
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecutor[DataFrame] {
 
@@ -23,7 +23,7 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
         dataframe
     }
 
-    def query (sources : mutable.Set[(mutable.HashMap[String, String], String, String, mutable.HashMap[String, (String, Boolean)])],
+    def query(sources : mutable.Set[(mutable.HashMap[String, String], String, String, mutable.HashMap[String, (String, Boolean)])],
                optionsMap_entity: mutable.HashMap[String, (Map[String, String],String)],
                toJoinWith: Boolean,
                star: String,
@@ -35,13 +35,14 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
                leftJoinTransformations: (String, Array[String]),
                rightJoinTransformations: Array[String],
                joinPairs: Map[(String,String), String]
-        ): (DataFrame, Integer) = {
+        ): (DataFrame, Integer, String) = {
 
         val spark = SparkSession.builder.master(sparkURI).appName("Squerall").getOrCreate
         //TODO: get from the function if there is a relevant data source that requires setting config to SparkSession
 
         var finalDF : DataFrame = null
         var dataSource_count = 0
+        var parSetId = "" // To use when subject (thus ID) is projected out in SELECT
 
         for (s <- sources) {
             logger.info("NEXT SOURCE...")
@@ -49,26 +50,33 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
 
             val attr_predicate = s._1
             logger.info("Star: " + star)
-            logger.info("attr_predicate: " + attr_predicate)
+            logger.info("Attribute_predicate: " + attr_predicate)
             val sourcePath = s._2
             val sourceType = getTypeFromURI(s._3)
             val options = optionsMap_entity(sourcePath)._1 // entity is not needed here in SparkExecutor
 
             // TODO: move to another class better
-            var columns = getSelectColumnsFromSet(attr_predicate, omitQuestionMark(star), prefixes, select, star_predicate_var, neededPredicates)
+            var columns = getSelectColumnsFromSet(attr_predicate, omitQuestionMark(star), prefixes, select, star_predicate_var, neededPredicates, filters)
+
+            val str = omitQuestionMark(star)
+
+            if (select.contains(str)) {
+                parSetId = getID(sourcePath, mappingsFile)
+                columns = s"$parSetId AS `$str`, " + columns
+            }
 
             logger.info("Relevant source (" + dataSource_count + ") is: [" + sourcePath + "] of type: [" + sourceType + "]")
 
-            logger.info("...from which columns (" + columns + ") are going to be projected")
-            logger.info("...with the following configuration options: " + options)
+            logger.info(s"...from which columns ($columns) are going to be projected")
+            logger.info(s"...with the following configuration options: $options" )
 
             if (toJoinWith) { // That kind of table that is the 1st or 2nd operand of a join operation
                 val id = getID(sourcePath, mappingsFile)
-                logger.info("...is to be joined with using the ID: " + omitQuestionMark(star) + "_" + id + " (obtained from subjectMap)")
-                if(columns == "") {
-                    columns = id + " AS " + omitQuestionMark(star) + "_ID"
+                logger.info(s"...is to be joined with using the ID: ${str}_id (obtained from subjectMap)")
+                if (columns == "") {
+                    columns = id + " AS " + str + "_ID"
                 } else
-                    columns = columns + "," + id + " AS " + omitQuestionMark(star) + "_ID"
+                    columns = columns + "," + id + " AS " + str + "_ID"
             }
 
             logger.info("sourceType: " + sourceType)
@@ -99,42 +107,41 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
 
             df.createOrReplaceTempView("table")
 
-            //try {
-                println("***********************: " + columns)
+            try {
                 val newDF = spark.sql("SELECT " + columns + " FROM table")
 
-                if(dataSource_count == 1) {
+                if (dataSource_count == 1) {
                     finalDF = newDF
                 } else {
                     finalDF = finalDF.union(newDF)
                 }
-            /*} catch {
-                case ae: AnalysisException => val logger = println("ERROR: Generated internal query wrong caused by wrong mappings. " +
-                  "For example, check `rr:reference` references a correct attribute, or if you have transformations, " +
-                  "check `rml:logicalSource` is the same between the TripleMap and the FunctionMap.")
+            } catch {
+                case ae: AnalysisException => val logger = println("ERROR: There is a mismatch between the mappings, query and/or data. " +
+                  "Examples: Check `rr:reference` references a correct attribute, or if you have transformations, " +
+                  "Check `rml:logicalSource` is the same between the TripleMap and the FunctionMap. Check if you are " +
+                  "SELECTing a variable used in the graph patterns. Returned error is:\n" + ae)
                    System.exit(1)
-            }*/
+            }
 
             // Transformations
             if (leftJoinTransformations != null && leftJoinTransformations._2 != null) {
                 val column: String = leftJoinTransformations._1
-                logger.info("leftJoinTransformations: " + column + " - " + leftJoinTransformations._2.mkString("."))
+                logger.info("Left Join Transformations: " + column + " - " + leftJoinTransformations._2.mkString("."))
                 val ns_pred = get_NS_predicate(column)
                 val ns = prefixes(ns_pred._1)
                 val pred = ns_pred._2
-                val col = omitQuestionMark(star) + "_" + pred + "_" + ns
+                val col = str + "_" + pred + "_" + ns
                 finalDF = transform(finalDF, col, leftJoinTransformations._2)
 
             }
             if (rightJoinTransformations != null && !rightJoinTransformations.isEmpty) {
-                println("rightJoinTransformations: " + rightJoinTransformations.mkString("_"))
-                val col = omitQuestionMark(star) + "_ID"
+                logger.info("right Join Transformations: " + rightJoinTransformations.mkString("_"))
+                val col = str + "_ID"
                 finalDF = transform(finalDF, col, rightJoinTransformations)
             }
-
         }
 
-        logger.info("- filters: " + filters + " ======= " + star)
+        logger.info("- filters: " + filters + " for star " + star)
 
         var whereString = ""
 
@@ -163,32 +170,34 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
                     whereString = column + operand_value._1 + operand_value._2
                     logger.info("--- WHERE string: " + whereString)
 
-                    //println("colcolcol: " + finalDF(column).toString())
-                    //println("operand_value._2: " + operand_value._2.replace("\"",""))
-                    if (operand_value._1 != "regex")
-                        finalDF = finalDF.filter(whereString)
-                    else
+                    if (operand_value._1 != "regex") {
+                        try {
+                            finalDF = finalDF.filter(whereString)
+                        } catch {
+                            case ae: NullPointerException => val logger = println("ERROR: No relevant source detected.")
+                                System.exit(1)
+                        }
+                    } else
                         finalDF = finalDF.filter(finalDF(column).like(operand_value._2.replace("\"","")))
                         // regular expression with _ matching an arbitrary character and % matching an arbitrary sequence
                 }
-                //finalDF.show()
             }
         }
 
         logger.info(s"Number of filters of this star is: $nbrOfFiltersOfThisStar")
 
-        /*******THIS IS JUST FOR TEST - REMOVE LATER*******/
-        logger.info("Number of Spark executors (JUST FOR TEST): " + spark.sparkContext.statusTracker.getExecutorInfos.length)
-        logger.info("Master URI (JUST FOR TEST): " + spark.sparkContext.master)
+        /*******THIS IS JUST FOR TEST*******/
+        // logger.info("Number of Spark executors (JUST FOR TEST): " + spark.sparkContext.statusTracker.getExecutorInfos.length)
+        // logger.info("Master URI (JUST FOR TEST): " + spark.sparkContext.master)
 
-        (finalDF, nbrOfFiltersOfThisStar)
+        (finalDF, nbrOfFiltersOfThisStar, parSetId)
     }
 
     def transform(df: Any, column: String, transformationsArray : Array[String]): DataFrame = {
 
         var ndf : DataFrame = df.asInstanceOf[DataFrame]
         for (t <- transformationsArray) {
-            println("Transformation next: " + t)
+            logger.info("Transformation next: " + t)
             t match {
                 case "toInt" =>
                     logger.info("TOINT found")
@@ -259,8 +268,6 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
             val njVal = get_NS_predicate(jVal)
             val ns = prefixes(njVal._1)
 
-            logger.info("njVal: " + ns)
-
             it.remove()
 
             val df1 = star_df(op1)
@@ -273,8 +280,14 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
                 firstTime = false
 
                 // Join level 1
-                jDF = df1.join(df2, df1.col(omitQuestionMark(op1) + "_" + omitNamespace(jVal) + "_" + ns).equalTo(df2(omitQuestionMark(op2) + "_ID")))
-                logger.info("...done")
+                try {
+                    jDF = df1.join(df2, df1.col(omitQuestionMark(op1) + "_" + omitNamespace(jVal) + "_" + ns).equalTo(df2(omitQuestionMark(op2) + "_ID")))
+                    logger.info("...done")
+                } catch {
+                    case ae: NullPointerException => val logger = println("ERROR: No relevant source detected.")
+                        System.exit(1)
+                }
+
             } else {
                 val dfs_only = seenDF.map(_._1)
                 logger.info(s"EVALUATING NEXT JOIN ...checking prev. done joins: $dfs_only")
@@ -505,8 +518,8 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
         val groupByVars = groupBys._1
         val aggregationFunctions = groupBys._2
 
-        val cols : ListBuffer[Column] = ListBuffer  ()
-        for(gbv <- groupByVars) {
+        val cols : ListBuffer[Column] = ListBuffer()
+        for (gbv <- groupByVars) {
             cols += col(gbv)
         }
         logger.info("aggregationFunctions: " + aggregationFunctions)
@@ -518,10 +531,9 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
         val aa = aggSet.toList
         val newJDF : DataFrame = jDF.asInstanceOf[DataFrame].groupBy(cols: _*).agg(aa.head, aa.tail : _*)
 
-
         // df.groupBy("department").agg(max("age"), sum("expense"))
         // ("o_price_cbo","sum"),("o_price_cbo","max")
-        newJDF.printSchema()
+        // newJDF.printSchema()
 
         newJDF
     }
@@ -529,7 +541,17 @@ class SparkExecutor(sparkURI: String, mappingsFile: String) extends QueryExecuto
     def limit(jDF: Any, limitValue: Int) : DataFrame = jDF.asInstanceOf[DataFrame].limit(limitValue)
 
     def show(jDF: Any): Unit = {
-        jDF.asInstanceOf[DataFrame].show
+        val columns = ArrayBuffer[String]()
+        //jDF.asInstanceOf[DataFrame].show
+        val df = jDF.asInstanceOf[DataFrame]
+        //df.printSchema()
+        val schema = df.schema
+        for (col <- schema)
+            columns += col.name
+
+        println(columns.mkString(","))
+        df.take(20).foreach(x => println(x))
+
         println(s"Number of results: ${jDF.asInstanceOf[DataFrame].count()}")
     }
 

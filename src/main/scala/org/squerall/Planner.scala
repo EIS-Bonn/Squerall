@@ -21,7 +21,7 @@ class Planner(stars: mutable.HashMap[String, mutable.Set[(String, String)]] with
 
     val logger = Logger("Squerall")
 
-    def getNeededPredicates(star_predicate_var: mutable.HashMap[(String, String), String], joins: ArrayListMultimap[String, (String, String)], select_vars: util.List[String]) : (mutable.Set[String],mutable.Set[(String,String)]) = {
+    def getNeededPredicates(star_predicate_var: mutable.HashMap[(String, String), String], joins: ArrayListMultimap[String, (String, String)], select_vars: util.List[String], groupBys: (ListBuffer[String], mutable.Set[(String, String)]), prefixes: Map[String, String]) : (mutable.Set[String],mutable.Set[(String,String)]) = {
 
         logger.info("star_predicate_var: "+ star_predicate_var)
         val predicates : mutable.Set[String] = mutable.Set.empty
@@ -45,6 +45,15 @@ class Planner(stars: mutable.HashMap[String, mutable.Set[(String, String)]] with
 
             if (select_vars.contains(o.replace("?","")))
                 predicatesForSelect.add(s_p)
+
+            if (groupBys != null ) {
+                // Forming e.g. "failure_isFailureOf_fsmt"
+                val groupByPredicate = s_p._1.replace("?","") + "_" + omitNamespace(s_p._2) + "_" + prefixes(get_NS_predicate(s_p._2)._1)
+
+                if (groupBys._2.map(_._1).contains(groupByPredicate)) { // map to get only cols eg failure_isFailureOf from Set((failure_isFailureOf_fsmt,count))
+                    predicates.add(s_p._2)
+                }
+            }
         }
 
         (predicates,predicatesForSelect)
