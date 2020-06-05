@@ -67,6 +67,7 @@ Squerall is extensible by design, developers can themselves add support to more 
 - [Uniform Access to Multiform Data Lakes using Semantic Technologies](https://www.researchgate.net/publication/336363044_Uniform_Access_to_Multiform_Data_Lakes_using_Semantic_Technologies)
 - [Querying Data Lakes using Spark and Presto](https://www.researchgate.net/publication/331530051_Querying_Data_Lakes_using_Spark_and_Presto)
 - [How to feed the Squerall with RDF and other data nuts?](https://www.researchgate.net/publication/335001108_How_to_feed_the_Squerall_with_RDF_and_other_data_nuts)
+- [Semantic Data Integration for the SMT Manufacturing Process using SANSA Stack](https://dgraux.github.io/publications/SANSA-DL_VQB_ESWC_2020_Industry.pdf)
 
 ## Contact
 For any setup difficulties or other inquiries, please contact me on: mami@cs.uni-bonn.de, or ask directly on [Gitter chat](https://gitter.im/squerall).
