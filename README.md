@@ -70,7 +70,9 @@ Squerall is extensible by design, developers can themselves add support to more 
 - [Semantic Data Integration for the SMT Manufacturing Process using SANSA Stack](https://dgraux.github.io/publications/SANSA-DL_VQB_ESWC_2020_Industry.pdf)
 
 ## Contact
-For any setup difficulties or other inquiries, please contact me on: mami@cs.uni-bonn.de, or ask directly on [Gitter chat](https://gitter.im/squerall).
+For any setup difficulties or other inquiries, please contact me on: mohamed.nadjib.mami at gmail.com, or ask directly on [Gitter chat](https://gitter.im/squerall).
+
+*Not only for issues, but also for successes, let us know either way :)*
 
 License
 -------
