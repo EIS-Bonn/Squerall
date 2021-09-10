@@ -13,6 +13,7 @@ To get an understanding of Squerall basics, which also helps understand the inst
 
 ## Setup and Execution
 *- Prerequisite:* You need Maven to build Squerall from the source. Refer to the official documentations for installation instructions: [Maven](https://maven.apache.org/install.html) and [SBT](https://www.scala-sbt.org/1.0/docs/Setup.html). Once that is installed, run:
+> Also, check Squerall covered SPARQL fragement and current limitations [here](https://github.com/EIS-Bonn/Squerall/wiki/Squerall-Basics#3-sparql-query-interface).
 ```
 git clone https://github.com/EIS-Bonn/squerall.git
 cd squerall
